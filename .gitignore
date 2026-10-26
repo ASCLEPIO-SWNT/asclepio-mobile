@@ -1,0 +1,29 @@
+# Gradle / Android
+.gradle/
+build/
+*/build/
+captures/
+.externalNativeBuild/
+.cxx/
+*.apk
+*.aab
+*.keystore
+*.jks
+
+# configuración local y secretos
+local.properties
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+.DS_Store
+
+*.log
+*.tmp
+
+.claude/settings.local.json

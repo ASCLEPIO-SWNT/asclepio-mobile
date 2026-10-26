@@ -1,0 +1,87 @@
+{
+  "project": "asclepio-mobile",
+  "description": "App Android Kotlin + Compose de Asclepio (admisión).",
+  "rules": {
+    "one_feature_per_session": true,
+    "require_tests_to_close": true,
+    "require_approved_spec_to_implement": true,
+    "valid_status": [
+      "pending",
+      "spec_ready",
+      "in_progress",
+      "done",
+      "blocked"
+    ],
+    "sdd_required_when": "feature has \"sdd\": true"
+  },
+  "features": [
+    {
+      "id": "F-00-mobile",
+      "global_id": "F-00",
+      "name": "bootstrap",
+      "title": "Bootstrap técnico del móvil",
+      "description": "Proyecto Android Gradle KTS + wrapper, Compose, Retrofit + kotlinx.serialization, API_BASE_URL desde local.properties, HTTP en claro solo en debug, RECORD_AUDIO declarado, pantalla /health adaptativa (WindowSizeClass), prueba unitaria de ejemplo, ADR de minSdk.",
+      "depends_on": [
+        "F-00-api"
+      ],
+      "consumes_contract": null,
+      "acceptance": [
+        "La pantalla de estado muestra el resultado de GET /api/v1/health en teléfono y tablet",
+        "./gradlew lint testDebugUnitTest en verde",
+        "./init.sh completo en verde"
+      ],
+      "sdd": false,
+      "status": "pending"
+    },
+    {
+      "id": "F-01-mobile",
+      "global_id": "F-01",
+      "name": "auth",
+      "title": "Login de recepción",
+      "description": "Login, almacenamiento seguro del token y logout.",
+      "depends_on": [
+        "F-00-mobile",
+        "F-01-api"
+      ],
+      "consumes_contract": null,
+      "acceptance": [
+        "Ver ../asclepio-api/docs/product/features/F-01.md (F-01.AC6)"
+      ],
+      "sdd": true,
+      "status": "pending"
+    },
+    {
+      "id": "F-02-mobile",
+      "global_id": "F-02",
+      "name": "admission",
+      "title": "Admisión: paciente y atención",
+      "description": "Buscar o crear paciente (incluido NN) y crear atención con motivo escrito.",
+      "depends_on": [
+        "F-01-mobile",
+        "F-02-api"
+      ],
+      "consumes_contract": null,
+      "acceptance": [
+        "Ver ../asclepio-api/docs/product/features/F-02.md (F-02.AC8)"
+      ],
+      "sdd": true,
+      "status": "pending"
+    },
+    {
+      "id": "F-08-mobile",
+      "global_id": "F-08",
+      "name": "voice_dictation",
+      "title": "Dictado en el dispositivo",
+      "description": "SpeechRecognizer local con detección en tiempo de ejecución; fallback a texto; complaint_source=VOICE_ON_DEVICE.",
+      "depends_on": [
+        "F-02-mobile"
+      ],
+      "consumes_contract": null,
+      "acceptance": [
+        "Ver ../asclepio-api/docs/product/features/F-08.md (F-08.AC1–AC5)"
+      ],
+      "sdd": true,
+      "status": "pending"
+    }
+  ]
+}
