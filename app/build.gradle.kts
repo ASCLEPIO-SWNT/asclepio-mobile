@@ -22,9 +22,10 @@ android {
         targetSdk = 37
         versionCode = 1
         versionName = "0.1.0"
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         // Versión del contrato consumido (feature_list.json → consumes_contract).
-        buildConfigField("String", "CONSUMED_CONTRACT", "\"0.1.0\"")
+        buildConfigField("String", "CONSUMED_CONTRACT", "\"0.2.1\"")
     }
 
     buildTypes {
@@ -61,7 +62,16 @@ dependencies {
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
 
+    // F-01-mobile (specs/F-01-mobile/design.md, "Dependencias nuevas")
+    implementation(libs.androidx.navigation3.runtime)
+    implementation(libs.androidx.navigation3.ui)
+    implementation(libs.androidx.lifecycle.viewmodel.navigation3)
+    implementation(libs.androidx.datastore.preferences)
+
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.okhttp.mockwebserver)
+
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.test.runner)
 }

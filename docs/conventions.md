@@ -21,7 +21,7 @@
 - La validación en la UI es para la experiencia de uso; la API valida igual.
 
 ## Pruebas
-- JUnit (`src/test`) con nombres en backticks que empiezan por `R<n>:` cuando cubren un requisito.
+- JUnit (`src/test`) con nombres en backticks que empiezan por `R<n> ` (R, número y espacio) cuando cubren un requisito. **No se usa `:`** porque no es válido en nombres de método JVM, **ni caracteres parecidos** (como `꞉` U+A789), porque rompen el grep de trazabilidad.
 
 ## Commits
 - Conventional Commits (`feat(voice): …`, `fix(patients): …`, `chore: …`), con `Refs: F-0X-mobile` en el cuerpo.

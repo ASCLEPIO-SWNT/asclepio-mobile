@@ -11,3 +11,10 @@
 - **Revisión:** APROBADA.
 - **Pendientes para F-01-mobile:** (1) parseo de `ProblemDetails` en `core/network`; (2) usar los subpaquetes `data/` y `ui/` en cada feature; (3) mensajes de error en `strings.xml`.
 - **Pendiente del humano:** probar en un dispositivo o emulador, teléfono y tablet (`adb reverse tcp:3000 tcp:3000` + `./gradlew installDebug`).
+
+## 2026-10-27 — F-01-mobile: cuenta e inicio de sesión del paciente → done
+- **Resultado:** elección de IPS y sede de la lista pública (recordadas en DataStore); consentimiento en Markdown con casilla obligatoria y versión vigente; alta (CC, CE o PA; 18 años o más con `Period.between` en America/Bogota; sexo M, F o X; contraseña de 10 a 128 caracteres con confirmación) con entrada automática tras el alta; login con 401 genérico, 429 con Retry-After y bloqueo del botón; `GET /me` debe dar kind PATIENT; token cifrado con AES-GCM del Android Keystore en DataStore; expiración a las 8 h; cierre de sesión con confirmación; pantalla de Inicio; layout de dos paneles en tablet (WindowSizeClass); sin logs, y la contraseña solo en memoria. Navigation 3, DI manual, ProblemDetails en `core/network`, mensajes en `strings.xml`. Consume el contrato **0.2.1**.
+- **Pruebas:** 121 JVM (MockWebServer) y 5 instrumentadas (Keystore, `connectedDebugAndroidTest`). La prueba manual del humano en el emulador (T19 y T20) salió OK.
+- **Revisión:** APROBADA en la 3.ª ronda (las dos anteriores se rechazaron por la convención de nombres de prueba).
+- **Lecciones:** (1) en Kotlin, los nombres de prueba usan `R<n> ` con espacio (`:` no es válido en la JVM; nunca caracteres parecidos como U+A789); ya está en CHECKPOINTS, conventions y docs/specs.md. (2) **Android 17 / targetSdk 37 bloquea la red local** (`10.0.2.2`, LAN) sin `ACCESS_LOCAL_NETWORK`; en desarrollo se usa `adb reverse tcp:3000 tcp:3000` + `API_BASE_URL=http://localhost:3000` (README).
+- **Pendientes para F-02-mobile:** cambiar el valor por defecto de `API_BASE_URL` en `app/build.gradle.kts` (hoy `10.0.2.2`) a `http://localhost:3000` y actualizar `docs/architecture.md`.

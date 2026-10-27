@@ -6,9 +6,9 @@
 
 ## Trazabilidad R<n> → prueba
 ```kotlin
-@Test fun `R2: crea la atención con complaint_source VOICE_ON_DEVICE si el texto viene del dictado`() { … }
+@Test fun `R2 crea la atención con complaint_source VOICE_ON_DEVICE si el texto viene del dictado`() { … }
 ```
-- Para comprobarlo: `grep -rn "R[0-9]\+:" app/src/test`.
+- Para comprobarlo: `grep -rnE '`R[0-9]+ ' app/src/test app/src/androidTest`.
 - `implementer` registra la tabla `R<n>` → `archivo::prueba` en `progress/impl_<id>.md`.
 
 ## Qué se prueba siempre (cuando aplica)

@@ -1,8 +1,8 @@
-package co.asclepio.mobile.feature.status
+package co.asclepio.mobile.feature.status.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import co.asclepio.mobile.core.network.HealthApi
+import co.asclepio.mobile.feature.status.data.HealthApi
 import co.asclepio.mobile.core.ui.formatBogota
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

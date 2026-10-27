@@ -1,9 +1,9 @@
-package co.asclepio.mobile.core.network
+package co.asclepio.mobile.feature.status.data
 
 import kotlinx.serialization.Serializable
 import retrofit2.http.GET
 
-/** Esquema HealthDto del contrato 0.1.0. */
+/** Esquema HealthDto del contrato. */
 @Serializable
 data class HealthDto(val status: String, val time: String)
 

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" tools:locale="es">
     <string name="app_name">Asclepio</string>
     <string name="tagline">La IA propone, el profesional decide.</string>
     <string name="status_title">Estado del sistema</string>
@@ -10,4 +10,64 @@
     <string name="status_retry">Reintentar</string>
     <string name="status_api_url">API: %1$s</string>
     <string name="status_contract">Contrato consumido: v%1$s</string>
+
+    <!-- F-01-mobile: mensajes de error de la app (requirements.md, tabla de PA-1). -->
+    <string name="error_no_tenants">No hay IPS disponibles en este momento. Intenta más tarde.</string>
+    <string name="tenant_no_sites">Sin sedes disponibles</string>
+    <string name="error_network">No hay conexión con el servidor. Revisa tu internet e intenta de nuevo.</string>
+    <string name="error_general">Algo salió mal. Intenta de nuevo en unos minutos.</string>
+    <!-- Textos fijados por la tabla de PA-1 (requirements.md): no se convierten a plurals. -->
+    <string name="error_too_many_requests" tools:ignore="PluralsCandidate">Demasiados intentos. Espera %1$d segundos e intenta de nuevo.</string>
+    <string name="error_login_invalid">Documento o contraseña incorrectos. Después de 5 intentos fallidos la cuenta se bloquea 15 minutos.</string>
+    <string name="error_signup_conflict">Ya existe una cuenta con este documento en esta IPS. Inicia sesión.</string>
+    <string name="error_signup_unprocessable">No pudimos crear la cuenta. Revisa tu fecha de nacimiento y vuelve a aceptar el consentimiento si cambió.</string>
+    <string name="error_not_patient">Esta cuenta no es de paciente. Usa la aplicación web del personal.</string>
+    <string name="error_required">Campo obligatorio</string>
+    <string name="error_max_length" tools:ignore="PluralsCandidate">Máximo %1$d caracteres</string>
+    <string name="error_password_length">La contraseña debe tener entre 10 y 128 caracteres</string>
+    <string name="error_password_mismatch">Las contraseñas no coinciden</string>
+    <string name="error_underage">Debes ser mayor de 18 años para crear una cuenta</string>
+
+    <!-- Tipos de documento y sexo (PA-6). -->
+    <string name="document_type_cc">Cédula de ciudadanía</string>
+    <string name="document_type_ce">Cédula de extranjería</string>
+    <string name="document_type_pa">Pasaporte</string>
+    <string name="sex_m">Masculino</string>
+    <string name="sex_f">Femenino</string>
+    <string name="sex_x">Indeterminado / otro</string>
+
+    <!-- Inicio (PA-3) y cierre de sesión (PA-8). -->
+    <string name="home_identity_unverified">Tu identidad se verificará en recepción</string>
+    <string name="home_preregister_soon">Pronto podrás pre-registrarte desde aquí</string>
+    <string name="logout_dialog_title">¿Cerrar sesión?</string>
+    <string name="logout_cancel">Cancelar</string>
+    <string name="logout_confirm">Cerrar sesión</string>
+
+    <!-- Etiquetas de las pantallas. -->
+    <string name="retry">Reintentar</string>
+    <string name="tenant_picker_title">Elige tu IPS</string>
+    <string name="tenant_picker_sites">Sede</string>
+    <string name="tenant_picker_choose_tenant">Elige una IPS para ver sus sedes</string>
+    <string name="tenant_picker_continue">Continuar</string>
+    <string name="tenant_and_site">%1$s · %2$s</string>
+    <string name="login_title">Iniciar sesión</string>
+    <string name="login_change_tenant">Cambiar IPS</string>
+    <string name="login_submit">Ingresar</string>
+    <string name="login_go_to_signup">Crear cuenta</string>
+    <string name="login_status">Estado del sistema</string>
+    <string name="field_document_type">Tipo de documento</string>
+    <string name="field_document_number">Número de documento</string>
+    <string name="field_full_name">Nombre completo</string>
+    <string name="field_birth_date">Fecha de nacimiento</string>
+    <string name="field_sex">Sexo</string>
+    <string name="field_password">Contraseña</string>
+    <string name="field_password_confirmation">Confirmar contraseña</string>
+    <string name="field_birth_date_choose">Elegir fecha</string>
+    <string name="date_picker_ok">Aceptar</string>
+    <string name="signup_title">Crear cuenta</string>
+    <string name="signup_consent_title">Consentimiento de tratamiento de datos</string>
+    <string name="signup_consent_accept">Acepto el tratamiento de mis datos personales según este consentimiento</string>
+    <string name="signup_submit">Crear cuenta</string>
+    <string name="signup_go_to_login">Ir a iniciar sesión</string>
+    <string name="home_title">Inicio</string>
 </resources>

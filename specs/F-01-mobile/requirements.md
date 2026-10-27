@@ -11,7 +11,7 @@ Glosario de la spec:
 - **Versión vigente del consentimiento**: el campo `version` de la última respuesta 200 de `GET /api/v1/public/consent` obtenida en la pantalla de alta.
 - **Mensaje de error de la app**: un texto de `strings.xml` elegido por la app según el caso; nunca el `title`, el `detail` ni `errors[].message` de la API. Los textos son los de la tabla siguiente (PA-1).
 - **Mayor de edad**: `Period.between(birthDate, hoy).years >= 18`, donde `hoy` es la fecha civil actual en `America/Bogota` (misma regla que la API, D18 de F-01-api: quien nació un 29 de febrero cumple el 1 de marzo en años no bisiestos).
-- **Prueba JVM**: JUnit en `app/src/test`, con el HTTP contra `MockWebServer` y Retrofit real (sin mockear Retrofit). Salvo que se indique otra cosa, cada `R<n>` se verifica con una prueba JVM cuyo nombre empieza por `R<n>:`.
+- **Prueba JVM**: JUnit en `app/src/test`, con el HTTP contra `MockWebServer` y Retrofit real (sin mockear Retrofit). Salvo que se indique otra cosa, cada `R<n>` se verifica con una prueba JVM cuyo nombre empieza por `R<n> `.
 
 ### Textos de la UI (PA-1 y PA-6, aceptados)
 | Clave | Texto |

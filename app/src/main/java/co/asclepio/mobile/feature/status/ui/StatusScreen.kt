@@ -1,4 +1,4 @@
-package co.asclepio.mobile.feature.status
+package co.asclepio.mobile.feature.status.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column

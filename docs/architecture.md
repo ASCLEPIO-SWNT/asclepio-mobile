@@ -5,13 +5,19 @@ Kotlin + Jetpack Compose, **MVVM**, Retrofit + kotlinx.serialization y layouts a
 ## Paquetes
 ```
 app/src/main/java/co/asclepio/mobile/
+├── AsclepioApp.kt       # Application: crea el AppContainer
+├── AppContainer.kt      # DI manual: Retrofit, APIs, SessionStore, SessionManager, repositorios
+├── AppNavigation.kt     # Navigation 3 (NavDisplay): une las features; pila reiniciada según SessionManager.state
 ├── MainActivity.kt
 ├── core/
-│   ├── network/     # Retrofit, kotlinx.serialization, ProblemDetails, API_BASE_URL (BuildConfig)
-│   ├── auth/        # cuenta y sesión del paciente, token (almacenamiento seguro), interceptor de auth
-│   └── ui/          # tema, componentes comunes, utilidades de WindowSizeClass
+│   ├── network/     # ApiClient (Retrofit + OkHttp + kotlinx.serialization), ProblemDetails, ApiError + apiCall
+│   ├── auth/        # TokenCipher + KeystoreTokenCipher (AES-256-GCM), SessionStore (DataStore), SessionManager,
+│   │                # AuthInterceptor, MeApi + MeDto, Age (mayoría de edad en America/Bogota)
+│   └── ui/          # Theme, DateTime, UiMessage (@StringRes), WindowLayout (paneMode), MarkdownText
 └── feature/
-    ├── status/      # pantalla de estado: GET /api/v1/health (F-00)
+    ├── status/      # data/ (HealthApi) y ui/ (StatusScreen, StatusViewModel): GET /api/v1/health (F-00)
+    ├── account/     # cuenta e inicio de sesión del paciente (F-01): data/ (PublicApi, PatientAuthApi, DTOs,
+    │                # TenantRepository, AccountRepository) y ui/ (TenantPicker, Login, SignUp, Home, formularios y errores)
     ├── patients/    # datos propios del paciente (F-02)
     ├── encounters/  # pre-registro y su estado (F-02)
     └── voice/       # dictado en el dispositivo (F-08)
@@ -25,7 +31,7 @@ Cada `feature/<f>/` contiene `data/` (API y repositorio), `ui/` (Composables y `
 - `ui` (Composable) → `ViewModel` → repositorio → servicio Retrofit.
 
 **Prohibidas**
-- `feature/A` → `feature/B`. Lo compartido va a `core/`.
+- `feature/A` → `feature/B`. Lo compartido va a `core/`. Solo `AppNavigation.kt` (paquete raíz) conoce varias features.
 - `core/` → `feature/`.
 - Un Composable que llama al repositorio o a Retrofit.
 - Enviar audio a cualquier servidor, o usar ASR en la nube (ADR 0006 de la API).
@@ -39,6 +45,6 @@ Cada `feature/<f>/` contiene `data/` (API y repositorio), `ui/` (Composables y `
 
 ## Qué es "buen trabajo" aquí
 - El código está en el paquete correcto y sigue MVVM con `StateFlow<UiState>` (`Loading`, `Success` y `Error`).
-- Cada `R<n>` tiene su prueba `R<n>: …`.
+- Cada `R<n>` tiene su prueba `R<n> …` (con espacio; `:` no es válido en Kotlin).
 - El layout funciona en teléfono y en tablet.
 - El audio no sale del dispositivo.

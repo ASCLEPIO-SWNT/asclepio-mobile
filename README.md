@@ -18,12 +18,11 @@ asclepio/
   sdk.dir=/ruta/a/Android/Sdk
   API_BASE_URL=http://10.0.2.2:3000
   ```
-  Valores de `API_BASE_URL` según dónde pruebes:
-  | Dónde | `API_BASE_URL` |
-  |---|---|
-  | Emulador | `http://10.0.2.2:3000` |
-  | Teléfono por USB o Wi-Fi con `adb reverse tcp:3000 tcp:3000` | `http://localhost:3000` |
-  | Teléfono en la misma Wi-Fi (sin adb reverse) | `http://<IP-de-tu-PC>:3000` |
+  **Usa siempre `adb reverse` y `API_BASE_URL=http://localhost:3000`** (emulador y teléfono):
+  ```bash
+  adb reverse tcp:3000 tcp:3000   # repetirlo cada vez que se reinicia el emulador o se reconecta el teléfono
+  ```
+  > **Android 17 (API 37) bloquea la red local:** con `targetSdk 37`, una app no puede abrir conexiones a IPs locales (`10.0.2.2`, `192.168.x.x`) sin el permiso `ACCESS_LOCAL_NETWORK`, y el error aparece en la app como "sin conexión". `localhost` a través de `adb reverse` no es red local, así que funciona sin permisos. (Diagnosticado el 2026-10-27: `nc` desde `adb shell` conecta, pero `run-as co.asclepio.mobile nc …` da timeout.)
 
   > No es una app Expo: **Expo Go no puede abrirla** porque es nativa (Kotlin + Compose). Para verla en tu teléfono usa `adb`.
 

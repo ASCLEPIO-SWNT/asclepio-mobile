@@ -1,6 +1,6 @@
-package co.asclepio.mobile.feature.status
+package co.asclepio.mobile.feature.status.ui
 
-import co.asclepio.mobile.core.network.HealthApi
+import co.asclepio.mobile.feature.status.data.HealthApi
 import co.asclepio.mobile.core.network.createRetrofit
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse

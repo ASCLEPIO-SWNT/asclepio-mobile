@@ -1,0 +1,43 @@
+package co.asclepio.mobile
+
+import android.content.Context
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.preferencesDataStoreFile
+import co.asclepio.mobile.core.auth.AuthInterceptor
+import co.asclepio.mobile.core.auth.KeystoreTokenCipher
+import co.asclepio.mobile.core.auth.MeApi
+import co.asclepio.mobile.core.auth.SessionManager
+import co.asclepio.mobile.core.auth.SessionStore
+import co.asclepio.mobile.core.network.createRetrofit
+import co.asclepio.mobile.feature.account.data.AccountRepository
+import co.asclepio.mobile.feature.account.data.PatientAuthApi
+import co.asclepio.mobile.feature.account.data.PublicApi
+import co.asclepio.mobile.feature.account.data.TenantRepository
+import co.asclepio.mobile.feature.status.data.HealthApi
+import okhttp3.OkHttpClient
+import java.time.Clock
+
+/** Inyección de dependencias manual (D4). */
+class AppContainer(context: Context) {
+    val clock: Clock = Clock.systemUTC()
+
+    // files/datastore/asclepio_session.preferences_pb (excluido de copias de seguridad).
+    private val dataStore = PreferenceDataStoreFactory.create {
+        context.applicationContext.preferencesDataStoreFile("asclepio_session")
+    }
+    private val sessionStore = SessionStore(dataStore, KeystoreTokenCipher())
+
+    private val okHttp = OkHttpClient.Builder()
+        .addInterceptor(AuthInterceptor { sessionManager.currentToken() })
+        .build()
+    private val retrofit = createRetrofit(BuildConfig.API_BASE_URL, okHttp)
+
+    val healthApi: HealthApi = retrofit.create(HealthApi::class.java)
+    private val publicApi: PublicApi = retrofit.create(PublicApi::class.java)
+    private val authApi: PatientAuthApi = retrofit.create(PatientAuthApi::class.java)
+    private val meApi: MeApi = retrofit.create(MeApi::class.java)
+
+    val sessionManager = SessionManager(sessionStore, meApi, clock)
+    val tenantRepository = TenantRepository(publicApi)
+    val accountRepository = AccountRepository(publicApi, authApi, meApi, sessionManager)
+}

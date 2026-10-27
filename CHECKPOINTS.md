@@ -33,7 +33,7 @@
 - [ ] Toda feature `sdd: true` en `spec_ready`, `in_progress` o `done` tiene `specs/<id>/{requirements,design,tasks}.md`.
 - [ ] `requirements.md` usa EARS estricto y cada `R<n>` está trazado a un `F-0X.ACn`.
 - [ ] Toda feature `done` con `sdd: true` tiene todas sus tareas `[x]`.
-- [ ] Cada `R<n>` está cubierto por al menos una prueba cuyo nombre empieza por `R<n>:` (en Kotlin, con backticks: ``fun `R1: crea paciente NN sin documento`()``).
+- [ ] Cada `R<n>` está cubierto por al menos una prueba cuyo nombre empieza por `R<n> ` (en Kotlin el `:` no es válido en nombres de método JVM, así que se usa un espacio: ``fun `R1 crea paciente NN sin documento`()``). Se comprueba con `grep -rnE '`R[0-9]+ ' app/src/test app/src/androidTest`.
 
 ## C7 — Seguridad clínica y privacidad (UI)
 - [ ] El audio no sale del dispositivo: solo se usa `SpeechRecognizer` en modo local y no hay código que suba audio.
