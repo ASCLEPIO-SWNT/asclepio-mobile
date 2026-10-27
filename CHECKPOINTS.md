@@ -41,7 +41,9 @@
 - [ ] `complaint_source` es `VOICE_ON_DEVICE` solo cuando el texto viene del dictado.
 - [ ] No hay datos personales en `Logcat`.
 - [ ] El tráfico HTTP en claro está permitido solo en `debug` (`network_security_config` en el sourceSet de debug).
-- [ ] La app no envía horas legales (la hora de llegada la pone el servidor).
+- [ ] La app no envía horas legales (la hora de llegada la fija el servidor cuando recepción confirma).
+- [ ] La app solo muestra datos del paciente autenticado; no hay pantallas ni llamadas a endpoints de personal.
+- [ ] El alta de la cuenta muestra y registra el consentimiento de tratamiento de datos (cuando se defina PA-PAC-5).
 
 ## C8 — Contrato
 - [ ] La feature declara `consumes_contract` y esa versión coincide (misma mayor) con `../asclepio-api/openapi/asclepio-api.v1.json`.

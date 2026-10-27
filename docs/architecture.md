@@ -1,6 +1,6 @@
 # Arquitectura — asclepio-mobile
 
-Kotlin + Jetpack Compose, **MVVM**, Retrofit + kotlinx.serialization y layouts adaptativos con `WindowSizeClass` (teléfono y tablet). Alcance: **admisión**.
+Kotlin + Jetpack Compose, **MVVM**, Retrofit + kotlinx.serialization y layouts adaptativos con `WindowSizeClass` (teléfono y tablet). Alcance: **app del paciente** (cuenta, pre-registro y dictado; ADR 0008 de la API).
 
 ## Paquetes
 ```
@@ -8,12 +8,12 @@ app/src/main/java/co/asclepio/mobile/
 ├── MainActivity.kt
 ├── core/
 │   ├── network/     # Retrofit, kotlinx.serialization, ProblemDetails, API_BASE_URL (BuildConfig)
-│   ├── auth/        # sesión y token (almacenamiento seguro), interceptor de auth
+│   ├── auth/        # cuenta y sesión del paciente, token (almacenamiento seguro), interceptor de auth
 │   └── ui/          # tema, componentes comunes, utilidades de WindowSizeClass
 └── feature/
     ├── status/      # pantalla de estado: GET /api/v1/health (F-00)
-    ├── patients/    # buscar o crear paciente (F-02)
-    ├── encounters/  # crear atención (F-02)
+    ├── patients/    # datos propios del paciente (F-02)
+    ├── encounters/  # pre-registro y su estado (F-02)
     └── voice/       # dictado en el dispositivo (F-08)
 ```
 Cada `feature/<f>/` contiene `data/` (API y repositorio), `ui/` (Composables y `<X>ViewModel`) y, si aplica, `model/`.

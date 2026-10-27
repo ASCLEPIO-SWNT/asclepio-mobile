@@ -1,1 +1,1 @@
-Buscar y crear paciente (incluido NN). Llega con F-02-mobile.
+Datos propios del paciente autenticado. Llega con F-02-mobile (ADR 0008).

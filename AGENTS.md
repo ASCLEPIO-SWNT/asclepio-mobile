@@ -1,6 +1,6 @@
 # AGENTS.md — mapa de asclepio-mobile
 
-App Android (Kotlin + Jetpack Compose) de Asclepio para **admisión**: login, buscar o crear paciente, crear la atención y dictar el motivo en el dispositivo. *La IA propone, el profesional decide.* Lee solo lo que necesites en cada momento.
+App Android (Kotlin + Jetpack Compose) de Asclepio **para el paciente** (ADR 0008 de la API): cuenta e inicio de sesión del paciente, pre-registro con sus datos y su motivo, y dictado en el dispositivo. Recepción confirma la llegada en la web. *La IA propone, el profesional decide.* Lee solo lo que necesites en cada momento.
 
 ## 1. Antes de empezar
 1. Ejecuta `./init.sh`. **Si falla, para** y reporta.
@@ -23,6 +23,7 @@ App Android (Kotlin + Jetpack Compose) de Asclepio para **admisión**: login, bu
 | `CHECKPOINTS.md` | C1–C8 | Al revisar o cerrar |
 | `../asclepio-api/docs/product/` | Visión, glosario, RNF y **briefs F-0X** (solo lectura) | Al especificar |
 | `../asclepio-api/docs/adr/0006-voz-en-dispositivo.md` | Decisión de voz en el dispositivo | En F-08 |
+| `../asclepio-api/docs/adr/0008-app-movil-del-paciente.md` | **La app es del paciente**: pre-registro y confirmación en la web | Siempre, antes de especificar |
 | `../asclepio-api/openapi/asclepio-api.v1.json` | **Contrato** (solo lectura) | Al consumir endpoints |
 | `.claude/agents/` | Roles | Según tu rol |
 
@@ -37,6 +38,7 @@ App Android (Kotlin + Jetpack Compose) de Asclepio para **admisión**: login, bu
 - **No escribas en `../asclepio-api/`** (hay un hook que lo bloquea).
 - **El audio nunca sale del dispositivo** (ADR 0006): sin subidas de audio ni ASR en la nube.
 - El tráfico HTTP en claro solo se permite en `debug`.
+- La app la usa el **paciente**: solo accede a sus propios datos y pre-registros, nunca a datos de otros pacientes ni a endpoints de personal. Tampoco muestra ni calcula la hora legal de llegada (la fija recepción al confirmar).
 
 ## 4. Flujo
 ```

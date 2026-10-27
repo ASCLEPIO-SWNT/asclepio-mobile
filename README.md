@@ -1,6 +1,6 @@
 # asclepio-mobile
 
-App Android de **Asclepio** para admisión en urgencias: login, buscar o crear paciente, crear la atención y dictar el motivo de consulta **en el dispositivo** (el audio nunca sale del teléfono). Usa Kotlin + Jetpack Compose, MVVM, Retrofit + kotlinx.serialization y layouts adaptativos (`WindowSizeClass`).
+App Android de **Asclepio para el paciente** que llega a urgencias: crea su cuenta, inicia sesión y envía un **pre-registro** con sus datos y su motivo de consulta, que puede dictar **en el dispositivo** (el audio nunca sale del teléfono). Recepción confirma la llegada en la web (ADR 0008 de la API). Usa Kotlin + Jetpack Compose, MVVM, Retrofit + kotlinx.serialization y layouts adaptativos (`WindowSizeClass`).
 
 ## Espacio de trabajo
 Necesita `asclepio-api` clonado al lado (de ahí salen el contrato y los briefs):

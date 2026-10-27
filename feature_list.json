@@ -1,6 +1,6 @@
 {
   "project": "asclepio-mobile",
-  "description": "App Android Kotlin + Compose de Asclepio (admisión).",
+  "description": "App Android Kotlin + Compose de Asclepio para el paciente (cuenta, pre-registro, dictado; ADR 0008).",
   "rules": {
     "one_feature_per_session": true,
     "require_tests_to_close": true,
@@ -36,16 +36,16 @@
     {
       "id": "F-01-mobile",
       "global_id": "F-01",
-      "name": "auth",
-      "title": "Login de recepción",
-      "description": "Login, almacenamiento seguro del token y logout.",
+      "name": "patient_auth",
+      "title": "Cuenta e inicio de sesión del paciente",
+      "description": "Alta de cuenta de paciente (con consentimiento), login, almacenamiento seguro del token y logout (ADR 0008).",
       "depends_on": [
         "F-00-mobile",
         "F-01-api"
       ],
       "consumes_contract": null,
       "acceptance": [
-        "Ver ../asclepio-api/docs/product/features/F-01.md (F-01.AC6)"
+        "Ver ../asclepio-api/docs/product/features/F-01.md (F-01.AC7, AC8)"
       ],
       "sdd": true,
       "status": "pending"
@@ -53,16 +53,16 @@
     {
       "id": "F-02-mobile",
       "global_id": "F-02",
-      "name": "admission",
-      "title": "Admisión: paciente y atención",
-      "description": "Buscar o crear paciente (incluido NN) y crear atención con motivo escrito.",
+      "name": "pre_registration",
+      "title": "Pre-registro del paciente",
+      "description": "El paciente completa sus datos y envía un pre-registro con motivo escrito a una sede; ve su estado. Recepción confirma en la web (ADR 0008).",
       "depends_on": [
         "F-01-mobile",
         "F-02-api"
       ],
       "consumes_contract": null,
       "acceptance": [
-        "Ver ../asclepio-api/docs/product/features/F-02.md (F-02.AC8)"
+        "Ver ../asclepio-api/docs/product/features/F-02.md (F-02.AC8, AC10)"
       ],
       "sdd": true,
       "status": "pending"
@@ -72,7 +72,7 @@
       "global_id": "F-08",
       "name": "voice_dictation",
       "title": "Dictado en el dispositivo",
-      "description": "SpeechRecognizer local con detección en tiempo de ejecución; fallback a texto; complaint_source=VOICE_ON_DEVICE.",
+      "description": "El paciente dicta el motivo: SpeechRecognizer local con detección en tiempo de ejecución; fallback a texto; complaint_source=VOICE_ON_DEVICE.",
       "depends_on": [
         "F-02-mobile"
       ],
