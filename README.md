@@ -18,7 +18,14 @@ asclepio/
   sdk.dir=/ruta/a/Android/Sdk
   API_BASE_URL=http://10.0.2.2:3000
   ```
-  `10.0.2.2` es el host desde el emulador. En un dispositivo físico usa la IP de tu PC en la LAN.
+  Valores de `API_BASE_URL` según dónde pruebes:
+  | Dónde | `API_BASE_URL` |
+  |---|---|
+  | Emulador | `http://10.0.2.2:3000` |
+  | Teléfono por USB o Wi-Fi con `adb reverse tcp:3000 tcp:3000` | `http://localhost:3000` |
+  | Teléfono en la misma Wi-Fi (sin adb reverse) | `http://<IP-de-tu-PC>:3000` |
+
+  > No es una app Expo: **Expo Go no puede abrirla** porque es nativa (Kotlin + Compose). Para verla en tu teléfono usa `adb`.
 
 ## Arranque
 > El esqueleto técnico llega con **F-00-mobile**.
@@ -26,7 +33,13 @@ asclepio/
 ```bash
 ./init.sh            # o ./init.sh --quick
 ```
-Después de F-00: `./gradlew installDebug`, o ábrelo en Android Studio.
+```bash
+./gradlew testDebugUnitTest lint   # lo mismo que ejecuta init.sh
+./gradlew assembleDebug            # APK en app/build/outputs/apk/debug/
+adb devices                        # teléfono (depuración USB) o emulador
+./gradlew installDebug             # instala en el dispositivo conectado
+```
+Antes, arranca la API (`cd ../asclepio-api && npm run start:dev`).
 
 ## Cómo trabajar con el harness (SDD)
 1. Abre Claude Code en este directorio; actúa como **leader**.

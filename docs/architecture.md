@@ -11,6 +11,7 @@ app/src/main/java/co/asclepio/mobile/
 │   ├── auth/        # sesión y token (almacenamiento seguro), interceptor de auth
 │   └── ui/          # tema, componentes comunes, utilidades de WindowSizeClass
 └── feature/
+    ├── status/      # pantalla de estado: GET /api/v1/health (F-00)
     ├── patients/    # buscar o crear paciente (F-02)
     ├── encounters/  # crear atención (F-02)
     └── voice/       # dictado en el dispositivo (F-08)
@@ -31,9 +32,9 @@ Cada `feature/<f>/` contiene `data/` (API y repositorio), `ui/` (Composables y `
 - Enviar horas legales a la API.
 
 ## Plataforma
-- El `minSdk` y su justificación (disponibilidad de `SpeechRecognizer` local) se documentan en `docs/adr/` con F-00.
+- `minSdk 31`, `compileSdk`/`targetSdk 37` (ver `docs/adr/0001-minsdk-31.md`). AGP 9 con Kotlin integrado y catálogo de versiones en `gradle/libs.versions.toml`.
 - `API_BASE_URL` se lee de `local.properties` hacia `BuildConfig` (por defecto `http://10.0.2.2:3000`).
-- El tráfico en claro solo se permite en `debug`.
+- El tráfico en claro solo se permite en `debug` (`app/src/debug/AndroidManifest.xml` y `res/xml/network_security_config.xml`).
 - El permiso `RECORD_AUDIO` se declara en el manifiesto y se solicita en el momento de uso.
 
 ## Qué es "buen trabajo" aquí

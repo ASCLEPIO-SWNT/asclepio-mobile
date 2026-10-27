@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Asclepio</string>
+    <string name="tagline">La IA propone, el profesional decide.</string>
+    <string name="status_title">Estado del sistema</string>
+    <string name="status_loading">Consultando la API…</string>
+    <string name="status_ok">API operativa</string>
+    <string name="status_server_time">Hora del servidor (Bogotá): %1$s</string>
+    <string name="status_error">API no disponible: %1$s</string>
+    <string name="status_retry">Reintentar</string>
+    <string name="status_api_url">API: %1$s</string>
+    <string name="status_contract">Contrato consumido: v%1$s</string>
+</resources>

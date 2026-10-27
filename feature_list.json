@@ -24,14 +24,14 @@
       "depends_on": [
         "F-00-api"
       ],
-      "consumes_contract": null,
+      "consumes_contract": "0.1.0",
       "acceptance": [
         "La pantalla de estado muestra el resultado de GET /api/v1/health en teléfono y tablet",
         "./gradlew lint testDebugUnitTest en verde",
         "./init.sh completo en verde"
       ],
       "sdd": false,
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "F-01-mobile",
