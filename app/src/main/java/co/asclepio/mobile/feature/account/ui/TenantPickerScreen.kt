@@ -26,11 +26,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import co.asclepio.mobile.R
+import co.asclepio.mobile.core.tenants.PublicSiteDto
+import co.asclepio.mobile.core.tenants.PublicTenantDto
 import co.asclepio.mobile.core.ui.PaneMode
 import co.asclepio.mobile.core.ui.paneMode
 import co.asclepio.mobile.core.ui.text
-import co.asclepio.mobile.feature.account.data.PublicSiteDto
-import co.asclepio.mobile.feature.account.data.PublicTenantDto
 
 /** Elegir IPS y sede (R1–R5). Tablet: IPS y sedes lado a lado; teléfono: una columna (R35). */
 @Composable

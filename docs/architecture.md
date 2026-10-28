@@ -12,14 +12,22 @@ app/src/main/java/co/asclepio/mobile/
 ├── core/
 │   ├── network/     # ApiClient (Retrofit + OkHttp + kotlinx.serialization), ProblemDetails, ApiError + apiCall
 │   ├── auth/        # TokenCipher + KeystoreTokenCipher (AES-256-GCM), SessionStore (DataStore), SessionManager,
-│   │                # AuthInterceptor, MeApi + MeDto, Age (mayoría de edad en America/Bogota)
+│   │                # AuthInterceptor, MeApi + MeDto, Age (mayoría de edad en America/Bogota),
+│   │                # PatientCall (`SessionManager.patientCall`: un 401 de /patient/… cierra la sesión, F-02)
+│   ├── tenants/     # TenantsApi (GET /api/v1/public/tenants) + PublicTenantDto/PublicSiteDto (F-01 y F-02)
+│   ├── model/       # Sex, FULL_NAME_MAX y la conversión del DatePicker (alta de F-01 y "Mis datos" de F-02)
 │   └── ui/          # Theme, DateTime, UiMessage (@StringRes), WindowLayout (paneMode), MarkdownText
 └── feature/
     ├── status/      # data/ (HealthApi) y ui/ (StatusScreen, StatusViewModel): GET /api/v1/health (F-00)
-    ├── account/     # cuenta e inicio de sesión del paciente (F-01): data/ (PublicApi, PatientAuthApi, DTOs,
-    │                # TenantRepository, AccountRepository) y ui/ (TenantPicker, Login, SignUp, Home, formularios y errores)
-    ├── patients/    # datos propios del paciente (F-02)
-    ├── encounters/  # pre-registro y su estado (F-02)
+    ├── account/     # cuenta e inicio de sesión del paciente (F-01): data/ (PublicApi con el consentimiento,
+    │                # PatientAuthApi, DTOs, TenantRepository, AccountRepository) y ui/ (TenantPicker, Login, SignUp,
+    │                # Home con el slot de estado y "Mis datos", formularios y errores)
+    ├── patients/    # "Mis datos" (F-02): data/ (PatientProfileApi, PatientProfileDto, UpdatePatientProfileRequest,
+    │                # PatientProfileRepository) y ui/ (ProfileScreen, ProfileViewModel, ProfileForm + validación y diff,
+    │                # ProfileErrors)
+    ├── encounters/  # pre-registro y su estado (F-02): data/ (PreRegistrationsApi, DTOs, ComplaintSource,
+    │                # PreRegistrationRepository) y ui/ (PreRegistrationScreen/ViewModel, PreRegistrationStatusPane/
+    │                # ViewModel, PreRegistrationForm + validación, statusText/isInProgress, PreRegistrationErrors)
     └── voice/       # dictado en el dispositivo (F-08)
 ```
 Cada `feature/<f>/` contiene `data/` (API y repositorio), `ui/` (Composables y `<X>ViewModel`) y, si aplica, `model/`.
@@ -29,6 +37,7 @@ Cada `feature/<f>/` contiene `data/` (API y repositorio), `ui/` (Composables y `
 **Permitidas**
 - `feature/*` → `core/*`.
 - `ui` (Composable) → `ViewModel` → repositorio → servicio Retrofit.
+- El inicio (`feature/account`) recibe el estado del pre-registro (`feature/encounters`) como un slot `@Composable` que compone `AppNavigation` (D3 de F-02-mobile).
 
 **Prohibidas**
 - `feature/A` → `feature/B`. Lo compartido va a `core/`. Solo `AppNavigation.kt` (paquete raíz) conoce varias features.
@@ -39,7 +48,7 @@ Cada `feature/<f>/` contiene `data/` (API y repositorio), `ui/` (Composables y `
 
 ## Plataforma
 - `minSdk 31`, `compileSdk`/`targetSdk 37` (ver `docs/adr/0001-minsdk-31.md`). AGP 9 con Kotlin integrado y catálogo de versiones en `gradle/libs.versions.toml`.
-- `API_BASE_URL` se lee de `local.properties` hacia `BuildConfig` (por defecto `http://10.0.2.2:3000`).
+- `API_BASE_URL` se lee de `local.properties` hacia `BuildConfig` (por defecto `http://localhost:3000`, con `adb reverse tcp:3000 tcp:3000`: Android 17 / targetSdk 37 bloquea la red local, como `10.0.2.2`, sin `ACCESS_LOCAL_NETWORK`).
 - El tráfico en claro solo se permite en `debug` (`app/src/debug/AndroidManifest.xml` y `res/xml/network_security_config.xml`).
 - El permiso `RECORD_AUDIO` se declara en el manifiesto y se solicita en el momento de uso.
 

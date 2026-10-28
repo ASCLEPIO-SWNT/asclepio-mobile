@@ -2,7 +2,7 @@
 
 ## Cómo se demuestra que algo funciona
 1. `./init.sh`: entorno (JDK 17+ y wrapper), harness, `local.properties`, estado y calidad (`./gradlew lint testDebugUnitTest`).
-2. Prueba manual en el emulador de **teléfono** y de **tablet** contra la API local (`http://10.0.2.2:3000`). Se registra en `progress/impl_<id>.md`.
+2. Prueba manual en el emulador de **teléfono** y de **tablet** contra la API local (`adb reverse tcp:3000 tcp:3000` + `http://localhost:3000`, el valor por defecto de `API_BASE_URL`; Android 17 bloquea `10.0.2.2` sin `ACCESS_LOCAL_NETWORK`). Se registra en `progress/impl_<id>.md`.
 
 ## Trazabilidad R<n> → prueba
 ```kotlin

@@ -32,13 +32,14 @@
     <string name="document_type_cc">Cédula de ciudadanía</string>
     <string name="document_type_ce">Cédula de extranjería</string>
     <string name="document_type_pa">Pasaporte</string>
+    <string name="document_type_ti">Tarjeta de identidad</string>
+    <string name="document_type_rc">Registro civil</string>
     <string name="sex_m">Masculino</string>
     <string name="sex_f">Femenino</string>
     <string name="sex_x">Indeterminado / otro</string>
 
     <!-- Inicio (PA-3) y cierre de sesión (PA-8). -->
     <string name="home_identity_unverified">Tu identidad se verificará en recepción</string>
-    <string name="home_preregister_soon">Pronto podrás pre-registrarte desde aquí</string>
     <string name="logout_dialog_title">¿Cerrar sesión?</string>
     <string name="logout_cancel">Cancelar</string>
     <string name="logout_confirm">Cerrar sesión</string>
@@ -70,4 +71,40 @@
     <string name="signup_submit">Crear cuenta</string>
     <string name="signup_go_to_login">Ir a iniciar sesión</string>
     <string name="home_title">Inicio</string>
+
+    <!-- F-02-mobile: textos de la UI (requirements.md, tabla de PA-M02-1). -->
+    <string name="home_action_profile">Mis datos</string>
+    <string name="home_action_new_preregistration">Nuevo pre-registro</string>
+    <string name="home_refresh">Actualizar</string>
+    <string name="home_no_preregistrations">Aún no has enviado ningún pre-registro.</string>
+    <string name="home_status_site">Sede: %1$s</string>
+    <string name="home_status_sent">Enviado: %1$s</string>
+    <string name="home_status_expires">Si recepción no lo confirma, vence: %1$s</string>
+    <string name="profile_title">Mis datos</string>
+    <string name="profile_locked">Tus datos ya fueron verificados en recepción y no se pueden cambiar desde la app.</string>
+    <string name="profile_save">Guardar</string>
+    <string name="profile_saved">Datos guardados</string>
+    <string name="value_missing">—</string>
+    <string name="preregistration_title">Nuevo pre-registro</string>
+    <string name="preregistration_site">Sede a la que llegas</string>
+    <string name="preregistration_complaint">Motivo de consulta</string>
+    <string name="preregistration_counter">%1$d / %2$d</string>
+    <string name="preregistration_submit">Enviar pre-registro</string>
+    <string name="preregistration_view_status">Ver mi estado</string>
+    <string name="error_no_sites">No hay sedes disponibles para tu IPS. Intenta más tarde.</string>
+    <string name="error_site_required">Elige una sede</string>
+    <string name="error_preregistration_conflict">Ya tienes un pre-registro pendiente o una atención en curso.</string>
+    <string name="error_site_unavailable">La sede elegida ya no está disponible. Elige otra sede.</string>
+
+    <!-- F-02-mobile: estado del último pre-registro (requirements.md, tabla de PA-M02-2). -->
+    <string name="status_pending">Pendiente de confirmación. Acércate a recepción para confirmar tu llegada.</string>
+    <string name="status_expired">Venció sin confirmarse. Puedes enviar uno nuevo.</string>
+    <string name="status_rejected">Recepción no aceptó este pre-registro. Puedes enviar uno nuevo o acercarte a recepción.</string>
+    <string name="status_confirmed">Llegada confirmada</string>
+    <string name="status_waiting_triage">En espera de triage</string>
+    <string name="status_triaged">En espera de atención</string>
+    <string name="status_in_care">En atención</string>
+    <string name="status_closed">Atención cerrada</string>
+    <string name="status_cancelled">Atención cancelada</string>
+    <string name="status_unknown">Estado no disponible. Intenta actualizar más tarde.</string>
 </resources>

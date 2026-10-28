@@ -2,18 +2,16 @@ package co.asclepio.mobile.feature.account.ui
 
 import co.asclepio.mobile.R
 import co.asclepio.mobile.core.auth.isAdult
+import co.asclepio.mobile.core.model.FULL_NAME_MAX
+import co.asclepio.mobile.core.model.Sex
 import co.asclepio.mobile.core.ui.UiMessage
 import co.asclepio.mobile.feature.account.data.CreatePatientAccountRequest
 import co.asclepio.mobile.feature.account.data.DocumentType
-import co.asclepio.mobile.feature.account.data.Sex
 import java.time.Clock
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneOffset
 
 // Límites del contrato 0.2.1 (D17).
 const val DOCUMENT_NUMBER_MAX = 64
-const val FULL_NAME_MAX = 200
 const val PASSWORD_MIN = 10
 const val PASSWORD_MAX = 128
 
@@ -92,9 +90,3 @@ fun SignUpForm.toRequest(tenantId: String, consentVersion: String): CreatePatien
         consentAccepted = true,
         consentVersion = consentVersion,
     )
-
-/** El DatePicker de Material 3 entrega la medianoche UTC del día elegido: es una fecha civil, sin zona (D6). */
-fun datePickerMillisToLocalDate(millis: Long): LocalDate =
-    Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
-
-fun LocalDate.toDatePickerMillis(): Long = atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()

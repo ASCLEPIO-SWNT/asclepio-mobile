@@ -9,6 +9,7 @@ import co.asclepio.mobile.core.auth.SessionManager
 import co.asclepio.mobile.core.auth.SessionStore
 import co.asclepio.mobile.core.auth.TestDataStore
 import co.asclepio.mobile.core.network.createRetrofit
+import co.asclepio.mobile.core.tenants.TenantsApi
 import co.asclepio.mobile.feature.account.data.AccountRepository
 import co.asclepio.mobile.feature.account.data.PatientAuthApi
 import co.asclepio.mobile.feature.account.data.PublicApi
@@ -30,6 +31,7 @@ class AccountTestEnv(dir: File, readTimeoutMs: Long = 10_000) {
         .readTimeout(readTimeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS).build()
     private val retrofit = createRetrofit(server.url("/").toString(), client)
     val publicApi: PublicApi = retrofit.create(PublicApi::class.java)
+    val tenantsApi: TenantsApi = retrofit.create(TenantsApi::class.java)
     val meApi: MeApi = retrofit.create(MeApi::class.java)
     val authApi: PatientAuthApi = retrofit.create(PatientAuthApi::class.java)
 
@@ -37,7 +39,7 @@ class AccountTestEnv(dir: File, readTimeoutMs: Long = 10_000) {
         sessionManager = SessionManager(store, meApi, clock)
     }
 
-    val tenantRepository = TenantRepository(publicApi)
+    val tenantRepository = TenantRepository(tenantsApi)
     val accountRepository = AccountRepository(publicApi, authApi, meApi, sessionManager)
 
     val tenant = RememberedTenant("t-1", "IPS Uno", "s-1", "Sede Norte")

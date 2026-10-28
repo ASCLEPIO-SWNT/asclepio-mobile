@@ -9,10 +9,15 @@ import co.asclepio.mobile.core.auth.MeApi
 import co.asclepio.mobile.core.auth.SessionManager
 import co.asclepio.mobile.core.auth.SessionStore
 import co.asclepio.mobile.core.network.createRetrofit
+import co.asclepio.mobile.core.tenants.TenantsApi
 import co.asclepio.mobile.feature.account.data.AccountRepository
 import co.asclepio.mobile.feature.account.data.PatientAuthApi
 import co.asclepio.mobile.feature.account.data.PublicApi
 import co.asclepio.mobile.feature.account.data.TenantRepository
+import co.asclepio.mobile.feature.encounters.data.PreRegistrationRepository
+import co.asclepio.mobile.feature.encounters.data.PreRegistrationsApi
+import co.asclepio.mobile.feature.patients.data.PatientProfileApi
+import co.asclepio.mobile.feature.patients.data.PatientProfileRepository
 import co.asclepio.mobile.feature.status.data.HealthApi
 import okhttp3.OkHttpClient
 import java.time.Clock
@@ -34,10 +39,15 @@ class AppContainer(context: Context) {
 
     val healthApi: HealthApi = retrofit.create(HealthApi::class.java)
     private val publicApi: PublicApi = retrofit.create(PublicApi::class.java)
+    private val tenantsApi: TenantsApi = retrofit.create(TenantsApi::class.java)
     private val authApi: PatientAuthApi = retrofit.create(PatientAuthApi::class.java)
     private val meApi: MeApi = retrofit.create(MeApi::class.java)
+    private val profileApi: PatientProfileApi = retrofit.create(PatientProfileApi::class.java)
+    private val preRegistrationsApi: PreRegistrationsApi = retrofit.create(PreRegistrationsApi::class.java)
 
     val sessionManager = SessionManager(sessionStore, meApi, clock)
-    val tenantRepository = TenantRepository(publicApi)
+    val tenantRepository = TenantRepository(tenantsApi)
     val accountRepository = AccountRepository(publicApi, authApi, meApi, sessionManager)
+    val profileRepository = PatientProfileRepository(profileApi, sessionManager)
+    val preRegistrationRepository = PreRegistrationRepository(preRegistrationsApi, tenantsApi, sessionManager)
 }

@@ -6,11 +6,12 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
 }
 
-// API_BASE_URL desde local.properties (no versionado). Por defecto: host desde el emulador.
+// API_BASE_URL desde local.properties (no versionado). Por defecto: localhost con `adb reverse tcp:3000 tcp:3000`
+// (Android 17 / targetSdk 37 bloquea la red local, como 10.0.2.2, sin ACCESS_LOCAL_NETWORK).
 val localProps = Properties().apply {
     rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
 }
-val apiBaseUrl: String = localProps.getProperty("API_BASE_URL") ?: "http://10.0.2.2:3000"
+val apiBaseUrl: String = localProps.getProperty("API_BASE_URL") ?: "http://localhost:3000"
 
 android {
     namespace = "co.asclepio.mobile"
@@ -25,7 +26,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         // Versión del contrato consumido (feature_list.json → consumes_contract).
-        buildConfigField("String", "CONSUMED_CONTRACT", "\"0.2.1\"")
+        buildConfigField("String", "CONSUMED_CONTRACT", "\"0.4.0\"")
     }
 
     buildTypes {

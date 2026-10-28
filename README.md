@@ -16,9 +16,10 @@ asclepio/
 - `local.properties` (no se versiona):
   ```properties
   sdk.dir=/ruta/a/Android/Sdk
-  API_BASE_URL=http://10.0.2.2:3000
+  # Opcional: por defecto es http://localhost:3000 (con adb reverse)
+  API_BASE_URL=http://localhost:3000
   ```
-  **Usa siempre `adb reverse` y `API_BASE_URL=http://localhost:3000`** (emulador y teléfono):
+  **Usa siempre `adb reverse` y `API_BASE_URL=http://localhost:3000`** (el valor por defecto; emulador y teléfono):
   ```bash
   adb reverse tcp:3000 tcp:3000   # repetirlo cada vez que se reinicia el emulador o se reconecta el teléfono
   ```

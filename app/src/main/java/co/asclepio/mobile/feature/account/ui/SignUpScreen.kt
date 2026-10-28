@@ -41,13 +41,15 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import co.asclepio.mobile.R
+import co.asclepio.mobile.core.model.Sex
+import co.asclepio.mobile.core.model.datePickerMillisToLocalDate
+import co.asclepio.mobile.core.model.toDatePickerMillis
 import co.asclepio.mobile.core.ui.PaneMode
 import co.asclepio.mobile.core.ui.UiMessage
 import co.asclepio.mobile.core.ui.markdownToAnnotated
 import co.asclepio.mobile.core.ui.paneMode
 import co.asclepio.mobile.core.ui.text
 import co.asclepio.mobile.feature.account.data.DocumentType
-import co.asclepio.mobile.feature.account.data.Sex
 import java.time.format.DateTimeFormatter
 
 private val birthDateFormat: DateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")

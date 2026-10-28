@@ -1,22 +1,12 @@
 package co.asclepio.mobile.feature.account.data
 
+import co.asclepio.mobile.core.model.Sex
 import kotlinx.serialization.Serializable
 
 // DTOs escritos a mano según el snapshot 0.2.1 de ../asclepio-api/openapi/asclepio-api.v1.json.
 
 @Serializable
 enum class DocumentType { CC, CE, PA }
-
-@Serializable
-enum class Sex { M, F, X }
-
-/** PublicSiteDto. */
-@Serializable
-data class PublicSiteDto(val id: String, val name: String)
-
-/** PublicTenantDto. */
-@Serializable
-data class PublicTenantDto(val id: String, val name: String, val sites: List<PublicSiteDto>)
 
 /** ConsentDto: `text` en Markdown. */
 @Serializable

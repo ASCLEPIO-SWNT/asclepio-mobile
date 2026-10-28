@@ -1,9 +1,11 @@
 package co.asclepio.mobile.feature.account.ui
 
 import co.asclepio.mobile.R
+import co.asclepio.mobile.core.model.Sex
+import co.asclepio.mobile.core.model.datePickerMillisToLocalDate
+import co.asclepio.mobile.core.model.toDatePickerMillis
 import co.asclepio.mobile.core.ui.UiMessage
 import co.asclepio.mobile.feature.account.data.DocumentType
-import co.asclepio.mobile.feature.account.data.Sex
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test

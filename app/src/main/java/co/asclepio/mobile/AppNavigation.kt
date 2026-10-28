@@ -33,6 +33,12 @@ import co.asclepio.mobile.feature.account.ui.SignUpScreen
 import co.asclepio.mobile.feature.account.ui.SignUpViewModel
 import co.asclepio.mobile.feature.account.ui.TenantPickerScreen
 import co.asclepio.mobile.feature.account.ui.TenantPickerViewModel
+import co.asclepio.mobile.feature.encounters.ui.PreRegistrationScreen
+import co.asclepio.mobile.feature.encounters.ui.PreRegistrationStatusPane
+import co.asclepio.mobile.feature.encounters.ui.PreRegistrationStatusViewModel
+import co.asclepio.mobile.feature.encounters.ui.PreRegistrationViewModel
+import co.asclepio.mobile.feature.patients.ui.ProfileScreen
+import co.asclepio.mobile.feature.patients.ui.ProfileViewModel
 import co.asclepio.mobile.feature.status.ui.StatusScreen
 import co.asclepio.mobile.feature.status.ui.StatusViewModel
 import kotlinx.coroutines.launch
@@ -49,6 +55,12 @@ sealed interface Route : NavKey {
 
     @Serializable data object Home : Route
 
+    /** "Mis datos" (F-02). */
+    @Serializable data object Profile : Route
+
+    /** Nuevo pre-registro (F-02). */
+    @Serializable data object PreRegistration : Route
+
     /** Pantalla de estado de F-00, accesible desde el login solo en debug. */
     @Serializable data object Status : Route
 }
@@ -64,6 +76,13 @@ fun rootRoute(state: SessionState): Route? = when (state) {
 private fun NavBackStack<NavKey>.resetTo(route: Route) {
     add(route)
     while (size > 1) removeAt(0)
+}
+
+/** Quita las pantallas que hay encima de la última aparición de [route] (R12, R13 de F-02: vuelta al inicio). */
+fun MutableList<NavKey>.popTo(route: Route) {
+    val index = lastIndexOf(route)
+    if (index < 0) return
+    while (lastIndex > index) removeAt(lastIndex)
 }
 
 /** Une las features; es el único lugar que conoce varias (vive fuera de feature/ y core/). */
@@ -138,11 +157,46 @@ fun AppNavigation(container: AppContainer, widthSizeClass: WindowWidthSizeClass)
             entry<Route.Home> {
                 val vm = viewModel { HomeViewModel(container.sessionManager) }
                 val state by vm.state.collectAsStateWithLifecycle()
+                // F-02 (D3): el estado del pre-registro va ligado a la entrada Home.
+                val statusVm = viewModel { PreRegistrationStatusViewModel(container.preRegistrationRepository) }
+                val status by statusVm.state.collectAsStateWithLifecycle()
+                // R17 de F-02: al mostrarse el inicio (también al volver de otra pantalla) y al volver a primer plano.
+                LifecycleEventEffect(Lifecycle.Event.ON_START) { statusVm.refresh() }
                 HomeScreen(
                     state = state,
+                    onOpenProfile = { backStack.add(Route.Profile) },
+                    status = {
+                        PreRegistrationStatusPane(
+                            state = status,
+                            onRefresh = statusVm::refresh,
+                            onNewPreRegistration = { backStack.add(Route.PreRegistration) },
+                        )
+                    },
                     onRequestLogout = vm::requestLogout,
                     onCancelLogout = vm::cancelLogout,
                     onConfirmLogout = vm::confirmLogout,
+                )
+            }
+            entry<Route.Profile> {
+                val vm = viewModel { ProfileViewModel(container.profileRepository, container.clock) }
+                val state by vm.state.collectAsStateWithLifecycle()
+                ProfileScreen(state = state, onFormChange = vm::updateForm, onSave = vm::save, onRetry = vm::retry)
+            }
+            entry<Route.PreRegistration> {
+                val vm = viewModel { PreRegistrationViewModel(container.preRegistrationRepository, container.sessionManager) }
+                val state by vm.state.collectAsStateWithLifecycle()
+                PreRegistrationScreen(
+                    state = state,
+                    widthSizeClass = widthSizeClass,
+                    onSelectSite = vm::selectSite,
+                    onComplaintChange = vm::updateComplaint,
+                    onSubmit = vm::submit,
+                    onRetrySites = vm::retrySites,
+                    onViewStatus = { backStack.popTo(Route.Home) },
+                    onCreated = {
+                        vm.onCreatedHandled()
+                        backStack.popTo(Route.Home)
+                    },
                 )
             }
             entry<Route.Status> {

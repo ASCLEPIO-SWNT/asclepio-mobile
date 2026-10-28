@@ -7,8 +7,8 @@ import co.asclepio.mobile.core.auth.RememberedTenant
 import co.asclepio.mobile.core.auth.SessionManager
 import co.asclepio.mobile.core.network.ApiResult
 import co.asclepio.mobile.core.network.rateLimitSeconds
+import co.asclepio.mobile.core.tenants.PublicTenantDto
 import co.asclepio.mobile.core.ui.UiMessage
-import co.asclepio.mobile.feature.account.data.PublicTenantDto
 import co.asclepio.mobile.feature.account.data.TenantRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow

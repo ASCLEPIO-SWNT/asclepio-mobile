@@ -1,6 +1,7 @@
 package co.asclepio.mobile.feature.account.ui
 
 import co.asclepio.mobile.R
+import co.asclepio.mobile.core.model.FULL_NAME_MAX
 import co.asclepio.mobile.core.network.ApiError
 import co.asclepio.mobile.core.network.commonMessage
 import co.asclepio.mobile.core.network.httpStatus

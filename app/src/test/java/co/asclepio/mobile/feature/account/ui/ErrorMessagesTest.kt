@@ -136,7 +136,6 @@ class ErrorMessagesTest {
             "sex_f" to "Femenino",
             "sex_x" to "Indeterminado / otro",
             "home_identity_unverified" to "Tu identidad se verificará en recepción",
-            "home_preregister_soon" to "Pronto podrás pre-registrarte desde aquí",
             "logout_dialog_title" to "¿Cerrar sesión?",
             "logout_cancel" to "Cancelar",
             "logout_confirm" to "Cerrar sesión",

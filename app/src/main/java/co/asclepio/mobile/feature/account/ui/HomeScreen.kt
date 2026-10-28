@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
@@ -20,10 +22,15 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import co.asclepio.mobile.R
 
-/** Inicio (R30, R31): IPS y sede, aviso de identidad, aviso de F-02 y "Cerrar sesión" con confirmación. */
+/**
+ * Inicio (R30, R31 de F-01; R16 de F-02): IPS y sede, aviso de identidad, "Mis datos", el estado del último
+ * pre-registro (slot que compone AppNavigation, D3 de F-02) y "Cerrar sesión" con confirmación.
+ */
 @Composable
 fun HomeScreen(
     state: HomeUiState,
+    onOpenProfile: () -> Unit,
+    status: @Composable () -> Unit,
     onRequestLogout: () -> Unit,
     onCancelLogout: () -> Unit,
     onConfirmLogout: () -> Unit,
@@ -31,7 +38,7 @@ fun HomeScreen(
 ) {
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         Column(
-            Modifier.widthIn(max = 600.dp).fillMaxWidth().padding(16.dp),
+            Modifier.widthIn(max = 600.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(stringResource(R.string.home_title), style = MaterialTheme.typography.headlineSmall)
@@ -43,7 +50,10 @@ fun HomeScreen(
                     Text(stringResource(R.string.home_identity_unverified), Modifier.padding(16.dp))
                 }
             }
-            Text(stringResource(R.string.home_preregister_soon), style = MaterialTheme.typography.bodyLarge)
+            status()
+            OutlinedButton(onClick = onOpenProfile, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.home_action_profile))
+            }
             OutlinedButton(onClick = onRequestLogout, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.logout_confirm))
             }

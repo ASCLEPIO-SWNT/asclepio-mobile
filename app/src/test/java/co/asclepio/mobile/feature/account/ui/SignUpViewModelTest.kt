@@ -2,9 +2,9 @@ package co.asclepio.mobile.feature.account.ui
 
 import co.asclepio.mobile.MainDispatcherRule
 import co.asclepio.mobile.R
+import co.asclepio.mobile.core.model.Sex
 import co.asclepio.mobile.core.ui.UiMessage
 import co.asclepio.mobile.feature.account.data.DocumentType
-import co.asclepio.mobile.feature.account.data.Sex
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy

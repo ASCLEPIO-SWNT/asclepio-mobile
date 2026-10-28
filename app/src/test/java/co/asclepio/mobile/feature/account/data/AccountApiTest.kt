@@ -1,7 +1,11 @@
 package co.asclepio.mobile.feature.account.data
 
 import co.asclepio.mobile.core.auth.MeApi
+import co.asclepio.mobile.core.model.Sex
 import co.asclepio.mobile.core.network.createRetrofit
+import co.asclepio.mobile.core.tenants.PublicSiteDto
+import co.asclepio.mobile.core.tenants.PublicTenantDto
+import co.asclepio.mobile.core.tenants.TenantsApi
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -20,6 +24,7 @@ import org.junit.Test
 class AccountApiTest {
     private lateinit var server: MockWebServer
     private lateinit var publicApi: PublicApi
+    private lateinit var tenantsApi: TenantsApi
     private lateinit var authApi: PatientAuthApi
     private lateinit var meApi: MeApi
 
@@ -27,6 +32,7 @@ class AccountApiTest {
         server = MockWebServer().apply { start() }
         val retrofit = createRetrofit(server.url("/").toString())
         publicApi = retrofit.create(PublicApi::class.java)
+        tenantsApi = retrofit.create(TenantsApi::class.java)
         authApi = retrofit.create(PatientAuthApi::class.java)
         meApi = retrofit.create(MeApi::class.java)
     }
@@ -97,7 +103,7 @@ class AccountApiTest {
         )
         assertEquals(
             listOf(PublicTenantDto("t1", "IPS Uno", listOf(PublicSiteDto("s1", "Sede A"))), PublicTenantDto("t2", "IPS Dos", emptyList())),
-            publicApi.tenants(),
+            tenantsApi.tenants(),
         )
         assertEquals("/api/v1/public/tenants", server.takeRequest().path)
     }

@@ -60,12 +60,12 @@
         "F-01-mobile",
         "F-02-api"
       ],
-      "consumes_contract": null,
+      "consumes_contract": "0.4.0",
       "acceptance": [
         "Ver ../asclepio-api/docs/product/features/F-02.md (F-02.AC8, AC10)"
       ],
       "sdd": true,
-      "status": "pending"
+      "status": "done"
     },
     {
       "id": "F-08-mobile",
