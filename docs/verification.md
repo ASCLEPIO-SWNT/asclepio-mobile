@@ -28,3 +28,18 @@ La lista de comprobación de la demo completa está en `../asclepio-api/docs/ver
 - En teléfono/tablet comprobar bienvenida, paciente con/sin IPS, login staff sin selector de IPS ni registro público, cuatro hogares y destinos exactos, error local/429, restauración bloqueada ante red/5xx, confirmaciones de logout/cambio y Atrás sin contenido anterior. Verificar rotación/teclado y destrucción de borradores al cambiar generación.
 - Las funciones staff posteriores aparecen como pendientes; no se simulan listas clínicas ni se ejecutan endpoints de esos bloques desde F-01-staff-mobile.
 - Registrar para cada ejecución emulador/API, APK/commit, fixture contractual o servidor real y acciones efectivamente realizadas. No llamar integración real a un fixture; no afirmar TalkBack, rotación o persistencia del proceso sin haberlos ejercitado.
+
+## Instrumentación Compose en Android 37 (UI-01-mobile)
+
+Las dependencias de instrumentación fijan AndroidX Test runner 1.7.0, ext.junit 1.3.0 y Espresso core **3.7.0 estable**. Compose UI test 1.12.1 solicita Espresso 3.5.0 transitivamente; se declara la versión corregida de Espresso de forma explícita en `androidTestImplementation`, sin cambiar el runtime de producción. La [nota oficial de Espresso 3.7.0](https://developer.android.com/jetpack/androidx/releases/test#espresso-3.7.0) incluye el acceso a InputManager mediante `getSystemService`, que sustituye la reflexión sobre `InputManager.getInstance`.
+
+En la pasada inicial de UI-01 sobre Android 37 esa reflexión provocó `NoSuchMethodException` antes de las acciones Compose. Es un fallo del harness de instrumentación; esa pasada no valida las aserciones de las pantallas. Conservar sus registros y volver a ejecutar las pruebas después de reconstruir el APK de test con la versión corregida, registrando los resultados por separado.
+
+Para comprobar la dependencia efectiva y compilar el APK de test:
+
+```sh
+./gradlew :app:dependencyInsight --configuration debugAndroidTestRuntimeClasspath --dependency androidx.test.espresso:espresso-core --single-path --console=plain
+./gradlew assembleDebugAndroidTest --console=plain
+```
+
+`dependencyInsight` debe resolver `espresso-core:3.7.0`; compilar el APK no sustituye ejecutar `connectedDebugAndroidTest` o el runner instalado en los dispositivos coordinados. No aplicar excepciones de reflexión ni modificar pruebas de producto para ocultar este error del harness.
