@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="guide_staff_reception_1">Wählen Sie einen Standort, um Voranmeldungen zu filtern. Verwenden Sie Aktualisieren, um erneut abzufragen.</string>
+    <string name="guide_staff_reception_2">Überprüfen Sie die Identität, bevor Sie die Ankunft bestätigen. Sie können mit einer Begründung ablehnen oder die direkte Registrierung öffnen.</string>
+    <string name="guide_staff_registration_1">Suchen Sie den Patienten anhand seines Dokuments oder registrieren Sie einen neuen. Verwenden Sie die NN-Registrierung für unbekannte Patienten.</string>
+    <string name="guide_staff_registration_2">Prüfen Sie Standort und Vorstellungsgrund, bevor Sie die Ankunft registrieren. Die Anleitung liest die Formulardaten nicht vor.</string>
+    <string name="guide_staff_encounters_1">Wählen Sie Standort und Status, um Behandlungen zu filtern. Verwenden Sie Aktualisieren, um erneut abzufragen.</string>
+    <string name="guide_staff_encounters_2">Öffnen Sie eine Behandlung, um Details und Ereignisse zu sehen. Verwenden Sie Zurück und Weiter, um die Seite zu wechseln.</string>
+    <string name="guide_staff_encounter_detail_1">Sehen Sie sich Details und Verlauf der Behandlung an. Wenn Ihre Rolle es erlaubt, können Sie sie mit einer Begründung stornieren.</string>
+    <string name="guide_staff_encounter_detail_2">Verwenden Sie Aktualisieren, um erneut abzufragen. Die Anleitung liest keine Patienteninformationen vor.</string>
+</resources>

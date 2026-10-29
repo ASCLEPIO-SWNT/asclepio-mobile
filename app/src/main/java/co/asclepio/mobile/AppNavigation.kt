@@ -53,6 +53,7 @@ import co.asclepio.mobile.feature.encounters.ui.PreRegistrationViewModel
 import co.asclepio.mobile.feature.patients.ui.ProfileScreen
 import co.asclepio.mobile.feature.patients.ui.ProfileViewModel
 import co.asclepio.mobile.feature.staffaccount.ui.*
+import co.asclepio.mobile.feature.reception.ui.*
 import co.asclepio.mobile.feature.status.ui.StatusScreen
 import co.asclepio.mobile.feature.status.ui.StatusViewModel
 import kotlinx.coroutines.launch
@@ -66,6 +67,8 @@ sealed interface Route : NavKey {
     @Serializable data object StaffLogin : Route
 
     @Serializable data class Staff(val destination: StaffDestination) : Route
+    @Serializable data object StaffRegistration : Route
+    @Serializable data class StaffEncounterDetail(val id: String) : Route
 
     @Serializable data object TenantPicker : Route
 
@@ -106,7 +109,12 @@ fun rootRoute(state: SessionState): Route? = when (state) {
 fun canAccessRoute(state: SessionState, route: Route): Boolean = when (state) {
     is SessionState.Authenticated -> when (val principal = state.principal) {
         is VerifiedPrincipal.Patient -> route in setOf(Route.Home, Route.Profile, Route.PreRegistration, Route.MyRequests)
-        is VerifiedPrincipal.Staff -> route is Route.Staff && route.destination in principal.role.destinations
+        is VerifiedPrincipal.Staff -> when (route) {
+            is Route.Staff -> route.destination in principal.role.destinations
+            Route.StaffRegistration -> principal.role == StaffRole.RECEPTION
+            is Route.StaffEncounterDetail -> true
+            else -> false
+        }
     }
     SessionState.Welcome -> route == Route.Welcome
     SessionState.NoTenant -> route == Route.TenantPicker
@@ -119,7 +127,13 @@ fun canAccessRoute(state: SessionState, route: Route): Boolean = when (state) {
 fun routeGuideDestination(route: Route): GuideDestination = when (route) {
     Route.Welcome -> GuideDestination.Welcome
     Route.StaffLogin -> GuideDestination.StaffLogin
-    is Route.Staff -> GuideDestination.StaffPending
+    is Route.Staff -> when (route.destination) {
+        StaffDestination.RECEPTION -> GuideDestination.StaffReception
+        StaffDestination.ENCOUNTERS -> GuideDestination.StaffEncounters
+        else -> GuideDestination.StaffPending
+    }
+    Route.StaffRegistration -> GuideDestination.StaffRegistration
+    is Route.StaffEncounterDetail -> GuideDestination.StaffEncounterDetail
     Route.TenantPicker -> GuideDestination.TenantPicker
     is Route.Login -> GuideDestination.PatientLogin
     Route.SignUp -> GuideDestination.SignUp
@@ -226,11 +240,47 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                             val principal = (session as SessionState.Authenticated).principal as VerifiedPrincipal.Staff
                             val vm = viewModel { StaffHomeViewModel(container.sessionManager) }
                             val confirmation by vm.confirmation.collectAsStateWithLifecycle()
+                            val operational: (@Composable () -> Unit)? = if (route.destination == StaffDestination.RECEPTION) ({
+                                val reception = viewModel { ReceptionViewModel(container.receptionRepository, container.staffSitesRepository, container.staffDataChanges) }
+                                val receptionState by reception.state.collectAsStateWithLifecycle()
+                                LifecycleEventEffect(Lifecycle.Event.ON_START) { reception.setActive(true) }
+                                LifecycleEventEffect(Lifecycle.Event.ON_STOP) { reception.setActive(false) }
+                                ReceptionScreen(
+                                    receptionState, reception::refresh, reception::retrySites, reception::selectSite,
+                                    reception::setIdentity, reception::setRejecting, reception::setReason, reception::confirm, reception::reject,
+                                    onDirectRegistration = { backStack.add(Route.StaffRegistration) },
+                                    onOpenEncounter = { backStack.add(Route.StaffEncounterDetail(it)) }, onScroll = reception::rememberScroll,
+                                )
+                            }) else null
                             StaffWorkspaceScreen(
                                 principal, route.destination, widthSizeClass, confirmation,
                                 onSelect = { destination -> if (canAccessRoute(session, Route.Staff(destination))) backStack.add(Route.Staff(destination)) },
                                 onLogout = vm::requestLogout, onChangeAccess = vm::requestChangeAccess, onCancel = vm::cancel, onConfirm = vm::confirm,
+                                content = operational,
                             )
+                        }
+                    }
+                    entry<Route.StaffRegistration> {
+                        GuardedRoute(session, Route.StaffRegistration, { backStack.resetTo(root) }) {
+                            val vm = viewModel { DirectRegistrationViewModel(container.receptionRepository, container.encountersRepository, container.staffSitesRepository, container.clock) }
+                            val state by vm.state.collectAsStateWithLifecycle()
+                            LaunchedEffect(state.createdEncounterId) {
+                                state.createdEncounterId?.let { id -> vm.consumeCreatedEncounter(); backStack.add(Route.StaffEncounterDetail(id)) }
+                            }
+                            DirectRegistrationScreen(
+                                state, vm::updateSearch, vm::search, vm::startDocumentedPatient, vm::startNnPatient,
+                                vm::updatePatient, vm::updateDatePicker, vm::createPatient, vm::cancelPatientCreation,
+                                vm::updateArrival, vm::registerArrival, vm::retrySites,
+                                onReception = { backStack.resetTo(Route.Staff(StaffDestination.RECEPTION)) },
+                            )
+                        }
+                    }
+                    entry<Route.StaffEncounterDetail> { route ->
+                        GuardedRoute(session, route, { backStack.resetTo(root) }) {
+                            co.asclepio.mobile.core.ui.ScreenColumn {
+                                co.asclepio.mobile.core.ui.PageHeader(stringResource(R.string.staff_encounter))
+                                co.asclepio.mobile.core.ui.UiNotice(stringResource(R.string.staff_destination_pending))
+                            }
                         }
                     }
                     entry<Route.TenantPicker> {

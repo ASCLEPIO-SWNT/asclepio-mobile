@@ -1,0 +1,28 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="staff_navigation">Navegación</string>
+    <string name="staff_sites_error">No se pudieron cargar las sedes.</string>
+    <string name="staff_sites_all">Todas las sedes</string>
+    <string name="staff_arrival_confirmed">Llegada confirmada. Hora de llegada:</string>
+    <string name="staff_encounter_view">Ver atención</string>
+    <string name="staff_pr_rejected">Preregistro rechazado.</string>
+    <string name="staff_tray_loading">Cargando la bandeja…</string>
+    <string name="staff_tray_error">No se pudo cargar la bandeja.</string>
+    <string name="staff_tray_empty">No hay preregistros pendientes.</string>
+    <string name="staff_tray_pending">Preregistros pendientes</string>
+    <string name="staff_confirm_conflict">Este preregistro ya no está pendiente o el paciente ya tiene una atención activa.</string>
+    <string name="staff_pr_gone">Este preregistro ya no existe.</string>
+    <string name="staff_reject_conflict">Este preregistro ya no está pendiente.</string>
+    <string name="staff_pr_label">Preregistro</string>
+    <string name="staff_expires">Expira</string>
+    <string name="staff_verified">Identidad verificada</string>
+    <string name="staff_unverified">Identidad sin verificar</string>
+    <string name="staff_verify_identity">Verifiqué la identidad del paciente presente con su documento.</string>
+    <string name="staff_confirm_arrival">Confirmar llegada</string>
+    <string name="staff_reject">Rechazar</string>
+    <string name="staff_confirming_arrival">Confirmando la llegada…</string>
+    <string name="staff_reject_form">Rechazar preregistro</string>
+    <string name="staff_reject_reason">Motivo del rechazo</string>
+    <string name="staff_reject_confirm">Confirmar rechazo</string>
+    <string name="staff_rejecting">Rechazando el preregistro…</string>
+</resources>

@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="staff_sites_error">Impossible de charger les établissements.</string>
+    <string name="staff_sites_all">Tous les établissements</string>
+    <string name="staff_arrival_confirmed">Arrivée confirmée. Heure d’arrivée :</string>
+    <string name="staff_encounter_view">Voir la prise en charge</string>
+    <string name="staff_pr_rejected">Préinscription refusée.</string>
+    <string name="staff_tray_loading">Chargement des préinscriptions…</string>
+    <string name="staff_tray_error">Impossible de charger les préinscriptions.</string>
+    <string name="staff_tray_empty">Aucune préinscription en attente.</string>
+    <string name="staff_tray_pending">Préinscriptions en attente</string>
+    <string name="staff_confirm_conflict">Cette préinscription n’est plus en attente ou le patient a déjà une prise en charge active.</string>
+    <string name="staff_pr_gone">Cette préinscription n’existe plus.</string>
+    <string name="staff_reject_conflict">Cette préinscription n’est plus en attente.</string>
+    <string name="staff_pr_label">Préinscription</string>
+    <string name="staff_expires">Expire le</string>
+    <string name="staff_verified">Identité vérifiée</string>
+    <string name="staff_unverified">Identité non vérifiée</string>
+    <string name="staff_verify_identity">J’ai vérifié l’identité du patient présent avec son document.</string>
+    <string name="staff_confirm_arrival">Confirmer l’arrivée</string>
+    <string name="staff_reject">Refuser</string>
+    <string name="staff_confirming_arrival">Confirmation de l’arrivée…</string>
+    <string name="staff_reject_form">Refuser la préinscription</string>
+    <string name="staff_reject_reason">Motif du refus</string>
+    <string name="staff_reject_confirm">Confirmer le refus</string>
+    <string name="staff_rejecting">Refus de la préinscription…</string>
+</resources>

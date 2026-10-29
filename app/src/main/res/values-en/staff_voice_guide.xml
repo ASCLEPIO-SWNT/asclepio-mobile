@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="guide_staff_reception_1">Select a location to filter pre-registrations. Use Refresh to check again.</string>
+    <string name="guide_staff_reception_2">Verify identity before using Confirm arrival. You can reject with a reason or open direct registration.</string>
+    <string name="guide_staff_registration_1">Search for the patient by document or register a new one. Use NN registration for an unidentified patient.</string>
+    <string name="guide_staff_registration_2">Check the location and chief complaint before registering arrival. The guide will not read the form data.</string>
+    <string name="guide_staff_encounters_1">Select a location and status to filter encounters. Use Refresh to check again.</string>
+    <string name="guide_staff_encounters_2">Open an encounter to view its details and events. Use Previous and Next to change pages.</string>
+    <string name="guide_staff_encounter_detail_1">Review the encounter details and timeline. If your role allows it, you can cancel it with a reason.</string>
+    <string name="guide_staff_encounter_detail_2">Use Refresh to check again. The guide will not read patient information.</string>
+</resources>

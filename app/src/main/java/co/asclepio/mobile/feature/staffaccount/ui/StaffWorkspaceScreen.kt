@@ -5,7 +5,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -14,6 +14,7 @@ import co.asclepio.mobile.R
 import co.asclepio.mobile.core.ui.*
 import co.asclepio.mobile.core.ui.AsclepioButton
 import co.asclepio.mobile.core.auth.*
+import co.asclepio.mobile.core.encounters.ui.StaffChoiceField
 
 private fun StaffDestination.label(): Int = when (this) {
     StaffDestination.RECEPTION -> R.string.staff_destination_reception
@@ -42,8 +43,37 @@ fun StaffWorkspaceScreen(
     onChangeAccess: () -> Unit,
     onCancel: () -> Unit,
     onConfirm: () -> Unit,
+    content: (@Composable () -> Unit)? = null,
 ) {
-    ScreenColumn(maxWidth = 1080.dp) {
+    if (content != null) {
+        if (adaptivePaneMode(widthSizeClass) == PaneMode.Single) Column(Modifier.fillMaxSize()) {
+            var accountMenu by remember { mutableStateOf(false) }
+            Box(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) {
+                OutlinedButton(onClick = { accountMenu = true }, modifier = Modifier.fillMaxWidth()) {
+                    Text(principal.fullName + " · " + stringResource(principal.role.label()))
+                }
+                DropdownMenu(expanded = accountMenu, onDismissRequest = { accountMenu = false }) {
+                    DropdownMenuItem(text = { Text(stringResource(R.string.logout_confirm)) }, onClick = { accountMenu = false; onLogout() })
+                    DropdownMenuItem(text = { Text(stringResource(R.string.change_access)) }, onClick = { accountMenu = false; onChangeAccess() })
+                }
+            }
+            StaffChoiceField(
+                label = stringResource(R.string.staff_navigation), selected = destination,
+                options = principal.role.destinations.map { it to stringResource(it.label()) },
+                onSelect = onSelect, modifier = Modifier.padding(horizontal = 16.dp),
+            )
+            Box(Modifier.weight(1f).fillMaxWidth()) { content() }
+        } else Row(Modifier.fillMaxSize()) {
+            Column(Modifier.width(260.dp).verticalScroll(rememberScrollState()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text(principal.fullName, style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(principal.role.label()))
+                StaffNavigation(principal.role, destination, onSelect)
+                OutlinedButton(onClick = onLogout, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.logout_confirm)) }
+                TextButton(onClick = onChangeAccess) { Text(stringResource(R.string.change_access)) }
+            }
+            Box(Modifier.weight(1f).fillMaxHeight()) { content() }
+        }
+    } else ScreenColumn(maxWidth = 1080.dp) {
         Text(principal.fullName, style = MaterialTheme.typography.titleMedium)
         Text(stringResource(principal.role.label()), color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (adaptivePaneMode(widthSizeClass) == PaneMode.Single) {

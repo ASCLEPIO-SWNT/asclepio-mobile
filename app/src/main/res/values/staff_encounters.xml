@@ -1,0 +1,45 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="staff_status">Estado</string>
+    <string name="staff_statuses_all">Todos los estados</string>
+    <string name="staff_encounters_loading">Cargando las atenciones…</string>
+    <string name="staff_encounters_error">No se pudieron cargar las atenciones.</string>
+    <string name="staff_encounters_empty">No hay atenciones con estos filtros.</string>
+    <string name="staff_arrival">Llegada</string>
+    <string name="staff_document">Documento</string>
+    <string name="staff_origin">Origen</string>
+    <string name="staff_detail">Detalle</string>
+    <string name="staff_previous">Anterior</string>
+    <string name="staff_next">Siguiente</string>
+    <string name="staff_encounter_not_found">No se encontró la atención.</string>
+    <string name="staff_encounters_back">Volver a las atenciones</string>
+    <string name="staff_encounter_loading">Cargando la atención…</string>
+    <string name="staff_encounter_error">No se pudo cargar la atención.</string>
+    <string name="staff_arrival_registered">Llegada registrada.</string>
+    <string name="staff_encounter_cancelled">Atención cancelada.</string>
+    <string name="staff_arrival_legal">Llegada (hora legal)</string>
+    <string name="staff_pr_reference">Preregistro (referencia)</string>
+    <string name="staff_registered_by">Registrada por</string>
+    <string name="staff_cancellation_reason">Motivo de la cancelación</string>
+    <string name="staff_encounter">Atención</string>
+    <string name="staff_encounters_all">Todas las atenciones</string>
+    <string name="staff_timeline">Línea de tiempo</string>
+    <string name="staff_cancel_conflict">La atención ya está cerrada o cancelada.</string>
+    <string name="staff_encounter_cancel">Cancelar atención</string>
+    <string name="staff_cancel_confirm">Confirmar cancelación</string>
+    <string name="staff_encounter_cancelling">Cancelando la atención…</string>
+    <string name="staff_status_registered">Registrada</string>
+    <string name="staff_status_triaged">Clasificada</string>
+    <string name="staff_status_closed">Cerrada</string>
+    <string name="staff_status_cancelled">Cancelada</string>
+    <string name="staff_origin_pr">Preregistro (app)</string>
+    <string name="staff_complaint_typed">Escrito</string>
+    <string name="staff_complaint_voice">Dictado en el dispositivo</string>
+    <string name="staff_event_created">Atención creada</string>
+    <string name="staff_event_status">Cambio de estado</string>
+    <string name="staff_event_vitals">Signos vitales registrados</string>
+    <string name="staff_event_findings">Hallazgos registrados</string>
+    <string name="staff_event_unknown">Evento</string>
+    <string name="staff_patient_nn">Paciente NN</string>
+    <string name="staff_value_unavailable">No disponible</string>
+</resources>

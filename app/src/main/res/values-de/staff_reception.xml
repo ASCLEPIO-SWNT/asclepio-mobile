@@ -1,0 +1,27 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="staff_sites_error">Die Standorte konnten nicht geladen werden.</string>
+    <string name="staff_sites_all">Alle Standorte</string>
+    <string name="staff_arrival_confirmed">Ankunft bestätigt. Ankunftszeit:</string>
+    <string name="staff_encounter_view">Behandlung ansehen</string>
+    <string name="staff_pr_rejected">Voranmeldung abgelehnt.</string>
+    <string name="staff_tray_loading">Voranmeldungen werden geladen…</string>
+    <string name="staff_tray_error">Die Voranmeldungen konnten nicht geladen werden.</string>
+    <string name="staff_tray_empty">Keine ausstehenden Voranmeldungen.</string>
+    <string name="staff_tray_pending">Ausstehende Voranmeldungen</string>
+    <string name="staff_confirm_conflict">Diese Voranmeldung ist nicht mehr offen oder der Patient hat bereits eine aktive Behandlung.</string>
+    <string name="staff_pr_gone">Diese Voranmeldung existiert nicht mehr.</string>
+    <string name="staff_reject_conflict">Diese Voranmeldung ist nicht mehr offen.</string>
+    <string name="staff_pr_label">Voranmeldung</string>
+    <string name="staff_expires">Läuft ab</string>
+    <string name="staff_verified">Identität überprüft</string>
+    <string name="staff_unverified">Identität nicht überprüft</string>
+    <string name="staff_verify_identity">Ich habe die Identität des anwesenden Patienten anhand seines Dokuments überprüft.</string>
+    <string name="staff_confirm_arrival">Ankunft bestätigen</string>
+    <string name="staff_reject">Ablehnen</string>
+    <string name="staff_confirming_arrival">Ankunft wird bestätigt…</string>
+    <string name="staff_reject_form">Voranmeldung ablehnen</string>
+    <string name="staff_reject_reason">Ablehnungsgrund</string>
+    <string name="staff_reject_confirm">Ablehnung bestätigen</string>
+    <string name="staff_rejecting">Voranmeldung wird abgelehnt…</string>
+</resources>

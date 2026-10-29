@@ -1,0 +1,11 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="guide_staff_reception_1">Selecciona una sede para filtrar los preregistros. Usa Actualizar para consultar de nuevo.</string>
+    <string name="guide_staff_reception_2">Verifica la identidad antes de Confirmar llegada. Puedes rechazar con un motivo o abrir el registro directo.</string>
+    <string name="guide_staff_registration_1">Busca al paciente por documento o registra uno nuevo. Usa el registro NN si no está identificado.</string>
+    <string name="guide_staff_registration_2">Revisa la sede y el motivo antes de Registrar llegada. La guía no leerá los datos del formulario.</string>
+    <string name="guide_staff_encounters_1">Selecciona sede y estado para filtrar las atenciones. Usa Actualizar para consultar de nuevo.</string>
+    <string name="guide_staff_encounters_2">Abre una atención para ver su detalle y sus eventos. Usa Anterior y Siguiente para cambiar de página.</string>
+    <string name="guide_staff_encounter_detail_1">Consulta el detalle y la línea de tiempo de la atención. Si tu rol lo permite, puedes cancelarla indicando un motivo.</string>
+    <string name="guide_staff_encounter_detail_2">Usa Actualizar para consultar de nuevo. La guía no leerá la información del paciente.</string>
+</resources>

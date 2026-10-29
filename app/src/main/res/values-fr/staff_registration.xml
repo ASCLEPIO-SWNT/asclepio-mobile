@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="staff_registration_direct">Enregistrement direct</string>
+    <string name="staff_no_patient">Aucun patient trouvé avec ce document.</string>
+    <string name="staff_patient_create">Créer un patient</string>
+    <string name="staff_patient_nn_register">Enregistrer un patient non identifié (NN)</string>
+    <string name="staff_patient_search">Rechercher un patient</string>
+    <string name="staff_choose">Choisir…</string>
+    <string name="staff_search">Rechercher</string>
+    <string name="staff_searching">Recherche du patient…</string>
+    <string name="staff_patient_conflict">Un patient avec ce document existe déjà.</string>
+    <string name="staff_birth_future">La date de naissance ne peut pas être dans le futur.</string>
+    <string name="staff_nn_optional">Facultatif pour un patient non identifié (NN).</string>
+    <string name="staff_age_information">Information sur l’âge</string>
+    <string name="staff_estimated_age">Âge estimé (ans)</string>
+    <string name="staff_patient_save">Enregistrer le patient</string>
+    <string name="staff_patient_saving">Enregistrement du patient…</string>
+    <string name="staff_arrival_conflict">Le patient a déjà une préinscription en attente ou une prise en charge active. Consultez les préinscriptions.</string>
+    <string name="staff_arrival_invalid">L’établissement ou le patient n’est plus valide.</string>
+    <string name="staff_patient_selected">Patient sélectionné</string>
+    <string name="staff_arrival_register">Enregistrer l’arrivée</string>
+    <string name="staff_site_choose">Choisir un établissement…</string>
+    <string name="staff_arrival_registering">Enregistrement de l’arrivée…</string>
+    <string name="staff_tray_go">Voir les préinscriptions</string>
+    <string name="staff_reason_required">Saisissez le motif.</string>
+    <string name="staff_reason_max">Le motif ne doit pas dépasser 500 caractères.</string>
+    <string name="staff_birth_required">Saisissez la date de naissance.</string>
+    <string name="staff_age_invalid">L’âge estimé doit être un nombre entier entre 0 et 120.</string>
+    <string name="staff_name_max">Le nom ne doit pas dépasser 200 caractères.</string>
+    <string name="staff_sex_choose">Choisissez le sexe.</string>
+    <string name="staff_document_choose">Choisissez le type de document.</string>
+    <string name="staff_document_required">Saisissez le numéro du document.</string>
+    <string name="staff_document_max">Le numéro du document ne doit pas dépasser 64 caractères.</string>
+    <string name="staff_name_required">Saisissez le nom.</string>
+    <string name="staff_age_choose">Indiquez la date de naissance ou l’âge estimé.</string>
+    <string name="staff_site_required">Choisissez un établissement.</string>
+    <string name="staff_complaint_required">Saisissez le motif de consultation.</string>
+    <string name="staff_complaint_max">Le motif de consultation ne doit pas dépasser 2000 caractères.</string>
+    <string name="staff_forbidden_action">Vous n’avez pas l’autorisation d’effectuer cette action.</string>
+    <string name="staff_action_error">Impossible d’effectuer cette action. Réessayez.</string>
+</resources>

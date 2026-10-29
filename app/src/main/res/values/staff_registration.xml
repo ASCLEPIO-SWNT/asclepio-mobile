@@ -1,0 +1,41 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="staff_registration_direct">Registro directo</string>
+    <string name="staff_no_patient">No hay ningún paciente con ese documento.</string>
+    <string name="staff_patient_create">Crear paciente</string>
+    <string name="staff_patient_nn_register">Registrar paciente NN</string>
+    <string name="staff_patient_search">Buscar paciente</string>
+    <string name="staff_choose">Elige…</string>
+    <string name="staff_search">Buscar</string>
+    <string name="staff_searching">Buscando el paciente…</string>
+    <string name="staff_patient_conflict">Ya existe un paciente con ese documento.</string>
+    <string name="staff_birth_future">La fecha de nacimiento no puede ser posterior a hoy.</string>
+    <string name="staff_nn_optional">Opcional en un paciente NN.</string>
+    <string name="staff_age_information">Dato de edad</string>
+    <string name="staff_estimated_age">Edad estimada (años)</string>
+    <string name="staff_patient_save">Guardar paciente</string>
+    <string name="staff_patient_saving">Guardando el paciente…</string>
+    <string name="staff_arrival_conflict">El paciente ya tiene un preregistro pendiente o una atención activa. Revisa la bandeja.</string>
+    <string name="staff_arrival_invalid">La sede o el paciente ya no son válidos.</string>
+    <string name="staff_patient_selected">Paciente seleccionado</string>
+    <string name="staff_arrival_register">Registrar llegada</string>
+    <string name="staff_site_choose">Elige la sede…</string>
+    <string name="staff_arrival_registering">Registrando la llegada…</string>
+    <string name="staff_tray_go">Ir a la bandeja</string>
+    <string name="staff_reason_required">Escribe el motivo.</string>
+    <string name="staff_reason_max">El motivo admite como máximo 500 caracteres.</string>
+    <string name="staff_birth_required">Escribe la fecha de nacimiento.</string>
+    <string name="staff_age_invalid">La edad estimada debe ser un número entero entre 0 y 120.</string>
+    <string name="staff_name_max">El nombre admite como máximo 200 caracteres.</string>
+    <string name="staff_sex_choose">Elige el sexo.</string>
+    <string name="staff_document_choose">Elige el tipo de documento.</string>
+    <string name="staff_document_required">Escribe el número de documento.</string>
+    <string name="staff_document_max">El número de documento admite como máximo 64 caracteres.</string>
+    <string name="staff_name_required">Escribe el nombre.</string>
+    <string name="staff_age_choose">Indica la fecha de nacimiento o la edad estimada.</string>
+    <string name="staff_site_required">Elige la sede.</string>
+    <string name="staff_complaint_required">Escribe el motivo de consulta.</string>
+    <string name="staff_complaint_max">El motivo de consulta admite como máximo 2000 caracteres.</string>
+    <string name="staff_forbidden_action">No tienes permiso para realizar esta acción.</string>
+    <string name="staff_action_error">No se pudo completar la acción. Inténtalo de nuevo.</string>
+</resources>
