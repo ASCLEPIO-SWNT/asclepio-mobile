@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import co.asclepio.mobile.core.ui.*
+import co.asclepio.mobile.core.ui.guide.*
 import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
@@ -42,6 +43,10 @@ class MainActivity : AppCompatActivity() {
                 enableEdgeToEdge(statusBarStyle = style, navigationBarStyle = style)
             }
             val scope = rememberCoroutineScope()
+            val guide = remember { createAndroidSpeechGuide(applicationContext) }
+            val guideState by guide.state.collectAsStateWithLifecycle()
+            DisposableEffect(guide) { onDispose { guide.release() } }
+            var showGuide by remember { mutableStateOf(false) }
             // Only a public presentation boolean is saveable; fields remain in feature ViewModels.
             var showPreferences by rememberSaveable { mutableStateOf(false) }
             AsclepioTheme(preferences) {
@@ -49,11 +54,14 @@ class MainActivity : AppCompatActivity() {
                     Column(Modifier.safeDrawingPadding().imePadding()) {
                         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             Brand(Modifier.weight(1f).testTag("app-brand"))
+                            IconButton(onClick = { showGuide = true }, modifier = Modifier.testTag("open-guide")) {
+                                Icon(painterResource(R.drawable.ic_voice), contentDescription = stringResource(R.string.guide_title))
+                            }
                             IconButton(onClick = { showPreferences = true }, modifier = Modifier.testTag("open-preferences")) {
                                 Icon(painterResource(R.drawable.ic_preferences), contentDescription = stringResource(R.string.preferences_title))
                             }
                         }
-                        Box(Modifier.weight(1f)) { AppNavigation(container, calculateWindowSizeClass(this@MainActivity).widthSizeClass) }
+                        Box(Modifier.weight(1f)) { AppNavigation(container, calculateWindowSizeClass(this@MainActivity).widthSizeClass, guide, showPreferences) }
                     }
                 }
                 if (showPreferences) PreferencesPanel(
@@ -62,7 +70,9 @@ class MainActivity : AppCompatActivity() {
                     onChange = { transform -> scope.launch { container.uiPreferencesRepository.update(transform) } },
                     onLocaleChange = { AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(it)) },
                     onClose = { showPreferences = false },
+                    onGuide = { showGuide = true },
                 )
+                if (showGuide) SpeechGuidePanel(guide, guideState, onClose = { showGuide = false })
             }
         }
     }

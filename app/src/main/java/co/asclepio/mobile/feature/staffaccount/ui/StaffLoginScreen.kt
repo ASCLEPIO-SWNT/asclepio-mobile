@@ -47,44 +47,44 @@ fun StaffLoginScreen(
             StaffLoginField.Password in state.fieldErrors -> passwordFocus.requestFocus()
         }
     }
-    ScreenColumn() {
-            PageHeader(stringResource(R.string.staff_login_title))
-            Text(stringResource(R.string.staff_login_intro))
-            AsclepioTextField(
-                value = state.form.email,
-                onValueChange = { onFormChange(state.form.copy(email = it)) },
-                label = { Text(stringResource(R.string.staff_email)) },
-                modifier = Modifier.fillMaxWidth().focusRequester(emailFocus),
-                enabled = !state.submitting,
-                singleLine = true,
-                isError = StaffLoginField.Email in state.fieldErrors,
-                supportingText = state.fieldErrors[StaffLoginField.Email]?.let { message -> { Text(message.text()) } },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
-                keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() }),
-            )
-            AsclepioTextField(
-                value = state.form.password,
-                onValueChange = { onFormChange(state.form.copy(password = it)) },
-                label = { Text(stringResource(R.string.field_password)) },
-                modifier = Modifier.fillMaxWidth().focusRequester(passwordFocus),
-                enabled = !state.submitting,
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                isError = StaffLoginField.Password in state.fieldErrors,
-                supportingText = state.fieldErrors[StaffLoginField.Password]?.let { message -> { Text(message.text()) } },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { focus.clearFocus(); if (state.canSubmit) onSubmit() }),
-            )
-            state.message?.let {
-                Text(it.text(), color = MaterialTheme.colorScheme.error, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+    ScreenColumn(maxWidth = if (widthSizeClass == WindowWidthSizeClass.Compact) 600.dp else 720.dp) {
+        PageHeader(stringResource(R.string.staff_login_title))
+        Text(stringResource(R.string.staff_login_intro))
+        AsclepioTextField(
+            value = state.form.email,
+            onValueChange = { onFormChange(state.form.copy(email = it)) },
+            label = { Text(stringResource(R.string.staff_email)) },
+            modifier = Modifier.fillMaxWidth().focusRequester(emailFocus),
+            enabled = !state.submitting,
+            singleLine = true,
+            isError = StaffLoginField.Email in state.fieldErrors,
+            supportingText = state.fieldErrors[StaffLoginField.Email]?.let { message -> { Text(message.text()) } },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
+            keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() }),
+        )
+        AsclepioTextField(
+            value = state.form.password,
+            onValueChange = { onFormChange(state.form.copy(password = it)) },
+            label = { Text(stringResource(R.string.field_password)) },
+            modifier = Modifier.fillMaxWidth().focusRequester(passwordFocus),
+            enabled = !state.submitting,
+            singleLine = true,
+            visualTransformation = PasswordVisualTransformation(),
+            isError = StaffLoginField.Password in state.fieldErrors,
+            supportingText = state.fieldErrors[StaffLoginField.Password]?.let { message -> { Text(message.text()) } },
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { focus.clearFocus(); if (state.canSubmit) onSubmit() }),
+        )
+        state.message?.let {
+            UiNotice(it.text(), NoticeTone.Error)
+        }
+        AsclepioButton(onClick = onSubmit, enabled = state.canSubmit, modifier = Modifier.fillMaxWidth()) {
+            if (state.submitting) {
+                CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                Spacer(Modifier.width(8.dp))
             }
-            AsclepioButton(onClick = onSubmit, enabled = state.canSubmit, modifier = Modifier.fillMaxWidth()) {
-                if (state.submitting) {
-                    CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-                    Spacer(Modifier.width(8.dp))
-                }
-                Text(stringResource(R.string.login_submit))
-            }
-            TextButton(onClick = onChangeAccess) { Text(stringResource(R.string.change_access)) }
-            }
+            Text(stringResource(R.string.login_submit))
+        }
+        TextButton(onClick = onChangeAccess) { Text(stringResource(R.string.change_access)) }
+        }
 }

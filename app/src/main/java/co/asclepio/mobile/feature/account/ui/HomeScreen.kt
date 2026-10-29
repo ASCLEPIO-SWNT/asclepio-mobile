@@ -35,6 +35,7 @@ import co.asclepio.mobile.core.ui.AsclepioButton
 fun HomeScreen(
     state: HomeUiState,
     onOpenProfile: () -> Unit,
+    onOpenMyRequests: () -> Unit,
     status: @Composable () -> Unit,
     onRequestLogout: () -> Unit,
     onRequestChangeAccess: () -> Unit,
@@ -43,30 +44,33 @@ fun HomeScreen(
     modifier: Modifier = Modifier,
 ) {
     ScreenColumn(modifier) {
-            PageHeader(stringResource(R.string.home_title))
-            state.tenant?.let {
-                Text(stringResource(R.string.tenant_and_site, it.tenantName, it.siteName), style = MaterialTheme.typography.titleMedium)
+        PageHeader(stringResource(R.string.home_title))
+        state.tenant?.let {
+            Text(stringResource(R.string.tenant_and_site, it.tenantName, it.siteName), style = MaterialTheme.typography.titleMedium)
+        }
+        if (state.showIdentityNotice) {
+            Card(Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.home_identity_unverified), Modifier.padding(16.dp))
             }
-            if (state.showIdentityNotice) {
-                Card(Modifier.fillMaxWidth()) {
-                    Text(stringResource(R.string.home_identity_unverified), Modifier.padding(16.dp))
-                }
-            }
-            status()
-            OutlinedButton(onClick = onOpenProfile, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.home_action_profile))
-            }
-            TextButton(onClick = onRequestChangeAccess) { Text(stringResource(R.string.change_access)) }
-            OutlinedButton(onClick = onRequestLogout, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.logout_confirm))
-            }
-            }
+        }
+        status()
+        OutlinedButton(onClick = onOpenMyRequests, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.my_requests_title))
+        }
+        OutlinedButton(onClick = onOpenProfile, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.home_action_profile))
+        }
+        TextButton(onClick = onRequestChangeAccess) { Text(stringResource(R.string.change_access)) }
+        OutlinedButton(onClick = onRequestLogout, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.logout_confirm))
+        }
+        }
     if (state.showLogoutDialog) {
         AlertDialog(
-            onDismissRequest = onCancelLogout,
-            title = { Text(stringResource(if (state.changingAccess) R.string.change_access_dialog_title else R.string.logout_dialog_title)) },
-            confirmButton = { TextButton(onClick = onConfirmLogout) { Text(stringResource(if (state.changingAccess) R.string.change_access else R.string.logout_confirm)) } },
-            dismissButton = { TextButton(onClick = onCancelLogout) { Text(stringResource(R.string.logout_cancel)) } },
+        onDismissRequest = onCancelLogout,
+        title = { Text(stringResource(if (state.changingAccess) R.string.change_access_dialog_title else R.string.logout_dialog_title)) },
+        confirmButton = { TextButton(onClick = onConfirmLogout) { Text(stringResource(if (state.changingAccess) R.string.change_access else R.string.logout_confirm)) } },
+        dismissButton = { TextButton(onClick = onCancelLogout) { Text(stringResource(R.string.logout_cancel)) } },
         )
     }
 }

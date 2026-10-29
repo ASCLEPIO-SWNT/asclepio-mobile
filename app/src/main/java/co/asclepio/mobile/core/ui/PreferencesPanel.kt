@@ -3,6 +3,7 @@ package co.asclepio.mobile.core.ui
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -24,12 +25,14 @@ fun PreferencesPanel(
     onChange: ((UiPreferences) -> UiPreferences) -> Unit,
     onLocaleChange: (String) -> Unit,
     onClose: () -> Unit,
+    onGuide: () -> Unit,
 ) {
     Dialog(onDismissRequest = onClose, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(Modifier.padding(16.dp).widthIn(max = 640.dp).fillMaxWidth(), shape = MaterialTheme.shapes.large) {
             Column(Modifier.verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 PageHeader(stringResource(R.string.preferences_title), stringResource(R.string.preferences_description))
                 TextButton(onClick = onClose, modifier = Modifier.testTag("preferences-close")) { Text(stringResource(R.string.close)) }
+                OutlinedButton(onClick = onGuide) { Text(stringResource(R.string.guide_title)) }
                 PreferenceGroup(stringResource(R.string.preferences_theme)) {
                     listOf(UiTheme.LIGHT to R.string.theme_light, UiTheme.DARK to R.string.theme_dark, UiTheme.SYSTEM to R.string.theme_system).forEach { (value, label) ->
                         PreferenceOption(stringResource(label), value == preferences.theme, "preference-theme-$value") { onChange { it.copy(theme = value) } }
@@ -64,7 +67,7 @@ fun PreferencesPanel(
 
 @Composable
 private fun PreferenceGroup(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(Modifier.selectableGroup(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(title, style = MaterialTheme.typography.titleMedium)
         content()
     }

@@ -15,10 +15,10 @@ private val TEXT_SCALE = floatPreferencesKey("text_scale")
 private val DYSLEXIA_FONT = booleanPreferencesKey("dyslexia_font")
 
 fun decodeUiPreferences(data: Preferences): UiPreferences = UiPreferences(
-    theme = UiTheme.entries.find { it.name == data[THEME] } ?: UiTheme.LIGHT,
-    colorMode = UiColorMode.entries.find { it.name == data[COLOR_MODE] } ?: UiColorMode.NORMAL,
-    textScale = data[TEXT_SCALE] ?: 1f,
-    dyslexiaFont = data[DYSLEXIA_FONT] ?: false,
+    theme = UiTheme.entries.find { it.name == (data.asMap()[THEME] as? String) } ?: UiTheme.LIGHT,
+    colorMode = UiColorMode.entries.find { it.name == (data.asMap()[COLOR_MODE] as? String) } ?: UiColorMode.NORMAL,
+    textScale = (data.asMap()[TEXT_SCALE] as? Float) ?: 1f,
+    dyslexiaFont = (data.asMap()[DYSLEXIA_FONT] as? Boolean) ?: false,
 ).validated()
 
 /** Singleton visual DataStore, independent from authentication. I/O failure keeps the chosen RAM state. */

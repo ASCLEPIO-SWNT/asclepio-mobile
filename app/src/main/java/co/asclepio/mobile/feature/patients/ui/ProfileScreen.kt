@@ -57,16 +57,16 @@ fun ProfileScreen(
     modifier: Modifier = Modifier,
 ) {
     ScreenColumn(modifier) {
-            PageHeader(stringResource(R.string.profile_title))
-            when (state) {
-                ProfileUiState.Loading -> CircularProgressIndicator()
-                is ProfileUiState.Error -> {
-                    UiNotice(state.message.text(), NoticeTone.Error)
-                    AsclepioButton(onClick = onRetry, enabled = state.retryEnabled) { Text(stringResource(R.string.retry)) }
-                }
-                is ProfileUiState.Success -> ProfileContent(state, onFormChange, onSave)
+        PageHeader(stringResource(R.string.profile_title))
+        when (state) {
+            ProfileUiState.Loading -> CircularProgressIndicator()
+            is ProfileUiState.Error -> {
+                UiNotice(state.message.text(), NoticeTone.Error)
+                AsclepioButton(onClick = onRetry, enabled = state.retryEnabled) { Text(stringResource(R.string.retry)) }
             }
-            }
+            is ProfileUiState.Success -> ProfileContent(state, onFormChange, onSave)
+        }
+        }
 }
 
 @Composable
@@ -99,8 +99,7 @@ private fun ProfileContent(state: ProfileUiState.Success, onFormChange: (Profile
     BirthDateField(form, state.fieldErrors[ProfileField.BirthDate], enabled, onFormChange)
     SexSelector(form.sex, state.fieldErrors[ProfileField.Sex], enabled) { onFormChange(form.copy(sex = it)) }
     state.message?.let {
-        val color = if (it.resId == R.string.profile_saved) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
-        Text(it.text(), color = color)
+        UiNotice(it.text(), if (it.resId == R.string.profile_saved) NoticeTone.Success else NoticeTone.Error)
     }
     AsclepioButton(onClick = onSave, enabled = state.canSave, modifier = Modifier.fillMaxWidth()) {
         if (state.saving) CircularProgressIndicator(Modifier.padding(end = 8.dp))

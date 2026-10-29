@@ -25,7 +25,8 @@ import co.asclepio.mobile.R
 fun Brand(modifier: Modifier = Modifier) {
     Row(modifier.semantics(mergeDescendants = true) {}, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Image(painterResource(R.drawable.asclepio_mark), contentDescription = null, modifier = Modifier.size(width = 27.dp, height = 40.dp), contentScale = ContentScale.Fit)
-        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineSmall)
+        val effectiveScale = androidx.compose.ui.platform.LocalDensity.current.fontScale * LocalUiPreferences.current.textScale
+        Text(stringResource(R.string.app_name), style = if (effectiveScale > 1.4f) MaterialTheme.typography.titleMedium else MaterialTheme.typography.headlineSmall)
     }
 }
 

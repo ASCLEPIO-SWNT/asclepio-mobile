@@ -56,6 +56,7 @@ class UiPreferencesRepositoryTest {
     @Test fun `R8 all color modes round trip as typed values and invalid stored values use defaults`() {
         UiColorMode.entries.forEach { mode -> assertEquals(mode, decodeUiPreferences(preferencesOf(stringPreferencesKey("color_mode") to mode.name)).colorMode) }
         assertEquals(UiPreferences(), decodeUiPreferences(preferencesOf(stringPreferencesKey("theme") to "broken", stringPreferencesKey("color_mode") to "bad", floatPreferencesKey("text_scale") to Float.NaN)))
+        assertEquals(UiPreferences(), decodeUiPreferences(preferencesOf(intPreferencesKey("theme") to 42, stringPreferencesKey("text_scale") to "bad")))
     }
 
     @Test fun `R9 only approved text scales are accepted and accessible font is independent`() {

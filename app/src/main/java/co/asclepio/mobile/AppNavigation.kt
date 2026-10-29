@@ -13,6 +13,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.saveable.LocalSaveableStateRegistry
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalConfiguration
+import co.asclepio.mobile.core.ui.guide.*
+import co.asclepio.mobile.feature.encounters.ui.MyRequestsScreen
+import co.asclepio.mobile.feature.encounters.ui.MyRequestsViewModel
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,6 +78,8 @@ sealed interface Route : NavKey {
     /** "Mis datos" (F-02). */
     @Serializable data object Profile : Route
 
+    @Serializable data object MyRequests : Route
+
     /** Nuevo pre-registro (F-02). */
     @Serializable data object PreRegistration : Route
 
@@ -97,7 +104,7 @@ fun rootRoute(state: SessionState): Route? = when (state) {
 /** Se evalúa antes de crear el Composable/VM de cualquier destino, también con una pila restaurada. */
 fun canAccessRoute(state: SessionState, route: Route): Boolean = when (state) {
     is SessionState.Authenticated -> when (val principal = state.principal) {
-        is VerifiedPrincipal.Patient -> route in setOf(Route.Home, Route.Profile, Route.PreRegistration)
+        is VerifiedPrincipal.Patient -> route in setOf(Route.Home, Route.Profile, Route.PreRegistration, Route.MyRequests)
         is VerifiedPrincipal.Staff -> route is Route.Staff && route.destination in principal.role.destinations
     }
     SessionState.Welcome -> route == Route.Welcome
@@ -105,6 +112,21 @@ fun canAccessRoute(state: SessionState, route: Route): Boolean = when (state) {
     is SessionState.LoggedOut -> route in setOf(Route.Login, Route.TenantPicker, Route.SignUp) || (BuildConfig.DEBUG && route == Route.Status)
     SessionState.StaffEntry -> route == Route.StaffLogin
     else -> false
+}
+
+/** Closed resource catalog: no identity, patient data or form values can become guide text. */
+fun routeGuideDestination(route: Route): GuideDestination = when (route) {
+    Route.Welcome -> GuideDestination.Welcome
+    Route.StaffLogin -> GuideDestination.StaffLogin
+    is Route.Staff -> GuideDestination.StaffPending
+    Route.TenantPicker -> GuideDestination.TenantPicker
+    Route.Login -> GuideDestination.PatientLogin
+    Route.SignUp -> GuideDestination.SignUp
+    Route.Home -> GuideDestination.Home
+    Route.Profile -> GuideDestination.Profile
+    Route.PreRegistration -> GuideDestination.PreRegistration
+    Route.MyRequests -> GuideDestination.MyRequests
+    Route.Status -> GuideDestination.Status
 }
 
 /** Auth A→B reinicia pila y ámbito VM aunque ambos tengan el mismo principal/rol. */
@@ -127,9 +149,14 @@ fun MutableList<NavKey>.popTo(route: Route) {
 
 /** Une las features; es el único lugar que conoce varias (vive fuera de feature/ y core/). */
 @Composable
-fun AppNavigation(container: AppContainer, widthSizeClass: WindowWidthSizeClass) {
+fun AppNavigation(container: AppContainer, widthSizeClass: WindowWidthSizeClass, guide: SpeechGuideController, preferencesOpen: Boolean = false) {
     val session by container.sessionManager.state.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
+    val locale = LocalConfiguration.current.locales[0].toLanguageTag()
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { guide.onBackground() }
+    if (rootRoute(session) == null) LaunchedEffect(session, locale, preferencesOpen) {
+        guide.update(if (preferencesOpen) GuideDestination.Preferences else GuideDestination.SessionVerification, locale, navigationIdentity(session))
+    }
     // R27: al abrir la app y al volver a primer plano se comprueba la sesión (expiración y descifrado).
     LifecycleEventEffect(Lifecycle.Event.ON_START) { scope.launch { container.sessionManager.refresh() } }
 
@@ -148,18 +175,27 @@ fun AppNavigation(container: AppContainer, widthSizeClass: WindowWidthSizeClass)
     }
     key(navigationIdentity(session)) {
         if (session is SessionState.Authenticated) {
-            SessionGraph(container, widthSizeClass, session, root)
+            SessionGraph(container, widthSizeClass, session, root, guide, preferencesOpen)
         } else EntryBackdrop {
-            SessionGraph(container, widthSizeClass, session, root)
+            SessionGraph(container, widthSizeClass, session, root, guide, preferencesOpen)
         }
     }
 }
 
 @Composable
-private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSizeClass, session: SessionState, root: Route) {
+private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSizeClass, session: SessionState, root: Route, guide: SpeechGuideController, preferencesOpen: Boolean) {
     val scope = rememberCoroutineScope()
     val backStack = rememberNavBackStack(root)
+    val currentRoute = backStack.lastOrNull() as? Route ?: root
+    val locale = LocalConfiguration.current.locales[0].toLanguageTag()
+    LaunchedEffect(currentRoute, locale, preferencesOpen, navigationIdentity(session)) {
+        // Route names contain no parameters/private data. Distinct pending STAFF routes must also reset.
+        guide.update(if (preferencesOpen) GuideDestination.Preferences else routeGuideDestination(currentRoute), locale, navigationIdentity(session) + "|" + currentRoute.toString())
+    }
     Column(Modifier.fillMaxSize()) {
+        if (backStack.size > 1) TextButton(onClick = { backStack.removeAt(backStack.lastIndex) }) {
+            Text(stringResource(R.string.navigate_back))
+        }
         if (session is SessionState.LoggedOut || session == SessionState.NoTenant) {
             TextButton(onClick = { scope.launch { container.sessionManager.showWelcome() } }) { Text(stringResource(R.string.change_access)) }
         }
@@ -255,6 +291,7 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                             HomeScreen(
                                 state = state,
                                 onOpenProfile = { backStack.add(Route.Profile) },
+                                onOpenMyRequests = { backStack.add(Route.MyRequests) },
                                 status = {
                                     PreRegistrationStatusPane(
                                         state = status,
@@ -268,6 +305,14 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                                 onConfirmLogout = vm::confirmLogout,
                             )
 
+                        }
+                    }
+                    entry<Route.MyRequests> {
+                        GuardedRoute(session, Route.MyRequests, { backStack.resetTo(root) }) {
+                            val vm = viewModel { MyRequestsViewModel(container.preRegistrationRepository) }
+                            val state by vm.state.collectAsStateWithLifecycle()
+                            LifecycleEventEffect(Lifecycle.Event.ON_START) { vm.refresh() }
+                            MyRequestsScreen(state, vm::refresh)
                         }
                     }
                     entry<Route.Profile> {

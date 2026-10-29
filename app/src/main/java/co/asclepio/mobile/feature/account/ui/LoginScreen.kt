@@ -42,28 +42,28 @@ fun LoginScreen(
     val form = state.form
     val enabled = !state.submitting
     ScreenColumn(modifier) {
-            PageHeader(stringResource(R.string.login_title))
-            state.tenant?.let {
-                Text(stringResource(R.string.tenant_and_site, it.tenantName, it.siteName), style = MaterialTheme.typography.titleMedium)
-            }
-            TextButton(onClick = onChangeTenant, enabled = enabled) { Text(stringResource(R.string.login_change_tenant)) }
-            DocumentTypeSelector(form.documentType, state.fieldErrors[LoginField.DocumentType], enabled) {
-                onFormChange(form.copy(documentType = it))
-            }
-            FormTextField(form.documentNumber, R.string.field_document_number, state.fieldErrors[LoginField.DocumentNumber], enabled) {
-                onFormChange(form.copy(documentNumber = it))
-            }
-            FormTextField(form.password, R.string.field_password, state.fieldErrors[LoginField.Password], enabled, password = true) {
-                onFormChange(form.copy(password = it))
-            }
-            state.message?.let { UiNotice(it.text(), NoticeTone.Error) }
-            AsclepioButton(onClick = onSubmit, enabled = state.canSubmit, modifier = Modifier.fillMaxWidth()) {
-                if (state.submitting) CircularProgressIndicator(Modifier.padding(end = 8.dp))
-                Text(stringResource(R.string.login_submit))
-            }
-            OutlinedButton(onClick = onGoToSignUp, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.login_go_to_signup))
-            }
-            onOpenStatus?.let { TextButton(onClick = it) { Text(stringResource(R.string.login_status)) } }
-            }
+        PageHeader(stringResource(R.string.login_title))
+        state.tenant?.let {
+            Text(stringResource(R.string.tenant_and_site, it.tenantName, it.siteName), style = MaterialTheme.typography.titleMedium)
+        }
+        TextButton(onClick = onChangeTenant, enabled = enabled) { Text(stringResource(R.string.login_change_tenant)) }
+        DocumentTypeSelector(form.documentType, state.fieldErrors[LoginField.DocumentType], enabled) {
+            onFormChange(form.copy(documentType = it))
+        }
+        FormTextField(form.documentNumber, R.string.field_document_number, state.fieldErrors[LoginField.DocumentNumber], enabled) {
+            onFormChange(form.copy(documentNumber = it))
+        }
+        FormTextField(form.password, R.string.field_password, state.fieldErrors[LoginField.Password], enabled, password = true) {
+            onFormChange(form.copy(password = it))
+        }
+        state.message?.let { UiNotice(it.text(), NoticeTone.Error) }
+        AsclepioButton(onClick = onSubmit, enabled = state.canSubmit, modifier = Modifier.fillMaxWidth()) {
+            if (state.submitting) CircularProgressIndicator(Modifier.padding(end = 8.dp))
+            Text(stringResource(R.string.login_submit))
+        }
+        OutlinedButton(onClick = onGoToSignUp, enabled = enabled, modifier = Modifier.fillMaxWidth()) {
+            Text(stringResource(R.string.login_go_to_signup))
+        }
+        onOpenStatus?.let { TextButton(onClick = it) { Text(stringResource(R.string.login_status)) } }
+        }
 }
