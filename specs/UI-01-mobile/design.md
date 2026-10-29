@@ -2,7 +2,7 @@
 
 ## Resumen
 
-Se aplica la identidad UI-01/UI-02 a la app nativa y se añaden idiomas, preferencias y guía TTS local, conservando sesiones y negocio F-01/F-02. Se incorpora Mis solicitudes mediante la lista propia ya publicada. La documentación corresponde al bloque futuro autorizado por el usuario el 2026-10-29; no activa otra feature mientras F-01-staff siga en curso.
+Se aplica la identidad UI-01/UI-02 a la app nativa y se añaden idiomas, preferencias y guía TTS local, conservando sesiones y negocio F-01/F-02. Se incorpora Mis solicitudes mediante la lista propia ya publicada. La documentación materializa el bloque autorizado por el usuario para su activación el 2026-10-29 (America/Bogota), con F-01-staff-mobile cerrado, aprobado y publicado en main `548d17c`; el líder registra el estado y la línea base.
 
 ## Decisiones
 

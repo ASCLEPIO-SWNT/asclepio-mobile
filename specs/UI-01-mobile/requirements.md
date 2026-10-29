@@ -2,9 +2,9 @@
 
 Brief autorizado: `docs/mobile-migration.md`, bloques UI-01-mobile y conservación/integración de F-02-mobile; plan aprobado por el usuario con **«PLEASE IMPLEMENT THIS PLAN»** el 2026-10-29 (America/Bogota).
 Referencias funcionales: F-01.AC1/AC3/AC7/AC8 y F-02.AC8/AC10 de los briefs API; su trazabilidad identifica las funciones que se preservan, no atribuye a esos criterios idiomas o preferencias inexistentes. La identidad procede de UI-01/UI-02-web, main `dc280a9`, árbol `c812c63`, solo lectura.
-Contrato: consume **0.4.0**, sin cambios. Dependencia: F-01-staff-mobile terminado antes de activar esta feature.
+Contrato: consume **0.4.0**, sin cambios. Dependencia satisfecha: F-01-staff-mobile cerrado, aprobado y publicado en main `548d17c`.
 RNF: RNF-05, RNF-10, RNF-11, RNF-12, RNF-13, RNF-14, RNF-18.
-Estado de esta materialización: spec futura, sin activar UI-01 ni alterar el bloque F-01-staff en curso.
+Estado de esta materialización: lista para activación de UI-01-mobile el 2026-10-29 (America/Bogota), con la aprobación del alcance ya recibida por chat; el líder registra la transición de estado y la línea base.
 
 Criterios locales del plan: **UI-M.AC1** identidad/fuentes nativas; **UI-M.AC2** cinco idiomas y configuración; **UI-M.AC3** preferencias separadas y accesibilidad; **UI-M.AC4** guía estática exclusivamente local; **UI-M.AC5** solicitudes propias con estado actual, conservando F-02; **UI-M.AC6** datos privados en RAM, guardas y estados de UI preservados. No se amplía el sondeo: el paciente mantiene entrada/foreground/manual; los 30 s corresponden a los cuatro dashboards STAFF del futuro UI-02-mobile.
 
@@ -34,4 +34,4 @@ Criterios locales del plan: **UI-M.AC1** identidad/fuentes nativas; **UI-M.AC2**
 
 ## Preguntas abiertas
 
-Ninguna decisión de producto pendiente. Los valores por defecto y el mecanismo de pausa por instrucción materializan el mínimo del plan. Esta spec futura solo se activa tras cerrar/verificar F-01-staff-mobile. Las licencias/procedencia se documentan con la evidencia de cada asset, sin inventar permisos; la reproducción audible se verifica únicamente en dispositivos con voz local disponible.
+Ninguna decisión de producto pendiente. Los valores por defecto y el mecanismo de pausa por instrucción materializan el mínimo del plan. F-01-staff-mobile ya está cerrado y verificado en main `548d17c`, satisfaciendo la dependencia para esta activación. Las licencias/procedencia se documentan con la evidencia de cada asset, sin inventar permisos; la reproducción audible se verifica únicamente en dispositivos con voz local disponible.

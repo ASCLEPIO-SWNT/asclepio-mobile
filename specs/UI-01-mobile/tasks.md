@@ -1,6 +1,6 @@
 # UI-01-mobile — Tareas
 
-Spec futura del alcance ya aprobado; **no activar ni implementar antes de cerrar F-01-staff-mobile**. No hay migraciones. Al iniciar el bloque se revalida main y la línea base. Pruebas Kotlin primero con prefijos `R<n> `; el implementer marca checks.
+Alcance ya aprobado por chat, preparado para activación el 2026-10-29 (America/Bogota). F-01-staff-mobile está cerrado, aprobado y publicado en main `548d17c`; la dependencia está satisfecha. No hay migraciones. El líder revalida main y la línea base y registra la transición de estado. Pruebas Kotlin primero con prefijos `R<n> `; el implementer marca checks.
 
 - [ ] **T1 — Recursos e interfaz nativa.** Inventariar únicamente assets usados; empaquetar logo/fondos nativos, Axiforma/OpenDyslexic TTF/OTF y avisos/procedencia, comprobar carga real. Añadir tokens/typography/componentes/estados y una marca privada, sin operaciones ficticias ni pantallas de bloques siguientes. (R1, R2, R3, R19, R21)
 - [ ] **T2 — Locales y preferencias.** Añadir AppCompat1.8.0/AppCompatActivity/tema compatible/localeConfig, cinco catálogos equivalentes y UiPreferences DataStore separado con fallos seguros. Probar cambio de idioma/tema/escala/fuente y VM/nav/session estables durante recreación, rotación y retorno del sistema; mantener datos privados fuera de estado guardado. (R4, R5, R6, R7, R8, R9, R10, R20)
