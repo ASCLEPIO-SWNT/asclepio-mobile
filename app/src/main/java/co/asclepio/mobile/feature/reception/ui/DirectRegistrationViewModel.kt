@@ -92,7 +92,7 @@ class DirectRegistrationViewModel(
                     error.rateLimitSeconds()?.let { wait ->
                         _state.update { it.copy(searchBlocked = true) }
                         delay(wait * 1000L)
-                        if (current && request == revision) _state.update { it.copy(searchBlocked = false) }
+                        if (current) _state.update { it.copy(searchBlocked = false) }
                     }
                 }
             }
@@ -134,12 +134,12 @@ class DirectRegistrationViewModel(
                 is ApiResult.Failure -> {
                     val error = result.error
                     val fields = (error as? ApiError.Http)?.problem?.errors.orEmpty().mapNotNull { field ->
-                        when (field.field) { "fullName" -> StaffPatientField.FullName; "birthDate" -> StaffPatientField.BirthDate; "sex" -> StaffPatientField.Sex; "estimatedAgeYears" -> StaffPatientField.EstimatedAge; else -> null }
+                        when (field.field) { "documentType" -> StaffPatientField.DocumentType; "documentNumber" -> StaffPatientField.DocumentNumber; "fullName" -> StaffPatientField.FullName; "birthDate" -> StaffPatientField.BirthDate; "sex" -> StaffPatientField.Sex; "estimatedAgeYears" -> StaffPatientField.EstimatedAge; else -> null }
                     }.associateWith { UiMessage(R.string.staff_error_field) }.toMutableMap()
                     if (error.httpStatus == 422) fields[StaffPatientField.BirthDate] = UiMessage(R.string.staff_birth_future)
                     val message = if (error.httpStatus == 409) UiMessage(R.string.staff_patient_conflict) else error.commonMessage()
                     _state.update { it.copy(creating = false, patientErrors = fields, patientMessage = message, unavailable = unavailable(error), createBlocked = error.rateLimitSeconds() != null) }
-                    error.rateLimitSeconds()?.let { wait -> delay(wait * 1000L); if (current && request == revision) _state.update { it.copy(createBlocked = false) } }
+                    error.rateLimitSeconds()?.let { wait -> delay(wait * 1000L); if (current) _state.update { it.copy(createBlocked = false) } }
                 }
             }
         }
@@ -171,7 +171,7 @@ class DirectRegistrationViewModel(
                     val message = when (error.httpStatus) { 409 -> UiMessage(R.string.staff_arrival_conflict); 422 -> UiMessage(R.string.staff_arrival_invalid); else -> error.commonMessage() }
                     _state.update { it.copy(registering = false, arrivalErrors = fields, arrivalMessage = message, unavailable = unavailable(error), arrivalBlocked = error.rateLimitSeconds() != null) }
                     if (error.httpStatus == 422) retrySites()
-                    error.rateLimitSeconds()?.let { wait -> delay(wait * 1000L); if (current && request == revision) _state.update { it.copy(arrivalBlocked = false) } }
+                    error.rateLimitSeconds()?.let { wait -> delay(wait * 1000L); if (current) _state.update { it.copy(arrivalBlocked = false) } }
                 }
             }
         }

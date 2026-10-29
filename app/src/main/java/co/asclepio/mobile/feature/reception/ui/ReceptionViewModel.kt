@@ -33,7 +33,9 @@ data class ReceptionDraft(
     override fun toString() = "ReceptionDraft(identityChecked=$identityChecked, rejecting=$rejecting, reason=***, action=$action, blocked=$blocked)"
 }
 sealed interface ReceptionNotice {
-    data class Confirmed(val encounterId: String, val arrivalAt: String) : ReceptionNotice
+    data class Confirmed(val encounterId: String, val arrivalAt: String) : ReceptionNotice {
+        override fun toString() = "Confirmed(context=***)"
+    }
     data object Rejected : ReceptionNotice
 }
 data class ReceptionUiState(
@@ -93,7 +95,7 @@ class ReceptionViewModel(
     }
     fun refresh() = refresh(invalidated = false)
     private fun refresh(invalidated: Boolean) {
-        if (!current) return
+        if (!current || (_state.value.remote as? ReceptionRemote.Error)?.retryEnabled == false) return
         if (readJob?.isActive == true) {
             if (invalidated) readAgain = true
             return

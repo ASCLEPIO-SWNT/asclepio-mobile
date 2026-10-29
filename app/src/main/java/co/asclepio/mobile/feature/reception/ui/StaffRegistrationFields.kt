@@ -51,7 +51,12 @@ fun StaffPatientFields(
     onChange: (StaffPatientForm) -> Unit, onDatePickerChange: (PrivateDatePickerDraft) -> Unit, onSave: () -> Unit, onCancel: () -> Unit,
 ) {
     Text(stringResource(if (form.mode is StaffPatientMode.Nn) R.string.staff_patient_nn_register else R.string.staff_patient_create), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
-    (form.mode as? StaffPatientMode.Document)?.let { StaffFact(stringResource(R.string.staff_document), "${it.type.name} ${it.number}") }
+    (form.mode as? StaffPatientMode.Document)?.let {
+        StaffFact(stringResource(R.string.staff_document), "${it.type.name} ${it.number}")
+        listOfNotNull(errors[StaffPatientField.DocumentType], errors[StaffPatientField.DocumentNumber]).distinct().forEach { error ->
+            Text(error.text(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
+        }
+    }
     AsclepioTextField(
         value = form.fullName, onValueChange = { onChange(form.copy(fullName = it)) }, modifier = Modifier.fillMaxWidth(), enabled = !busy,
         label = { Text(stringResource(R.string.field_full_name)) }, singleLine = true, isError = errors[StaffPatientField.FullName] != null,

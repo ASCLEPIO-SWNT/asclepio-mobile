@@ -48,7 +48,7 @@ fun ReceptionScreen(
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     PageHeader(stringResource(R.string.staff_destination_reception))
                     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedButton(onClick = onRefresh, enabled = !state.refreshing) { Text(stringResource(R.string.home_refresh)) }
+                        OutlinedButton(onClick = onRefresh, enabled = !state.refreshing && (state.remote as? ReceptionRemote.Error)?.retryEnabled != false) { Text(stringResource(R.string.home_refresh)) }
                         AsclepioButton(onClick = onDirectRegistration) { Text(stringResource(R.string.staff_registration_direct)) }
                     }
                     Panel(Modifier.fillMaxWidth()) {

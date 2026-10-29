@@ -17,7 +17,7 @@ sealed interface StaffPatientMode {
     data object Nn : StaffPatientMode
 }
 enum class NnAgeMode { BirthDate, EstimatedAge }
-enum class StaffPatientField { FullName, BirthDate, Sex, EstimatedAge }
+enum class StaffPatientField { DocumentType, DocumentNumber, FullName, BirthDate, Sex, EstimatedAge }
 enum class StaffSearchField { DocumentType, DocumentNumber }
 enum class StaffArrivalField { Site, ChiefComplaint }
 
