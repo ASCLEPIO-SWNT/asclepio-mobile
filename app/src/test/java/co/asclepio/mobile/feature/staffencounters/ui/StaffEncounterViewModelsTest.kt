@@ -4,6 +4,7 @@ import co.asclepio.mobile.MainDispatcherRule
 import co.asclepio.mobile.StaffEncountersTestEnv
 import co.asclepio.mobile.core.auth.StaffRole
 import co.asclepio.mobile.core.encounters.EncounterStatus
+import co.asclepio.mobile.core.encounters.ui.EncounterListRemote
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.advanceTimeBy
@@ -64,7 +65,7 @@ class StaffEncounterViewModelsTest {
         env.login()
         val vm = StaffEncountersViewModel(env.encounters, env.sites, env.changes)
         vm.setActive(true)
-        vm.state.first { it.remote is StaffEncountersRemote.Ready && !it.refreshing && !it.sites.loading }
+        vm.state.first { it.remote is EncounterListRemote.Ready && !it.refreshing && !it.sites.loading }
         assertEquals("50", reads.last()["limit"])
         vm.nextPage()
         vm.state.first { it.filters.offset == 50 && !it.refreshing }

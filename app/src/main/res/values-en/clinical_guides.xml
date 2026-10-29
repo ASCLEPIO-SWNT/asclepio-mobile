@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="clinical_guide_tray">This is the nursing inbox. Select a location and open a waiting encounter to record clinical information. Use Refresh to check again and Previous or Next to change pages.</string>
+    <string name="clinical_guide_capture">Review the encounter context. Complete and save the vital signs. In the other form, add symptoms, findings or chief complaint notes. The forms save separately. Review captures in the history. The guide does not read clinical data.</string>
+    <string name="clinical_guide_history">Review saved measurements and findings, with the server-provided time and recorded-by information. Saved records cannot be edited. The guide does not read clinical values or descriptions.</string>
+</resources>

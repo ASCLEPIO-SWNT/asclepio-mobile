@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="clinical_guide_tray">Voici la liste d’attente du personnel infirmier. Sélectionnez un établissement et ouvrez une prise en charge en attente pour saisir les informations cliniques. Utilisez Actualiser pour consulter à nouveau et Précédent ou Suivant pour changer de page.</string>
+    <string name="clinical_guide_capture">Vérifiez le contexte de la prise en charge. Complétez et enregistrez les constantes. Dans l’autre formulaire, ajoutez des symptômes, des constats ou des précisions du motif. Les formulaires s’enregistrent séparément. Consultez l’historique. Le guide ne lit aucune donnée clinique.</string>
+    <string name="clinical_guide_history">Consultez les mesures et observations enregistrées, avec l’heure et le responsable fournis par le serveur. Les enregistrements ne peuvent pas être modifiés. Le guide ne lit pas les valeurs ni les descriptions cliniques.</string>
+</resources>

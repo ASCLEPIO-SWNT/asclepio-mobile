@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="clinical_guide_tray">Esta es la bandeja de enfermería. Selecciona una sede y abre una atención en espera para registrar la información clínica. Usa Actualizar para consultar de nuevo y Anterior o Siguiente para cambiar de página.</string>
+    <string name="clinical_guide_capture">Revisa el contexto de la atención. Completa y guarda los signos vitales. En el otro formulario puedes añadir síntomas, hallazgos o precisiones del motivo. Los formularios se guardan por separado. Consulta las capturas en el historial. La guía no lee datos clínicos.</string>
+    <string name="clinical_guide_history">Consulta las tomas y los hallazgos guardados, con la hora y el responsable recibidos del servidor. Los registros no se editan. La guía no lee valores ni descripciones clínicas.</string>
+</resources>

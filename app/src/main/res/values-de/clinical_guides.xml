@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="clinical_guide_tray">Dies ist die Arbeitsliste der Pflege. Wählen Sie einen Standort und öffnen Sie eine wartende Behandlung, um klinische Informationen zu erfassen. Verwenden Sie Aktualisieren zum erneuten Abrufen und Zurück oder Weiter für den Seitenwechsel.</string>
+    <string name="clinical_guide_capture">Prüfen Sie den Behandlungskontext. Ergänzen und speichern Sie die Vitalwerte. Im anderen Formular können Sie Symptome, Befunde oder Ergänzungen zum Vorstellungsgrund hinzufügen. Die Formulare werden separat gespeichert. Prüfen Sie die Erfassungen im Verlauf. Die Anleitung liest keine klinischen Daten vor.</string>
+    <string name="clinical_guide_history">Sehen Sie gespeicherte Messungen und Befunde mit der vom Server gelieferten Uhrzeit und verantwortlichen Person. Gespeicherte Einträge können nicht bearbeitet werden. Die Anleitung liest keine klinischen Werte oder Beschreibungen vor.</string>
+</resources>

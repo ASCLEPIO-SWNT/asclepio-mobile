@@ -1,0 +1,6 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="clinical_guide_tray">Esta é a caixa de entrada de enfermagem. Selecione uma unidade e abra um atendimento em espera para registrar as informações clínicas. Use Atualizar para consultar novamente e Anterior ou Próximo para mudar de página.</string>
+    <string name="clinical_guide_capture">Revise o contexto do atendimento. Preencha e salve os sinais vitais. No outro formulário, adicione sintomas, achados ou complementos do motivo. Os formulários são salvos separadamente. Consulte os registros no histórico. A orientação não lê dados clínicos.</string>
+    <string name="clinical_guide_history">Consulte as medições e os achados salvos, com o horário e o responsável recebidos do servidor. Os registros não podem ser editados. O guia não lê valores nem descrições clínicas.</string>
+</resources>
