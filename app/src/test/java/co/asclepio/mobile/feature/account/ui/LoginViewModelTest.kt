@@ -53,6 +53,26 @@ class LoginViewModelTest {
         assertEquals(LoginForm(), vm.state.value.form)
     }
 
+    @Test fun `R6 confirming the same tenant requires a fresh login entry and never rearms the old draft`() = runTest {
+        val old = ready()
+        old.updateForm(form)
+        env.rememberTenant()
+        runCurrent()
+        old.submit()
+        runCurrent()
+        assertEquals(0, env.server.requestCount)
+
+        val fresh = LoginViewModel(env.accountRepository, env.sessionManager)
+        runCurrent()
+        assertEquals(LoginForm(), fresh.state.value.form)
+        fresh.updateForm(form)
+        env.enqueue(401, env.problem(401))
+        fresh.submit()
+        fresh.settled()
+        assertEquals(1, env.server.requestCount)
+        assertFalse(fresh.state.value.submitting)
+    }
+
     @Test fun `R17 con campos vacios marca Campo obligatorio y no envia la peticion`() = runTest {
         val vm = ready()
         vm.updateForm(LoginForm(null, " ", ""))

@@ -69,7 +69,8 @@ sealed interface Route : NavKey {
 
     @Serializable data object TenantPicker : Route
 
-    @Serializable data object Login : Route
+    /** Public entry identity: confirming even the same IPS discards the previous login VM/draft. */
+    @Serializable data class Login(val entryGeneration: Long = 0L) : Route
 
     @Serializable data object SignUp : Route
 
@@ -91,7 +92,7 @@ sealed interface Route : NavKey {
 fun rootRoute(state: SessionState): Route? = when (state) {
     SessionState.Loading -> null
     SessionState.NoTenant -> Route.TenantPicker
-    is SessionState.LoggedOut -> Route.Login
+    is SessionState.LoggedOut -> Route.Login()
     is SessionState.Authenticated -> when (val principal = state.principal) {
         is VerifiedPrincipal.Patient -> Route.Home
         is VerifiedPrincipal.Staff -> Route.Staff(principal.role.home)
@@ -109,7 +110,7 @@ fun canAccessRoute(state: SessionState, route: Route): Boolean = when (state) {
     }
     SessionState.Welcome -> route == Route.Welcome
     SessionState.NoTenant -> route == Route.TenantPicker
-    is SessionState.LoggedOut -> route in setOf(Route.Login, Route.TenantPicker, Route.SignUp) || (BuildConfig.DEBUG && route == Route.Status)
+    is SessionState.LoggedOut -> route is Route.Login || route in setOf(Route.TenantPicker, Route.SignUp) || (BuildConfig.DEBUG && route == Route.Status)
     SessionState.StaffEntry -> route == Route.StaffLogin
     else -> false
 }
@@ -120,7 +121,7 @@ fun routeGuideDestination(route: Route): GuideDestination = when (route) {
     Route.StaffLogin -> GuideDestination.StaffLogin
     is Route.Staff -> GuideDestination.StaffPending
     Route.TenantPicker -> GuideDestination.TenantPicker
-    Route.Login -> GuideDestination.PatientLogin
+    is Route.Login -> GuideDestination.PatientLogin
     Route.SignUp -> GuideDestination.SignUp
     Route.Home -> GuideDestination.Home
     Route.Profile -> GuideDestination.Profile
@@ -243,13 +244,13 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                                 onSelectSite = vm::selectSite,
                                 onConfirm = vm::confirm,
                                 onRetry = vm::retry,
-                                onConfirmed = { backStack.resetTo(Route.Login) },
+                                onConfirmed = { backStack.resetTo(Route.Login(container.sessionManager.generation)) },
                             )
 
                         }
                     }
-                    entry<Route.Login> {
-                        GuardedRoute(session, Route.Login, { backStack.resetTo(root) }) {
+                    entry<Route.Login> { route ->
+                        GuardedRoute(session, route, { backStack.resetTo(root) }) {
                             val vm = viewModel { LoginViewModel(container.accountRepository, container.sessionManager) }
                             val state by vm.state.collectAsStateWithLifecycle()
                             LoginScreen(

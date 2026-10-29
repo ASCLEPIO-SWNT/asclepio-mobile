@@ -15,7 +15,7 @@ class AppNavigationTest {
     }
 
     @Test fun `R3 con IPS recordada y sin sesion la app abre en el login`() {
-        assertEquals(Route.Login, rootRoute(SessionState.LoggedOut(tenant)))
+        assertEquals(Route.Login(), rootRoute(SessionState.LoggedOut(tenant)))
     }
 
     @Test fun `R31 con sesion activa la app abre en el inicio`() {
@@ -36,12 +36,12 @@ class AppNavigationTest {
         val stack = mutableListOf<NavKey>(Route.Home, Route.Profile, Route.PreRegistration)
         stack.popTo(Route.Home)
         assertEquals(listOf<NavKey>(Route.Home), stack)
-        val other = mutableListOf<NavKey>(Route.Login, Route.SignUp)
+        val other = mutableListOf<NavKey>(Route.Login(), Route.SignUp)
         other.popTo(Route.Home)
-        assertEquals(listOf<NavKey>(Route.Login, Route.SignUp), other)
+        assertEquals(listOf<NavKey>(Route.Login(), Route.SignUp), other)
     }
 
     @Test fun `R23 tras un 401 la sesion queda LoggedOut y la raiz vuelve al login`() {
-        assertEquals(Route.Login, rootRoute(SessionState.LoggedOut(tenant)))
+        assertEquals(Route.Login(), rootRoute(SessionState.LoggedOut(tenant)))
     }
 }

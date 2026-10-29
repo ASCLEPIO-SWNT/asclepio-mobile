@@ -22,7 +22,7 @@ class UiNavigationTest {
     @Test fun `R11 guide mapping uses only static destinations and every implemented route is covered`() {
         val expected = mapOf<Route, GuideDestination>(
             Route.Welcome to GuideDestination.Welcome, Route.StaffLogin to GuideDestination.StaffLogin,
-            Route.TenantPicker to GuideDestination.TenantPicker, Route.Login to GuideDestination.PatientLogin,
+            Route.TenantPicker to GuideDestination.TenantPicker, Route.Login() to GuideDestination.PatientLogin,
             Route.SignUp to GuideDestination.SignUp, Route.Home to GuideDestination.Home,
             Route.Profile to GuideDestination.Profile, Route.PreRegistration to GuideDestination.PreRegistration,
             Route.MyRequests to GuideDestination.MyRequests, Route.Status to GuideDestination.Status,

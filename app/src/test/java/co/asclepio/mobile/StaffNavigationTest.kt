@@ -12,7 +12,7 @@ class StaffNavigationTest {
     @Test fun `R1 bienvenida separa paciente y personal sin registro publico staff`() {
         assertEquals(Route.Welcome, rootRoute(SessionState.Welcome))
         assertEquals(Route.TenantPicker, rootRoute(SessionState.NoTenant))
-        assertEquals(Route.Login, rootRoute(SessionState.LoggedOut(tenant)))
+        assertEquals(Route.Login(), rootRoute(SessionState.LoggedOut(tenant)))
         assertEquals(Route.StaffLogin, rootRoute(SessionState.StaffEntry))
         assertFalse(canAccessRoute(SessionState.StaffEntry, Route.SignUp))
     }
