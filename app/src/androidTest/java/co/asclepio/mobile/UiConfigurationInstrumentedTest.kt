@@ -23,6 +23,8 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class UiConfigurationInstrumentedTest {
     @get:Rule(order = 0) val api = UiInstrumentedApi()
+    // Compose 1.12.1 v2/StandardTestDispatcher stalls in Espresso.onIdle after real API37 locale recreation.
+    // Use one consistent legacy/Unconfined scheduler across classes; R5 keeps its full assertions.
     @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
 
     @Before fun resetEntry() {
