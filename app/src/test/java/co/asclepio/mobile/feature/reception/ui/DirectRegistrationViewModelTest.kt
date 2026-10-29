@@ -201,7 +201,7 @@ class DirectRegistrationViewModelTest {
         val patient = vm.state.value.selected
         val draft = StaffArrivalForm(StaffEncountersTestEnv.SITE, " Motivo literal reservado ")
         vm.updateArrival(draft)
-        for (status in listOf(400, 409, 422)) {
+        for (status in listOf(400, 422, 409)) {
             val field = if (status == 422) "siteId" else "chiefComplaintText"
             arrivalStatus = status; arrivalBody = errors(status, field)
             vm.registerArrival(); vm.state.first { !it.registering && it.arrivalMessage != null && !it.sites.loading }
@@ -213,6 +213,24 @@ class DirectRegistrationViewModelTest {
         }
         assertEquals(3, posts("/api/v1/encounters").size)
         assertEquals(2, requests.count { it.requestUrl!!.encodedPath == "/api/v1/public/tenants" })
+        assertTrue(vm.state.value.arrivalBlocked)
+        vm.updateArrival(draft.copy(chiefComplaintText = "Motivo corregido"))
+        vm.registerArrival(); runCurrent()
+        assertEquals(3, posts("/api/v1/encounters").size)
+        assertTrue(vm.state.value.arrivalBlocked)
+        assertEquals(UiMessage(R.string.staff_arrival_conflict), vm.state.value.arrivalMessage)
+        vm.search()
+        vm.state.first { it.searchStatus == PatientSearchStatus.Found }
+        assertEquals(patient, vm.state.value.selected)
+        assertTrue(vm.state.value.arrivalBlocked)
+        vm.updateArrival(draft); vm.registerArrival(); runCurrent()
+        assertEquals(3, posts("/api/v1/encounters").size)
+
+        val other = "44444444-4444-4444-4444-444444444445"
+        searchBody = "[${StaffEncountersTestEnv.patient().replace(StaffEncountersTestEnv.PATIENT, other)}]"
+        vm.updateSearch(StaffSearchForm(StaffDocumentType.TI, "OTRO")); vm.search()
+        vm.state.first { it.selected?.id == other }
+        assertFalse(vm.state.value.arrivalBlocked)
     }
 
     @Test fun `R22 red fallida en alta conserva borrador y permite solo reintento explicito`() = runTest {

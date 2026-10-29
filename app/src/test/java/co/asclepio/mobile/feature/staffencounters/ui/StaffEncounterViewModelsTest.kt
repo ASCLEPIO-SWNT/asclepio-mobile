@@ -19,6 +19,7 @@ import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.util.concurrent.atomic.AtomicInteger
 
+@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
 class StaffEncounterViewModelsTest {
     @get:Rule val main = MainDispatcherRule()
     @get:Rule val tmp = TemporaryFolder()

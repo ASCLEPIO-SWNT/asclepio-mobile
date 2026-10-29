@@ -15,7 +15,7 @@
     <string name="staff_estimated_age">Estimated age (years)</string>
     <string name="staff_patient_save">Save patient</string>
     <string name="staff_patient_saving">Saving the patient…</string>
-    <string name="staff_arrival_conflict">The patient already has a pending pre-registration or an active encounter. Check the inbox.</string>
+    <string name="staff_arrival_conflict">The arrival was not saved because the patient has a pending pre-registration or an active encounter. Resolve the case at reception and start a new registration.</string>
     <string name="staff_arrival_invalid">The location or patient is no longer valid.</string>
     <string name="staff_patient_selected">Selected patient</string>
     <string name="staff_arrival_register">Register arrival</string>

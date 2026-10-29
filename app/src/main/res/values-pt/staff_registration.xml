@@ -15,7 +15,7 @@
     <string name="staff_estimated_age">Idade estimada (anos)</string>
     <string name="staff_patient_save">Salvar paciente</string>
     <string name="staff_patient_saving">Salvando o paciente…</string>
-    <string name="staff_arrival_conflict">O paciente já tem um pré-registro pendente ou um atendimento ativo. Verifique a caixa.</string>
+    <string name="staff_arrival_conflict">A chegada não foi registrada porque o paciente tem um pré-registro pendente ou um atendimento ativo. Resolva o caso na recepção e inicie um novo registro.</string>
     <string name="staff_arrival_invalid">A unidade ou o paciente não é mais válido.</string>
     <string name="staff_patient_selected">Paciente selecionado</string>
     <string name="staff_arrival_register">Registrar chegada</string>

@@ -15,7 +15,7 @@
     <string name="staff_estimated_age">Âge estimé (ans)</string>
     <string name="staff_patient_save">Enregistrer le patient</string>
     <string name="staff_patient_saving">Enregistrement du patient…</string>
-    <string name="staff_arrival_conflict">Le patient a déjà une préinscription en attente ou une prise en charge active. Consultez les préinscriptions.</string>
+    <string name="staff_arrival_conflict">L’arrivée n’a pas été enregistrée car le patient a une préinscription en attente ou une prise en charge active. Résolvez la situation à l’accueil, puis commencez un nouvel enregistrement.</string>
     <string name="staff_arrival_invalid">L’établissement ou le patient n’est plus valide.</string>
     <string name="staff_patient_selected">Patient sélectionné</string>
     <string name="staff_arrival_register">Enregistrer l’arrivée</string>

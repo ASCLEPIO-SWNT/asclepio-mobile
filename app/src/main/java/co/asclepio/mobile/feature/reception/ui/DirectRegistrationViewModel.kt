@@ -57,6 +57,9 @@ class DirectRegistrationViewModel(
     private var sitesJob: Job? = null
     private var revision = 0L
     private var searched: StaffSearchForm? = null
+    /** A 409 belongs to this patient context until the user explicitly leaves this flow. */
+    private val conflictedPatients = mutableSetOf<String>()
+    private var arrivalRateLimited = false
     private val current: Boolean get() = repository.sessionGeneration == originGeneration
     private val editable: Boolean get() = current && !_state.value.busy && _state.value.unavailable == null
 
@@ -82,7 +85,15 @@ class DirectRegistrationViewModel(
             val result = repository.search(checkNotNull(form.documentType), form.documentNumber)
             if (!current || request != revision) return@launch
             when (result) {
-                is ApiResult.Success -> _state.update { it.copy(searchStatus = if (result.value.isEmpty()) PatientSearchStatus.Empty else PatientSearchStatus.Found, selected = result.value.firstOrNull()) }
+                is ApiResult.Success -> {
+                    val patient = result.value.firstOrNull()
+                    val conflicted = patient != null && patient.id in conflictedPatients
+                    _state.update { it.copy(
+                        searchStatus = if (patient == null) PatientSearchStatus.Empty else PatientSearchStatus.Found,
+                        selected = patient, arrivalBlocked = arrivalRateLimited || conflicted,
+                        arrivalMessage = if (conflicted) UiMessage(R.string.staff_arrival_conflict) else null,
+                    ) }
+                }
                 is ApiResult.Failure -> {
                     val error = result.error
                     val fields = (error as? ApiError.Http)?.problem?.errors.orEmpty().mapNotNull { field ->
@@ -130,7 +141,7 @@ class DirectRegistrationViewModel(
             val result = repository.createPatient(form.toRequest())
             if (!current || request != revision) return@launch
             when (result) {
-                is ApiResult.Success -> _state.update { it.copy(creating = false, selected = result.value, patientForm = null, datePicker = PrivateDatePickerDraft(), searchStatus = PatientSearchStatus.Found, arrival = StaffArrivalForm()) }
+                is ApiResult.Success -> _state.update { it.copy(creating = false, selected = result.value, patientForm = null, datePicker = PrivateDatePickerDraft(), searchStatus = PatientSearchStatus.Found, arrival = StaffArrivalForm(), arrivalBlocked = arrivalRateLimited || result.value.id in conflictedPatients) }
                 is ApiResult.Failure -> {
                     val error = result.error
                     val fields = (error as? ApiError.Http)?.problem?.errors.orEmpty().mapNotNull { field ->
@@ -147,7 +158,7 @@ class DirectRegistrationViewModel(
     fun updateArrival(form: StaffArrivalForm) {
         if (!editable || _state.value.selected == null) return
         if (form.siteId != null && _state.value.sites.sites.none { it.id == form.siteId }) return
-        _state.update { it.copy(arrival = form, arrivalErrors = emptyMap(), arrivalMessage = null) }
+        _state.update { it.copy(arrival = form, arrivalErrors = emptyMap(), arrivalMessage = if (it.selected?.id in conflictedPatients) UiMessage(R.string.staff_arrival_conflict) else null) }
     }
     fun registerArrival() {
         if (!editable || _state.value.arrivalBlocked || !_state.value.sites.available) return
@@ -169,9 +180,17 @@ class DirectRegistrationViewModel(
                         when (field.field) { "siteId" -> StaffArrivalField.Site; "chiefComplaintText" -> StaffArrivalField.ChiefComplaint; else -> null }
                     }.associateWith { UiMessage(R.string.staff_error_field) }
                     val message = when (error.httpStatus) { 409 -> UiMessage(R.string.staff_arrival_conflict); 422 -> UiMessage(R.string.staff_arrival_invalid); else -> error.commonMessage() }
-                    _state.update { it.copy(registering = false, arrivalErrors = fields, arrivalMessage = message, unavailable = unavailable(error), arrivalBlocked = error.rateLimitSeconds() != null) }
+                    if (error.httpStatus == 409) conflictedPatients.add(patient.id)
+                    arrivalRateLimited = error.rateLimitSeconds() != null
+                    _state.update { it.copy(registering = false, arrivalErrors = fields, arrivalMessage = message, unavailable = unavailable(error), arrivalBlocked = arrivalRateLimited || patient.id in conflictedPatients) }
                     if (error.httpStatus == 422) retrySites()
-                    error.rateLimitSeconds()?.let { wait -> delay(wait * 1000L); if (current) _state.update { it.copy(arrivalBlocked = false) } }
+                    error.rateLimitSeconds()?.let { wait ->
+                        delay(wait * 1000L)
+                        if (current) {
+                            arrivalRateLimited = false
+                            _state.update { it.copy(arrivalBlocked = it.selected?.id in conflictedPatients) }
+                        }
+                    }
                 }
             }
         }

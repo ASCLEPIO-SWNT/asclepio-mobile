@@ -15,7 +15,7 @@
     <string name="staff_estimated_age">Geschätztes Alter (Jahre)</string>
     <string name="staff_patient_save">Patient speichern</string>
     <string name="staff_patient_saving">Patient wird gespeichert…</string>
-    <string name="staff_arrival_conflict">Der Patient hat bereits eine offene Voranmeldung oder eine aktive Behandlung. Prüfen Sie die Voranmeldungen.</string>
+    <string name="staff_arrival_conflict">Die Ankunft wurde nicht gespeichert, da der Patient eine offene Voranmeldung oder eine aktive Behandlung hat. Klären Sie den Fall am Empfang und beginnen Sie eine neue Registrierung.</string>
     <string name="staff_arrival_invalid">Der Standort oder Patient ist nicht mehr gültig.</string>
     <string name="staff_patient_selected">Ausgewählter Patient</string>
     <string name="staff_arrival_register">Ankunft registrieren</string>
