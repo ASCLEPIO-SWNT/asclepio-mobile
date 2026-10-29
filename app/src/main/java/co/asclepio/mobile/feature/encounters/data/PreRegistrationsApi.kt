@@ -4,6 +4,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.POST
 
 // DTOs escritos a mano según el snapshot 0.4.0 de ../asclepio-api/openapi/asclepio-api.v1.json.
@@ -54,9 +55,9 @@ data class PatientPreRegistrationDto(
 /** Pre-registros del paciente autenticado (Bearer del paciente; el paciente sale del token, R26). */
 interface PreRegistrationsApi {
     @POST("api/v1/patient/pre-registrations")
-    suspend fun create(@Body body: CreatePreRegistrationRequest): PatientPreRegistrationDto
+    suspend fun create(@Body body: CreatePreRegistrationRequest, @Header("Authorization") authorization: String): PatientPreRegistrationDto
 
     /** Ordenados por `preRegisteredAt` descendente (R12 de F-02-api): el primero es el último. */
     @GET("api/v1/patient/pre-registrations")
-    suspend fun list(): List<PatientPreRegistrationDto>
+    suspend fun list(@Header("Authorization") authorization: String): List<PatientPreRegistrationDto>
 }

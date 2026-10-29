@@ -17,7 +17,6 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
-import java.time.Instant
 
 class HomeViewModelTest {
     @get:Rule val main = MainDispatcherRule()
@@ -32,8 +31,9 @@ class HomeViewModelTest {
 
     private suspend fun TestScope.home(meCode: Int = 200, me: String = AccountTestEnv.me()): HomeViewModel {
         env.rememberTenant()
-        env.sessionManager.startSession(AccountTestEnv.TOKEN, Instant.parse(AccountTestEnv.EXPIRES_AT))
+        env.enqueue(200, AccountTestEnv.LOGIN_OK)
         env.enqueue(meCode, me)
+        env.accountRepository.login(env.tenant.tenantId, co.asclepio.mobile.feature.account.data.DocumentType.CC, "123", "p")
         val vm = HomeViewModel(env.sessionManager)
         vm.state.first { !it.verifying }
         runCurrent()
@@ -45,7 +45,9 @@ class HomeViewModelTest {
         val state = vm.state.value
         assertEquals(env.tenant, state.tenant)
         assertTrue(state.showIdentityNotice)
+        assertEquals("/api/v1/auth/patient/login", env.server.takeRequest().path)
         assertEquals("Bearer ${AccountTestEnv.TOKEN}", env.server.takeRequest().getHeader("Authorization"))
+        assertEquals(2, env.server.requestCount) // Home no vuelve a consultar /me al rotar.
     }
 
     @Test fun `R31 con identidad verificada no muestra el aviso`() = runTest {
@@ -71,7 +73,7 @@ class HomeViewModelTest {
         vm.cancelLogout()
         runCurrent()
         assertFalse(vm.state.value.showLogoutDialog)
-        assertEquals(SessionState.LoggedIn(env.tenant), env.sessionManager.state.value)
+        co.asclepio.mobile.core.auth.assertPatientSession(env.sessionManager, env.tenant)
         assertEquals(AccountTestEnv.TOKEN, env.sessionManager.currentToken())
     }
 
@@ -95,7 +97,7 @@ class HomeViewModelTest {
         val vm = LoginViewModel(env.accountRepository, env.sessionManager)
         vm.updateForm(LoginForm(co.asclepio.mobile.feature.account.data.DocumentType.CC, "DOC-998877", "clave-secreta-77"))
         vm.submit()
-        env.sessionManager.state.first { it is SessionState.LoggedIn }
+        env.sessionManager.state.first { it is SessionState.Authenticated }
         val files = tmp.root.walkTopDown().filter(File::isFile).toList()
         assertTrue(files.isNotEmpty())
         for (f in files) {

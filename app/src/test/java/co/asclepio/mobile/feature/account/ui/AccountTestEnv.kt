@@ -45,8 +45,7 @@ class AccountTestEnv(dir: File, readTimeoutMs: Long = 10_000) {
     val tenant = RememberedTenant("t-1", "IPS Uno", "s-1", "Sede Norte")
 
     suspend fun rememberTenant() {
-        store.saveTenant(tenant)
-        sessionManager.refresh()
+        sessionManager.saveTenant(tenant)
     }
 
     fun enqueue(code: Int, body: String = "", retryAfter: String? = null) {
@@ -60,6 +59,7 @@ class AccountTestEnv(dir: File, readTimeoutMs: Long = 10_000) {
         """{"type":"about:blank","title":"Título de la API","status":$code,"detail":"Detalle de la API"$extra}"""
 
     fun close() {
+        sessionManager.close()
         ds.close()
         server.shutdown()
     }

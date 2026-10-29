@@ -56,7 +56,7 @@ class PatientCallTest {
             for (code in listOf(400, 403, 404, 409, 422, 429, 500)) {
                 env.enqueue(code, env.problem(code))
                 assertTrue(name, call() is ApiResult.Failure)
-                assertEquals("$name $code", SessionState.LoggedIn(env.tenant), env.sessionManager.state.value)
+                co.asclepio.mobile.core.auth.assertPatientSession(env.sessionManager, env.tenant)
             }
         }
     }
@@ -65,6 +65,6 @@ class PatientCallTest {
         env.login()
         env.enqueue(401, env.problem(401))
         assertTrue(env.preRegistrationRepository.tenants() is ApiResult.Failure)
-        assertEquals(SessionState.LoggedIn(env.tenant), env.sessionManager.state.value)
+        co.asclepio.mobile.core.auth.assertPatientSession(env.sessionManager, env.tenant)
     }
 }

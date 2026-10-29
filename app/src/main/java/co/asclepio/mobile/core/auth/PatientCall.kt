@@ -4,12 +4,18 @@ import co.asclepio.mobile.core.network.ApiResult
 import co.asclepio.mobile.core.network.apiCall
 import co.asclepio.mobile.core.network.httpStatus
 
-/**
- * Llamada a un endpoint `/api/v1/patient/…` (D7 de F-02-mobile, R23): como [apiCall], y ante un 401 borra la sesión
- * con [SessionManager.logout] (conserva la IPS recordada). La navegación vuelve al login al cambiar el estado.
- */
-suspend fun <T> SessionManager.patientCall(block: suspend () -> T): ApiResult<T> {
-    val result = apiCall(block)
-    if (result is ApiResult.Failure && result.error.httpStatus == 401) logout()
+/** Credencial de la operación, capturada antes de suspender. Nunca cambia al iniciar otra sesión. */
+class AuthHandle internal constructor(val generation: Long, val authorization: String, val principal: VerifiedPrincipal) {
+    override fun toString() = "AuthHandle(generation=$generation, authorization=***, principal=***)"
+}
+
+suspend fun <T> SessionManager.authenticatedCall(scope: AccessMode, block: suspend (AuthHandle) -> T): ApiResult<T> {
+    val handle = capture(scope)
+    val result = apiCall { block(handle) }
+    finish(handle, result is ApiResult.Failure && result.error.httpStatus == 401)
     return result
 }
+
+/** F-02 conserva su frontera paciente, ahora con Bearer y generación inmutables. */
+suspend fun <T> SessionManager.patientCall(block: suspend (String) -> T): ApiResult<T> =
+    authenticatedCall(AccessMode.PATIENT) { block(it.authorization) }

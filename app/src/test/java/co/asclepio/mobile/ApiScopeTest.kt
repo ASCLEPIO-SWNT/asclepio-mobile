@@ -12,6 +12,7 @@ import org.junit.Test
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.PATCH
 import retrofit2.http.POST
 import retrofit2.http.PUT
@@ -52,7 +53,7 @@ class ApiScopeTest {
             for (method in api.declaredMethods) {
                 val params = method.parameterAnnotations.flatMap { it.toList() }
                 assertTrue("${method.name}: $params", params.none { it.annotationClass.java in forbidden })
-                assertTrue(params.all { it is Body })
+                assertTrue(params.all { it is Body || (it is Header && it.value == "Authorization") })
             }
         }
         val bodies = listOf(UpdatePatientProfileRequest.serializer().descriptor, CreatePreRegistrationRequest.serializer().descriptor)

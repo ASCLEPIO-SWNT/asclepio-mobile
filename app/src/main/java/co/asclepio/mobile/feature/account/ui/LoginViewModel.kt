@@ -44,7 +44,7 @@ class LoginViewModel(
     init {
         viewModelScope.launch {
             sessionManager.state.collect { s ->
-                val tenant = (s as? SessionState.LoggedOut)?.tenant ?: (s as? SessionState.LoggedIn)?.tenant
+                val tenant = (s as? SessionState.LoggedOut)?.tenant
                 if (tenant != null) _state.update { it.copy(tenant = tenant) }
             }
         }

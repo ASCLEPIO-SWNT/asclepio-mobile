@@ -25,11 +25,9 @@ class HomeViewModel(private val sessionManager: SessionManager) : ViewModel() {
     val state: StateFlow<HomeUiState> = _state.asStateFlow()
 
     init {
-        // R28: al abrir con sesión activa se pide /me; un 401 borra la sesión y la navegación vuelve al login.
-        viewModelScope.launch {
-            val me = sessionManager.verifySession()
-            _state.update { it.copy(identityVerified = me?.identityVerified, verifying = false) }
-        }
+        // /me ya fue validado antes de abrir la raíz autenticada, sin duplicar la consulta al rotar.
+        val patient = sessionManager.patientPrincipal()
+        _state.value = _state.value.copy(identityVerified = patient?.identityVerified, verifying = false)
     }
 
     fun requestLogout() = _state.update { it.copy(showLogoutDialog = true) }

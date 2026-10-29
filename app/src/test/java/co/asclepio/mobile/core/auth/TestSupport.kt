@@ -48,3 +48,13 @@ class MutableClock(var now: java.time.Instant) : java.time.Clock() {
     override fun withZone(zone: java.time.ZoneId?): java.time.Clock = this
     override fun instant(): java.time.Instant = now
 }
+
+/** Aserción de compatibilidad F-01/F-02: una IPS no basta para autorizar, exige principal paciente verificado. */
+fun assertPatientSession(manager: SessionManager, tenant: RememberedTenant) {
+    val state = manager.state.value as SessionState.Authenticated
+    val patient = state.principal as VerifiedPrincipal.Patient
+    org.junit.Assert.assertEquals(tenant, patient.tenant)
+    org.junit.Assert.assertEquals(tenant.tenantId, patient.tenantId)
+    org.junit.Assert.assertTrue(manager.isCurrent(state.generation))
+    org.junit.Assert.assertNotNull(manager.currentToken())
+}

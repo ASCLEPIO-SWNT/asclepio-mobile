@@ -29,7 +29,7 @@ class PreRegistrationsApiTest {
     @Test fun `R10 el POST lleva exactamente siteId, chiefComplaintText y complaintSource TYPED`() = runTest {
         env.login()
         env.enqueue(201, PatientTestEnv.preRegistration())
-        env.preRegistrationsApi.create(CreatePreRegistrationRequest(PatientTestEnv.SITE_SUR, "Dolor de cabeza", ComplaintSource.TYPED))
+        env.preRegistrationsApi.create(CreatePreRegistrationRequest(PatientTestEnv.SITE_SUR, "Dolor de cabeza", ComplaintSource.TYPED), "Bearer ${PatientTestEnv.TOKEN}")
         val recorded = env.server.takeRequest()
         assertEquals("POST", recorded.method)
         assertEquals("/api/v1/patient/pre-registrations", recorded.path)
@@ -47,7 +47,7 @@ class PreRegistrationsApiTest {
     @Test fun `R22 el cuerpo del POST no tiene campos de hora, patientId ni tenantId`() = runTest {
         env.login()
         env.enqueue(201, PatientTestEnv.preRegistration())
-        env.preRegistrationsApi.create(CreatePreRegistrationRequest(PatientTestEnv.SITE_NORTE, "Fiebre", ComplaintSource.TYPED))
+        env.preRegistrationsApi.create(CreatePreRegistrationRequest(PatientTestEnv.SITE_NORTE, "Fiebre", ComplaintSource.TYPED), "Bearer ${PatientTestEnv.TOKEN}")
         val keys = env.server.takeRequest().jsonBody().keys
         for (field in timeFields + listOf("patientId", "tenantId")) assertFalse(field, field in keys)
     }
@@ -56,7 +56,7 @@ class PreRegistrationsApiTest {
         env.login()
         val extra = ""","level":"ESI_2","arrivalAt":"2026-10-27T14:45:00.000Z","chiefComplaintText":"Fiebre""""
         env.enqueue(200, "[" + PatientTestEnv.preRegistration("CONFIRMED", "TRIAGED", extra = extra) + "]")
-        val list = env.preRegistrationsApi.list()
+        val list = env.preRegistrationsApi.list("Bearer ${PatientTestEnv.TOKEN}")
         assertEquals(
             listOf(
                 PatientPreRegistrationDto(
@@ -80,7 +80,7 @@ class PreRegistrationsApiTest {
     @Test fun `R17 un status o encounter status desconocidos no rompen la deserializacion`() = runTest {
         env.login()
         env.enqueue(200, "[" + PatientTestEnv.preRegistration("NUEVO_ESTADO", "OTRO") + "]")
-        val dto = env.preRegistrationsApi.list().single()
+        val dto = env.preRegistrationsApi.list("Bearer ${PatientTestEnv.TOKEN}").single()
         assertEquals("NUEVO_ESTADO", dto.status)
         assertEquals("OTRO", dto.encounter?.status)
     }

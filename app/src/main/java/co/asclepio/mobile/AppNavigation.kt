@@ -25,6 +25,7 @@ import androidx.navigation3.runtime.rememberNavBackStack
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
 import co.asclepio.mobile.core.auth.SessionState
+import co.asclepio.mobile.core.auth.VerifiedPrincipal
 import co.asclepio.mobile.feature.account.ui.HomeScreen
 import co.asclepio.mobile.feature.account.ui.HomeViewModel
 import co.asclepio.mobile.feature.account.ui.LoginScreen
@@ -70,7 +71,9 @@ fun rootRoute(state: SessionState): Route? = when (state) {
     SessionState.Loading -> null
     SessionState.NoTenant -> Route.TenantPicker
     is SessionState.LoggedOut -> Route.Login
-    is SessionState.LoggedIn -> Route.Home
+    is SessionState.Authenticated -> if (state.principal is VerifiedPrincipal.Patient) Route.Home else null
+    SessionState.Verifying, is SessionState.VerificationError -> null
+    SessionState.Welcome, SessionState.StaffEntry -> null
 }
 
 private fun NavBackStack<NavKey>.resetTo(route: Route) {

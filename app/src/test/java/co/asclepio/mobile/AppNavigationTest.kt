@@ -19,7 +19,7 @@ class AppNavigationTest {
     }
 
     @Test fun `R31 con sesion activa la app abre en el inicio`() {
-        assertEquals(Route.Home, rootRoute(SessionState.LoggedIn(tenant)))
+        assertEquals(Route.Home, rootRoute(SessionState.Authenticated(co.asclepio.mobile.core.auth.VerifiedPrincipal.Patient("a", "t-1", "p", "v1", false, tenant), 1)))
     }
 
     @Test fun `R27 mientras se carga la sesion no hay pantalla raiz`() {

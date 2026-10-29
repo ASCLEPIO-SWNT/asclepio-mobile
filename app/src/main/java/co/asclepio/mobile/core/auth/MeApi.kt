@@ -4,11 +4,7 @@ import kotlinx.serialization.Serializable
 import retrofit2.http.GET
 import retrofit2.http.Header
 
-/**
- * `GET /api/v1/me`: oneOf StaffMeDto | PatientMeDto con discriminador `kind` (D10).
- * Clase plana: un `kind` desconocido no rompe la deserialización. `email` y `fullName` del personal no se declaran,
- * así que se ignoran y nunca se guardan.
- */
+/** Variante plana tolerante a campos desconocidos; toPrincipal exige la variante publicada completa. */
 @Serializable
 data class MeDto(
     val kind: String,
@@ -18,7 +14,11 @@ data class MeDto(
     val consentVersion: String? = null,
     val identityVerified: Boolean? = null,
     val role: String? = null,
+    val email: String? = null,
+    val fullName: String? = null,
 ) {
+    override fun toString() = "MeDto(kind=$kind, identity=***, patient=***, email=***, fullName=***, role=$role)"
+
     val isPatient: Boolean get() = kind == KIND_PATIENT
 
     companion object {

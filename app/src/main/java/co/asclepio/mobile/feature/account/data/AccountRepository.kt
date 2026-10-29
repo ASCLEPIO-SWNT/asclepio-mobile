@@ -1,5 +1,6 @@
 package co.asclepio.mobile.feature.account.data
 
+import co.asclepio.mobile.core.auth.AccessMode
 import co.asclepio.mobile.core.auth.MeApi
 import co.asclepio.mobile.core.auth.SessionManager
 import co.asclepio.mobile.core.network.ApiError
@@ -48,21 +49,23 @@ class AccountRepository(
      * se guarda la sesión; en otro caso el token se descarta sin guardarse.
      */
     suspend fun login(tenantId: String, documentType: DocumentType, documentNumber: String, password: String): LoginResult {
+        val attempt = sessionManager.beginLogin(AccessMode.PATIENT)
         val request = PatientLoginRequest(tenantId, documentType, documentNumber.trim(), password)
         val token = when (val result = apiCall { authApi.login(request) }) {
             is ApiResult.Success -> result.value
-            is ApiResult.Failure -> return LoginResult.LoginFailed(result.error)
+            is ApiResult.Failure -> { sessionManager.requireCurrent(attempt.generation); return LoginResult.LoginFailed(result.error) }
         }
+        sessionManager.requireCurrent(attempt.generation)
+        if (token.tokenType != "Bearer" || token.accessToken.isBlank()) return LoginResult.NotPatient
         val expiresAt = runCatching { Instant.parse(token.expiresAt) }.getOrNull()
             ?: return LoginResult.MeFailed(ApiError.InvalidBody)
-        return when (val me = apiCall { meApi.meWithToken("Bearer ${token.accessToken}") }) {
+        val me = apiCall { meApi.meWithToken("Bearer ${token.accessToken}") }
+        sessionManager.requireCurrent(attempt.generation)
+        return when (me) {
             is ApiResult.Failure -> LoginResult.MeFailed(me.error)
-            is ApiResult.Success -> if (me.value.isPatient && me.value.tenantId == tenantId) {
-                sessionManager.startSession(token.accessToken, expiresAt)
+            is ApiResult.Success -> if (sessionManager.completeLogin(attempt, token.accessToken, expiresAt, me.value)) {
                 LoginResult.Success
-            } else {
-                LoginResult.NotPatient
-            }
+            } else LoginResult.NotPatient
         }
     }
 

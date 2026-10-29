@@ -47,8 +47,5 @@ data class PatientLoginRequest(
         "PatientLoginRequest(tenantId=$tenantId, documentType=$documentType, documentNumber=***, password=***)"
 }
 
-/** AccessTokenDto: JWT de 8 h, sin refresh token. */
-@Serializable
-data class AccessTokenDto(val accessToken: String, val tokenType: String, val expiresAt: String) {
-    override fun toString(): String = "AccessTokenDto(accessToken=***, tokenType=$tokenType, expiresAt=$expiresAt)"
-}
+/** Alias compatible con F-01-patient; el DTO compartido no depende de una feature. */
+typealias AccessTokenDto = co.asclepio.mobile.core.auth.AccessTokenDto

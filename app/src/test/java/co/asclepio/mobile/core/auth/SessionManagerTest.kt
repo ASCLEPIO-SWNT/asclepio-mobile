@@ -5,19 +5,15 @@ import kotlinx.coroutines.test.runTest
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+import org.junit.*
+import org.junit.Assert.*
 import org.junit.rules.TemporaryFolder
 import java.time.Duration
 import java.time.Instant
 
+/** Regresiones F-01: el token legado ahora se verifica antes de la raíz privada. */
 class SessionManagerTest {
     @get:Rule val tmp = TemporaryFolder()
-
     private lateinit var server: MockWebServer
     private lateinit var ds: TestDataStore
     private lateinit var store: SessionStore
@@ -36,93 +32,88 @@ class SessionManagerTest {
         meApi = createRetrofit(server.url("/").toString(), client).create(MeApi::class.java)
         manager = SessionManager(store, meApi, clock)
     }
+    @After fun tearDown() { manager.close(); ds.close(); server.shutdown() }
 
-    @After fun tearDown() {
-        ds.close()
-        server.shutdown()
-    }
-
-    @Test fun `R1 sin IPS recordada el estado es NoTenant`() = runTest {
+    @Test fun `R1 sin sesion el estado es bienvenida y paciente conserva selector de IPS`() = runTest {
         manager.refresh()
+        assertEquals(SessionState.Welcome, manager.state.value)
+        manager.selectAccess(AccessMode.PATIENT)
         assertEquals(SessionState.NoTenant, manager.state.value)
     }
-
-    @Test fun `R3 con IPS recordada y sin sesion el estado es LoggedOut con esa IPS`() = runTest {
+    @Test fun `R3 con IPS recordada paciente entra en LoggedOut con esa IPS`() = runTest {
         store.saveTenant(tenant)
         manager.refresh()
+        manager.selectAccess(AccessMode.PATIENT)
         assertEquals(SessionState.LoggedOut(tenant), manager.state.value)
         assertNull(manager.currentToken())
     }
-
-    @Test fun `R27 una sesion vigente se carga y una vencida al abrir se borra`() = runTest {
+    private suspend fun loggedIn() {
+        manager.saveTenant(tenant)
+        val attempt = manager.beginLogin(AccessMode.PATIENT)
+        check(manager.completeLogin(attempt, "tok", expiresAt, MeDto("PATIENT", "a", "t-1", "p", "v1", false)))
+    }
+    @Test fun `R27 sesion guardada vigente verifica me y una vencida al abrir se borra`() = runTest {
         store.saveTenant(tenant)
         store.saveSession("tok", expiresAt)
+        server.enqueue(MockResponse().setBody(patientMe))
         manager.refresh()
-        assertEquals(SessionState.LoggedIn(tenant), manager.state.value)
+        assertPatientSession(manager, tenant)
         assertEquals("tok", manager.currentToken())
-
-        clock.now = expiresAt // no es posterior a la hora del dispositivo
+        clock.now = expiresAt
         manager.refresh()
         assertEquals(SessionState.LoggedOut(tenant), manager.state.value)
         assertEquals(StoredSession.None, store.session())
         assertNull(manager.currentToken())
     }
-
-    @Test fun `R27 al volver a primer plano con la sesion vencida se borra y se pide iniciar sesion`() = runTest {
-        store.saveTenant(tenant)
-        manager.startSession("tok", expiresAt)
-        assertEquals(SessionState.LoggedIn(tenant), manager.state.value)
+    @Test fun `R27 al volver a primer plano vencida se borra y se pide login`() = runTest {
+        loggedIn()
         clock.now = expiresAt.plus(Duration.ofMinutes(1))
-        manager.refresh() // ON_START
+        manager.refresh()
         assertEquals(SessionState.LoggedOut(tenant), manager.state.value)
         assertEquals(StoredSession.None, store.session())
     }
-
-    @Test fun `R27 un token guardado que no se puede descifrar borra la sesion`() = runTest {
+    @Test fun `R27 un token que no se puede descifrar borra la sesion`() = runTest {
         store.saveTenant(tenant)
         SessionStore(ds.dataStore, BrokenTokenCipher()).saveSession("tok", expiresAt)
         val broken = SessionManager(SessionStore(ds.dataStore, BrokenTokenCipher()), meApi, clock)
+        broken.selectAccess(AccessMode.PATIENT)
+        // selectAccess limpia cualquier sesión anterior; se simula el token ilegible tras elegir entrada.
+        SessionStore(ds.dataStore, BrokenTokenCipher()).saveSession("tok", expiresAt)
         broken.refresh()
         assertEquals(SessionState.LoggedOut(tenant), broken.state.value)
         assertEquals(StoredSession.None, store.session())
+        broken.close()
     }
-
-    private suspend fun loggedIn() {
+    @Test fun `R28 al restaurar 401 me borra sesion con Bearer explicito`() = runTest {
         store.saveTenant(tenant)
         store.saveSession("tok", expiresAt)
+        server.enqueue(MockResponse().setResponseCode(401))
         manager.refresh()
-    }
-
-    @Test fun `R28 al abrir con sesion activa pide me con el token y un 401 borra la sesion`() = runTest {
-        loggedIn()
-        server.enqueue(MockResponse().setResponseCode(401).setBody("""{"type":"about:blank","title":"Unauthorized","status":401}"""))
-        assertNull(manager.verifySession())
-        val recorded = server.takeRequest()
-        assertEquals("/api/v1/me", recorded.path)
-        assertEquals("Bearer tok", recorded.getHeader("Authorization"))
-        assertEquals(SessionState.LoggedOut(tenant), manager.state.value)
+        assertEquals("Bearer tok", server.takeRequest().getHeader("Authorization"))
         assertEquals(StoredSession.None, store.session())
+        assertFalse(manager.state.value is SessionState.Authenticated)
     }
-
-    @Test fun `R28 si me falla con 5xx o sin red se conserva la sesion`() = runTest {
-        loggedIn()
+    @Test fun `R28 me 5xx conserva token pero bloquea contenido hasta reintentar`() = runTest {
+        store.saveTenant(tenant)
+        store.saveSession("tok", expiresAt)
         server.enqueue(MockResponse().setResponseCode(503))
-        assertNull(manager.verifySession())
-        assertEquals(SessionState.LoggedIn(tenant), manager.state.value)
-        server.shutdown() // sin respuesta HTTP
-        assertNull(manager.verifySession())
-        assertEquals(SessionState.LoggedIn(tenant), manager.state.value)
+        manager.refresh()
+        assertTrue(manager.state.value is SessionState.VerificationError)
+        assertNull(manager.currentToken())
         assertEquals(StoredSession.Present("tok", expiresAt), store.session())
     }
-
-    @Test fun `R28 si me responde 200 se conserva la sesion y se devuelve el perfil`() = runTest {
-        loggedIn()
+    @Test fun `R28 me 200 devuelve perfil verificado antes del inicio y no se duplica en refresh`() = runTest {
+        store.saveTenant(tenant)
+        store.saveSession("tok", expiresAt)
         server.enqueue(MockResponse().setBody(patientMe))
-        assertEquals(false, manager.verifySession()?.identityVerified)
-        assertEquals(SessionState.LoggedIn(tenant), manager.state.value)
+        manager.refresh()
+        assertEquals(false, manager.patientPrincipal()?.identityVerified)
+        val state = manager.state.value
+        manager.refresh()
+        assertEquals(state, manager.state.value)
+        assertEquals(1, server.requestCount)
     }
-
-    @Test fun `R30 cerrar sesion borra token y expiracion de memoria y disco, conserva la IPS y no llama a la API`() = runTest {
+    @Test fun `R30 logout borra token conserva IPS y no llama API`() = runTest {
         loggedIn()
         manager.logout()
         assertEquals(SessionState.LoggedOut(tenant), manager.state.value)
@@ -131,8 +122,7 @@ class SessionManagerTest {
         assertEquals(tenant, store.tenant())
         assertEquals(0, server.requestCount)
     }
-
-    @Test fun `R2 guardar la IPS deja el estado en LoggedOut con esa IPS`() = runTest {
+    @Test fun `R2 guardar IPS deja LoggedOut con esa IPS`() = runTest {
         manager.refresh()
         manager.saveTenant(tenant)
         assertEquals(SessionState.LoggedOut(tenant), manager.state.value)

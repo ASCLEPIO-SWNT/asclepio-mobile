@@ -4,6 +4,7 @@ import co.asclepio.mobile.core.model.Sex
 import kotlinx.serialization.Serializable
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Header
 import retrofit2.http.PATCH
 
 // DTOs escritos a mano según el snapshot 0.4.0 de ../asclepio-api/openapi/asclepio-api.v1.json.
@@ -46,8 +47,8 @@ data class UpdatePatientProfileRequest(
 /** Datos propios del paciente (Bearer del paciente; el paciente sale del token, R26). */
 interface PatientProfileApi {
     @GET("api/v1/patient/profile")
-    suspend fun profile(): PatientProfileDto
+    suspend fun profile(@Header("Authorization") authorization: String): PatientProfileDto
 
     @PATCH("api/v1/patient/profile")
-    suspend fun update(@Body body: UpdatePatientProfileRequest): PatientProfileDto
+    suspend fun update(@Body body: UpdatePatientProfileRequest, @Header("Authorization") authorization: String): PatientProfileDto
 }

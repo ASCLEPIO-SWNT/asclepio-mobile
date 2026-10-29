@@ -107,7 +107,7 @@ class LoginViewModelTest {
         env.enqueue(200, AccountTestEnv.LOGIN_OK)
         env.enqueue(200, AccountTestEnv.me())
         vm.submit()
-        env.sessionManager.state.first { it is SessionState.LoggedIn }
+        env.sessionManager.state.first { it is SessionState.Authenticated }
         env.server.takeRequest()
         val me = env.server.takeRequest()
         assertEquals("/api/v1/me", me.path)

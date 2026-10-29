@@ -53,9 +53,12 @@ class PatientTestEnv(dir: File) {
 
     /** IPS recordada y sesión activa del paciente. */
     suspend fun login() {
-        store.saveTenant(tenant)
-        store.saveSession(TOKEN, Instant.parse("2026-10-28T01:00:00Z"))
-        sessionManager.refresh()
+        sessionManager.saveTenant(tenant)
+        val attempt = sessionManager.beginLogin(co.asclepio.mobile.core.auth.AccessMode.PATIENT)
+        check(sessionManager.completeLogin(
+            attempt, TOKEN, Instant.parse("2026-10-28T01:00:00Z"),
+            co.asclepio.mobile.core.auth.MeDto("PATIENT", "account", TENANT_ID, "patient", "v1", false),
+        ))
     }
 
     fun enqueue(code: Int, body: String = "", retryAfter: String? = null) {
@@ -75,6 +78,7 @@ class PatientTestEnv(dir: File) {
     }
 
     fun close() {
+        sessionManager.close()
         ds.close()
         server.shutdown()
     }

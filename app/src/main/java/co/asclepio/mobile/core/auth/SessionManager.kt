@@ -2,114 +2,198 @@ package co.asclepio.mobile.core.auth
 
 import co.asclepio.mobile.core.network.ApiResult
 import co.asclepio.mobile.core.network.apiCall
+import co.asclepio.mobile.core.network.commonMessage
 import co.asclepio.mobile.core.network.httpStatus
+import co.asclepio.mobile.core.ui.UiMessage
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.time.Clock
+import java.time.Duration
 import java.time.Instant
 
-/** Estado de la sesión que decide la pila de navegación (D3). */
 sealed interface SessionState {
     data object Loading : SessionState
+    data object Welcome : SessionState
     data object NoTenant : SessionState
     data class LoggedOut(val tenant: RememberedTenant) : SessionState
-    data class LoggedIn(val tenant: RememberedTenant) : SessionState
+    data object StaffEntry : SessionState
+    data object Verifying : SessionState
+    data class VerificationError(val message: UiMessage) : SessionState
+    data class Authenticated(val principal: VerifiedPrincipal, val generation: Long) : SessionState
 }
 
-/**
- * Sesión del paciente: IPS recordada, token en memoria (ya descifrado) y en disco (cifrado).
- * La sesión es activa si `expiresAt` es posterior a la hora del dispositivo (D11).
- */
+class LoginAttempt internal constructor(val generation: Long, val mode: AccessMode, internal val tenantId: String?) {
+    override fun toString() = "LoginAttempt(generation=$generation, mode=$mode, tenantId=***)"
+}
+
+class SessionInvalidated : CancellationException("Session no longer current")
+
+/** Un solo token; ningún resultado anterior puede persistir, autorizar ni cerrar una sesión posterior. */
 class SessionManager(
     private val store: SessionStore,
     private val meApi: MeApi,
     private val clock: Clock,
+    private val expiryScope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Default),
 ) {
     private val _state = MutableStateFlow<SessionState>(SessionState.Loading)
     val state: StateFlow<SessionState> = _state.asStateFlow()
-
-    @Volatile private var accessToken: String? = null
     private val mutex = Mutex()
+    @Volatile private var accessToken: String? = null
+    @Volatile private var expiresAt: Instant? = null
+    @Volatile var generation: Long = 0L
+        private set
+    private var tenant: RememberedTenant? = null
+    private var selectedAccess: AccessMode? = null
+    private var expiryJob: Job? = null
 
-    /** Token para el [AuthInterceptor]; `null` sin sesión activa. */
-    fun currentToken(): String? = accessToken
+    fun currentToken(): String? = accessToken?.takeIf { expiresAt?.isAfter(clock.instant()) == true }
+    fun rememberedTenant(): RememberedTenant? = tenant
+    fun isCurrent(value: Long): Boolean = value == generation
+    fun requireCurrent(value: Long) { if (!isCurrent(value)) throw SessionInvalidated() }
 
-    /** Al abrir la app y al volver a primer plano (ON_START): carga y comprueba la sesión (R3, R27). */
-    suspend fun refresh() = mutex.withLock {
-        val tenant = store.tenant()
-        if (tenant == null) {
-            accessToken = null
-            _state.value = SessionState.NoTenant
-            return@withLock
-        }
-        when (val session = store.session()) {
-            is StoredSession.Present -> if (session.expiresAt.isAfter(clock.instant())) {
-                accessToken = session.accessToken
-                _state.value = SessionState.LoggedIn(tenant)
-            } else {
-                clearSessionLocked(tenant)
+    /** La comprobación de primer plano no cambia la identidad ni repite /me si ya está verificada. */
+    suspend fun refresh() {
+        val restored = mutex.withLock {
+            if (_state.value is SessionState.Authenticated) {
+                if (expiresAt?.isAfter(clock.instant()) != true) clearLocked()
+                return
             }
-            StoredSession.Unreadable -> clearSessionLocked(tenant)
-            StoredSession.None -> {
-                accessToken = null
-                _state.value = SessionState.LoggedOut(tenant)
-            }
-        }
-    }
-
-    /** Guarda la IPS recordada (R2). */
-    suspend fun saveTenant(tenant: RememberedTenant) = mutex.withLock {
-        store.saveTenant(tenant)
-        accessToken = null
-        _state.value = SessionState.LoggedOut(tenant)
-    }
-
-    /** IPS recordada actual, si existe. */
-    fun rememberedTenant(): RememberedTenant? = when (val s = _state.value) {
-        is SessionState.LoggedIn -> s.tenant
-        is SessionState.LoggedOut -> s.tenant
-        else -> null
-    }
-
-    /** Guarda la sesión ya confirmada con `/me` (R19, R26). */
-    suspend fun startSession(token: String, expiresAt: Instant) = mutex.withLock {
-        val tenant = checkNotNull(store.tenant())
-        store.saveSession(token, expiresAt)
-        accessToken = token
-        _state.value = SessionState.LoggedIn(tenant)
-    }
-
-    /**
-     * `GET /me` con la sesión guardada (R28): un 401 borra la sesión; sin red o con 5xx se conserva.
-     * Devuelve el perfil si la respuesta es 200.
-     */
-    suspend fun verifySession(): MeDto? =
-        when (val result = apiCall { meApi.me() }) {
-            is ApiResult.Success -> result.value
-            is ApiResult.Failure -> {
-                if (result.error.httpStatus == 401) logout()
-                null
+            if (_state.value == SessionState.Verifying) return
+            tenant = store.tenant()
+            when (val saved = store.session()) {
+                is StoredSession.Present -> {
+                    if (!saved.expiresAt.isAfter(clock.instant()) || saved.accessToken.isBlank()) {
+                        clearLocked()
+                        return
+                    }
+                    invalidateLocked()
+                    _state.value = SessionState.Verifying
+                    generation to saved
+                }
+                StoredSession.Unreadable -> { clearLocked(); return }
+                StoredSession.None -> { _state.value = entryState(); return }
             }
         }
-
-    /** Cerrar sesión (R30): borra token y expiración de memoria y disco, conserva la IPS y no llama a la API. */
-    suspend fun logout() = mutex.withLock {
-        val tenant = store.tenant()
-        if (tenant == null) {
-            accessToken = null
-            store.clearSession()
-            _state.value = SessionState.NoTenant
-        } else {
-            clearSessionLocked(tenant)
+        val (expected, saved) = restored
+        // La verificación pertenece al gestor: rotar cancela el await de UI, no su identidad ni la petición.
+        expiryScope.launch {
+        if (!isCurrent(expected)) return@launch
+        val result = apiCall { meApi.meWithToken("Bearer ${saved.accessToken}") }
+        mutex.withLock {
+            if (!isCurrent(expected)) return@withLock
+            when (result) {
+                is ApiResult.Success -> {
+                    val principal = result.value.toPrincipal(tenant)
+                    if (principal == null || !saved.expiresAt.isAfter(clock.instant())) {
+                        clearLocked()
+                    } else activateLocked(saved.accessToken, saved.expiresAt, principal)
+                }
+                is ApiResult.Failure -> {
+                    if (result.error.httpStatus == 401) clearLocked() else {
+                        _state.value = SessionState.VerificationError(result.error.commonMessage())
+                    }
+                }
+            }
         }
+        }.join()
     }
 
-    private suspend fun clearSessionLocked(tenant: RememberedTenant) {
-        accessToken = null
+    suspend fun saveTenant(value: RememberedTenant) = mutex.withLock {
+        invalidateLocked()
         store.clearSession()
-        _state.value = SessionState.LoggedOut(tenant)
+        store.saveTenant(value)
+        tenant = value
+        selectedAccess = AccessMode.PATIENT
+        _state.value = entryState()
     }
+
+    /** La UI pide confirmación antes de invocarlo desde un ámbito autenticado. */
+    suspend fun selectAccess(mode: AccessMode) = mutex.withLock {
+        selectedAccess = mode
+        tenant = store.tenant()
+        clearLocked()
+    }
+
+    suspend fun showWelcome() = mutex.withLock {
+        selectedAccess = null
+        clearLocked()
+    }
+
+    suspend fun beginLogin(mode: AccessMode): LoginAttempt = mutex.withLock {
+        selectedAccess = mode
+        tenant = store.tenant()
+        clearLocked()
+        LoginAttempt(generation, mode, tenant?.tenantId)
+    }
+
+    suspend fun completeLogin(attempt: LoginAttempt, token: String, expiration: Instant, me: MeDto): Boolean = mutex.withLock {
+        if (!isCurrent(attempt.generation)) throw SessionInvalidated()
+        val principal = me.toPrincipal(tenant)
+        if (token.isBlank() || !expiration.isAfter(clock.instant()) || principal == null ||
+            principal.mode != attempt.mode || (attempt.mode == AccessMode.PATIENT && principal.tenantId != attempt.tenantId)
+        ) return@withLock false
+        store.saveSession(token, expiration)
+        activateLocked(token, expiration, principal)
+        true
+    }
+
+    /** Compatibilidad de lectura del inicio paciente: el perfil ya se verificó antes de montar la pantalla. */
+    fun patientPrincipal(): VerifiedPrincipal.Patient? =
+        (_state.value as? SessionState.Authenticated)?.principal as? VerifiedPrincipal.Patient
+
+    suspend fun logout() = mutex.withLock { clearLocked() }
+
+    internal suspend fun capture(scope: AccessMode): AuthHandle = mutex.withLock {
+        val authenticated = _state.value as? SessionState.Authenticated ?: throw SessionInvalidated()
+        if (authenticated.principal.mode != scope) throw SessionInvalidated()
+        val token = currentToken()
+        if (token == null) { clearLocked(); throw SessionInvalidated() }
+        AuthHandle(authenticated.generation, "Bearer $token", authenticated.principal)
+    }
+
+    internal suspend fun finish(handle: AuthHandle, unauthorized: Boolean) = mutex.withLock {
+        requireCurrent(handle.generation)
+        if (unauthorized) clearLocked()
+    }
+
+    private fun entryState(): SessionState = when (selectedAccess) {
+        null -> SessionState.Welcome
+        AccessMode.STAFF -> SessionState.StaffEntry
+        AccessMode.PATIENT -> tenant?.let { SessionState.LoggedOut(it) } ?: SessionState.NoTenant
+    }
+    private fun invalidateLocked() {
+        generation++
+        accessToken = null
+        expiresAt = null
+        expiryJob?.cancel()
+        expiryJob = null
+    }
+    private suspend fun clearLocked() {
+        invalidateLocked()
+        store.clearSession()
+        _state.value = entryState()
+    }
+    private fun activateLocked(token: String, expiration: Instant, principal: VerifiedPrincipal) {
+        selectedAccess = principal.mode
+        accessToken = token
+        expiresAt = expiration
+        _state.value = SessionState.Authenticated(principal, generation)
+        val expected = generation
+        expiryJob?.cancel()
+        expiryJob = expiryScope.launch {
+            while (isCurrent(expected)) {
+                val remaining = Duration.between(clock.instant(), expiration).toMillis()
+                if (remaining <= 0) {
+                    mutex.withLock { if (isCurrent(expected)) { expiryJob = null; clearLocked() } }
+                    return@launch
+                }
+                delay(remaining)
+            }
+        }
+    }
+    fun close() { expiryJob?.cancel() }
 }

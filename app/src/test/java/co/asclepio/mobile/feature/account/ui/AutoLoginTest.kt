@@ -61,7 +61,7 @@ class AutoLoginTest {
         env.enqueue(200, AccountTestEnv.LOGIN_OK)
         env.enqueue(200, AccountTestEnv.me())
         vm.submit()
-        env.sessionManager.state.first { it is SessionState.LoggedIn }
+        env.sessionManager.state.first { it is SessionState.Authenticated }
         val paths = (1..4).map { env.server.takeRequest() }
         assertEquals(
             listOf("/api/v1/public/consent", "/api/v1/auth/patient/accounts", "/api/v1/auth/patient/login", "/api/v1/me"),
