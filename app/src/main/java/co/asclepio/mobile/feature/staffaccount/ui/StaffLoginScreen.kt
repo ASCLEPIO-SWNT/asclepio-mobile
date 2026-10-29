@@ -35,7 +35,7 @@ fun StaffLoginScreen(
     val emailFocus = remember { FocusRequester() }
     val passwordFocus = remember { FocusRequester() }
     val focus = LocalFocusManager.current
-    LaunchedEffect(state.fieldErrors, state.submitting) {
+    LaunchedEffect(state.validationAttempt) {
         if (!state.submitting) when {
             StaffLoginField.Email in state.fieldErrors -> emailFocus.requestFocus()
             StaffLoginField.Password in state.fieldErrors -> passwordFocus.requestFocus()

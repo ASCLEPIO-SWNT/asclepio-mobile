@@ -50,6 +50,7 @@ class SessionManager(
     private var tenant: RememberedTenant? = null
     private var selectedAccess: AccessMode? = null
     private var expiryJob: Job? = null
+    private var loginAttempt: LoginAttempt? = null
     private val invalidationListeners = CopyOnWriteArrayList<() -> Unit>()
 
     /** Limpieza inmediata de cachés efímeras; el núcleo no conoce ninguna feature. */
@@ -86,28 +87,30 @@ class SessionManager(
         val (expected, saved) = restored
         // La verificación pertenece al gestor: rotar cancela el await de UI, no su identidad ni la petición.
         expiryScope.launch {
-        if (!isCurrent(expected)) return@launch
-        val result = apiCall { meApi.meWithToken("Bearer ${saved.accessToken}") }
-        mutex.withLock {
-            if (!isCurrent(expected)) return@withLock
-            when (result) {
-                is ApiResult.Success -> {
-                    val principal = result.value.toPrincipal(tenant)
-                    if (principal == null || !saved.expiresAt.isAfter(clock.instant())) {
-                        clearLocked()
-                    } else activateLocked(saved.accessToken, saved.expiresAt, principal)
-                }
-                is ApiResult.Failure -> {
-                    if (result.error.httpStatus == 401) clearLocked() else {
-                        _state.value = SessionState.VerificationError(result.error.commonMessage())
+            if (!isCurrent(expected)) return@launch
+            val result = apiCall { meApi.meWithToken("Bearer ${saved.accessToken}") }
+            mutex.withLock {
+                if (!isCurrent(expected)) return@withLock
+                if (!saved.expiresAt.isAfter(clock.instant())) { clearLocked(); return@withLock }
+                when (result) {
+                    is ApiResult.Success -> {
+                        val principal = result.value.toPrincipal(tenant)
+                        if (principal == null || !saved.expiresAt.isAfter(clock.instant())) {
+                            clearLocked()
+                        } else activateLocked(saved.accessToken, saved.expiresAt, principal)
+                    }
+                    is ApiResult.Failure -> {
+                        if (result.error.httpStatus == 401) clearLocked() else {
+                            _state.value = SessionState.VerificationError(result.error.commonMessage())
+                        }
                     }
                 }
             }
-        }
         }.join()
     }
 
-    suspend fun saveTenant(value: RememberedTenant) = mutex.withLock {
+    suspend fun saveTenant(value: RememberedTenant, expectedGeneration: Long = generation) = mutex.withLock {
+        requireCurrent(expectedGeneration)
         invalidateLocked()
         store.clearSession()
         store.saveTenant(value)
@@ -130,21 +133,23 @@ class SessionManager(
         clearLocked()
     }
 
-    suspend fun beginLogin(mode: AccessMode): LoginAttempt = mutex.withLock {
-        if (_state.value is SessionState.Authenticated) throw SessionInvalidated()
+    suspend fun beginLogin(mode: AccessMode, expectedGeneration: Long = generation): LoginAttempt = mutex.withLock {
+        requireCurrent(expectedGeneration)
+        if (_state.value is SessionState.Authenticated || (selectedAccess != null && selectedAccess != mode)) throw SessionInvalidated()
         selectedAccess = mode
         tenant = store.tenant()
         clearLocked()
-        LoginAttempt(generation, mode, tenant?.tenantId)
+        LoginAttempt(generation, mode, tenant?.tenantId).also { loginAttempt = it }
     }
 
     suspend fun completeLogin(attempt: LoginAttempt, token: String, expiration: Instant, me: MeDto): Boolean = mutex.withLock {
-        if (!isCurrent(attempt.generation)) throw SessionInvalidated()
+        if (!isCurrent(attempt.generation) || loginAttempt !== attempt) throw SessionInvalidated()
         val principal = me.toPrincipal(tenant)
         if (token.isBlank() || !expiration.isAfter(clock.instant()) || principal == null ||
             principal.mode != attempt.mode || (attempt.mode == AccessMode.PATIENT && principal.tenantId != attempt.tenantId)
         ) return@withLock false
         store.saveSession(token, expiration)
+        if (!expiration.isAfter(clock.instant())) { clearLocked(); return@withLock false }
         activateLocked(token, expiration, principal)
         true
     }
@@ -157,7 +162,8 @@ class SessionManager(
         if (expectedGeneration == null || isCurrent(expectedGeneration)) clearLocked()
     }
 
-    internal suspend fun capture(scope: AccessMode): AuthHandle = mutex.withLock {
+    internal suspend fun capture(scope: AccessMode, expectedGeneration: Long): AuthHandle = mutex.withLock {
+        requireCurrent(expectedGeneration)
         val authenticated = _state.value as? SessionState.Authenticated ?: throw SessionInvalidated()
         if (authenticated.principal.mode != scope) throw SessionInvalidated()
         val token = currentToken()
@@ -167,6 +173,7 @@ class SessionManager(
 
     internal suspend fun finish(handle: AuthHandle, unauthorized: Boolean) = mutex.withLock {
         requireCurrent(handle.generation)
+        if (expiresAt?.isAfter(clock.instant()) != true) { clearLocked(); throw SessionInvalidated() }
         if (unauthorized) clearLocked()
     }
 
@@ -177,6 +184,7 @@ class SessionManager(
     }
     private fun invalidateLocked() {
         generation++
+        loginAttempt = null
         invalidationListeners.forEach { it() }
         accessToken = null
         expiresAt = null
@@ -190,6 +198,7 @@ class SessionManager(
     }
     private fun activateLocked(token: String, expiration: Instant, principal: VerifiedPrincipal) {
         selectedAccess = principal.mode
+        loginAttempt = null
         accessToken = token
         expiresAt = expiration
         _state.value = SessionState.Authenticated(principal, generation)

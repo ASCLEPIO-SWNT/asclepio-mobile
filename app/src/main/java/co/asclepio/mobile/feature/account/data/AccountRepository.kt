@@ -50,8 +50,8 @@ class AccountRepository(
      * Login + `GET /me` con la cabecera explícita (R17, R19–R21). Solo si `/me` es un paciente de la misma IPS
      * se guarda la sesión; en otro caso el token se descarta sin guardarse.
      */
-    suspend fun login(tenantId: String, documentType: DocumentType, documentNumber: String, password: String): LoginResult {
-        val attempt = sessionManager.beginLogin(AccessMode.PATIENT)
+    suspend fun login(tenantId: String, documentType: DocumentType, documentNumber: String, password: String, expectedGeneration: Long = sessionManager.generation): LoginResult {
+        val attempt = sessionManager.beginLogin(AccessMode.PATIENT, expectedGeneration)
         val request = PatientLoginRequest(tenantId, documentType, documentNumber.trim(), password)
         val token = when (val result = apiCall { authApi.login(request) }) {
             is ApiResult.Success -> result.value

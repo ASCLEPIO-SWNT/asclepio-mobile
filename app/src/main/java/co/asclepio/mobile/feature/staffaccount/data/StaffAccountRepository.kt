@@ -16,8 +16,10 @@ sealed interface StaffLoginResult {
 }
 
 class StaffAccountRepository(private val api: StaffAuthApi, private val meApi: MeApi, private val session: SessionManager) {
-    suspend fun login(email: String, password: String): StaffLoginResult {
-        val attempt = session.beginLogin(AccessMode.STAFF)
+    val sessionGeneration: Long get() = session.generation
+
+    suspend fun login(email: String, password: String, expectedGeneration: Long = session.generation): StaffLoginResult {
+        val attempt = session.beginLogin(AccessMode.STAFF, expectedGeneration)
         val login = apiCall { api.login(StaffLoginRequest(email.trim(), password)) }
         session.requireCurrent(attempt.generation)
         val token = when (login) {

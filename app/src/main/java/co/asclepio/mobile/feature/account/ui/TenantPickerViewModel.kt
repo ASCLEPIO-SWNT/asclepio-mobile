@@ -44,6 +44,7 @@ class TenantPickerViewModel(
     private val repository: TenantRepository,
     private val sessionManager: SessionManager,
 ) : ViewModel() {
+    private val originGeneration = sessionManager.generation
     private val _state = MutableStateFlow<TenantPickerUiState>(TenantPickerUiState.Loading)
     val state: StateFlow<TenantPickerUiState> = _state.asStateFlow()
 
@@ -101,7 +102,7 @@ class TenantPickerViewModel(
         val site = tenant.sites.first { it.id == s.selectedSiteId }
         _state.value = s.copy(saving = true)
         viewModelScope.launch {
-            sessionManager.saveTenant(RememberedTenant(tenant.id, tenant.name, site.id, site.name))
+            sessionManager.saveTenant(RememberedTenant(tenant.id, tenant.name, site.id, site.name), originGeneration)
             _state.update { (it as? TenantPickerUiState.Success)?.copy(saving = false, confirmed = true) ?: it }
         }
     }

@@ -99,6 +99,7 @@ class StaffSessionLifecycleTest {
     @Test fun `R14 logout y cambio de acceso invalidan incluso intentos pendientes y conservan solo IPS publica`() = runTest {
         env = StaffTestEnv(tmp.root, backgroundScope)
         env.manager.saveTenant(env.tenant)
+        env.manager.selectAccess(AccessMode.STAFF)
         val attempt = env.manager.beginLogin(AccessMode.STAFF)
         env.manager.selectAccess(AccessMode.PATIENT)
         assertFalse(env.manager.isCurrent(attempt.generation))

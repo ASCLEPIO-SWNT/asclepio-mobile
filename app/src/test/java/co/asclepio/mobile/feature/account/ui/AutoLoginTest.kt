@@ -104,4 +104,31 @@ class AutoLoginTest {
         assertEquals(notPatientMessage, login.state.value.message)
         assertEquals(StoredSession.None, env.store.session())
     }
+    @Test fun `R19 login paciente tras auto login fallido conserva formulario y usa generacion vigente`() = runTest {
+        val vm = signUp()
+        env.enqueue(401, env.problem(401))
+        vm.submit()
+        vm.state.first { it.navigateToLogin }
+        val login = LoginViewModel(env.accountRepository, env.sessionManager)
+        runCurrent()
+        login.updateForm(login.state.value.form.copy(password = "secreta-123"))
+        env.enqueue(200, AccountTestEnv.LOGIN_OK)
+        env.enqueue(200, AccountTestEnv.me())
+        login.submit()
+        login.state.first { !it.submitting }
+        co.asclepio.mobile.core.auth.assertPatientSession(env.sessionManager, env.tenant)
+    }
+
+    @Test fun `R19 mismo formulario paciente permite corregir despues de 401 y entrar en el intento siguiente`() = runTest {
+        env.rememberTenant()
+        val login = LoginViewModel(env.accountRepository, env.sessionManager)
+        env.enqueue(401, env.problem(401))
+        login.updateForm(LoginForm(DocumentType.CC, "123", "wrong")); login.submit()
+        login.state.first { !it.submitting }
+        login.updateForm(login.state.value.form.copy(password = "corrected"))
+        env.enqueue(200, AccountTestEnv.LOGIN_OK); env.enqueue(200, AccountTestEnv.me())
+        login.submit(); login.state.first { !it.submitting }
+        co.asclepio.mobile.core.auth.assertPatientSession(env.sessionManager, env.tenant)
+    }
+
 }

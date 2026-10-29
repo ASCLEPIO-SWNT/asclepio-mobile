@@ -69,4 +69,17 @@ class StaffTransitionRegressionTest {
         assertEquals(2, env.server.requestCount) // consentimiento + alta, nunca login
         assertNull(env.accountRepository.loginPrefill.value)
     }
+    @Test fun `R15 selector paciente anterior no cambia IPS ni cierra entrada personal posterior`() = runTest {
+        env.rememberTenant()
+        env.enqueue(200, """[{"id":"other","name":"Otra IPS","sites":[{"id":"site","name":"Sede"}]}]""")
+        val vm = TenantPickerViewModel(env.tenantRepository, env.sessionManager)
+        vm.state.first { it is TenantPickerUiState.Success }
+        vm.selectTenant("other"); vm.selectSite("site")
+        env.sessionManager.selectAccess(AccessMode.STAFF)
+        vm.confirm()
+        vm.viewModelScope.coroutineContext[Job]!!.children.toList().joinAll()
+        assertEquals(SessionState.StaffEntry, env.sessionManager.state.value)
+        assertEquals(env.tenant, env.store.tenant())
+    }
+
 }

@@ -41,12 +41,14 @@ data class StaffLoginUiState(
     val message: UiMessage? = null,
     val submitting: Boolean = false,
     val submitBlocked: Boolean = false,
+    val validationAttempt: Long = 0,
 ) {
     val canSubmit: Boolean get() = !submitting && !submitBlocked
 }
 
 /** Credenciales únicamente en VM, sin estado guardado ni persistencia. */
 class StaffLoginViewModel(private val repository: StaffAccountRepository) : ViewModel() {
+    private var loginGeneration = repository.sessionGeneration
     private val _state = MutableStateFlow(StaffLoginUiState())
     val state: StateFlow<StaffLoginUiState> = _state.asStateFlow()
     private var unblockJob: Job? = null
@@ -65,10 +67,13 @@ class StaffLoginViewModel(private val repository: StaffAccountRepository) : View
         val current = _state.value
         if (!current.canSubmit) return
         val errors = validateStaffLogin(current.form)
-        if (errors.isNotEmpty()) { _state.update { it.copy(fieldErrors = errors, message = null) }; return }
+        if (errors.isNotEmpty()) { _state.update { it.copy(fieldErrors = errors, message = null, validationAttempt = it.validationAttempt + 1) }; return }
+        val expectedGeneration = loginGeneration
         _state.update { it.copy(submitting = true, fieldErrors = emptyMap(), message = null) }
         viewModelScope.launch {
-            when (val result = repository.login(current.form.email, current.form.password)) {
+            val result = repository.login(current.form.email, current.form.password, expectedGeneration)
+            loginGeneration = repository.sessionGeneration
+            when (result) {
                 StaffLoginResult.Success -> _state.update { it.copy(submitting = false, form = it.form.copy(password = "")) }
                 StaffLoginResult.InvalidPrincipal -> _state.update { it.copy(submitting = false, message = UiMessage(R.string.staff_error_access)) }
                 is StaffLoginResult.LoginFailed -> failed(result.error, fromLogin = true)
@@ -89,6 +94,7 @@ class StaffLoginViewModel(private val repository: StaffAccountRepository) : View
                 submitting = false,
                 message = if (fromLogin && error.httpStatus == 401) UiMessage(R.string.staff_error_credentials) else error.commonMessage(),
                 fieldErrors = fields,
+                validationAttempt = if (fields.isNotEmpty()) it.validationAttempt + 1 else it.validationAttempt,
                 form = if (fromLogin && error.httpStatus == 401) it.form.copy(password = "") else it.form,
                 submitBlocked = wait != null,
             )

@@ -58,6 +58,18 @@ class StaffLoginViewModelTest {
             assertEquals(StoredSession.None, env.store.session())
         }
     }
+    @Test fun `R19 mismo formulario staff permite corregir despues de 401 y entrar en el intento siguiente`() = runTest {
+        val vm = StaffLoginViewModel(env.repository)
+        env.enqueue(401, "{}")
+        vm.updateForm(StaffLoginForm("wrong@ips.co", "x")); vm.submit()
+        vm.state.first { !it.submitting }
+        vm.updateForm(StaffLoginForm("nurse@ips.co", "corrected"))
+        env.enqueue(200, StaffTestEnv.LOGIN_OK); env.enqueue(200, StaffTestEnv.staffMe())
+        vm.submit(); vm.state.first { !it.submitting }
+        assertTrue(env.manager.state.value is SessionState.Authenticated)
+        assertEquals("", vm.state.value.form.password)
+    }
+
     @Test fun `R7 429 bloquea RetryAfter positivo o 60 segundos sin reintentos ni sesion`() = runTest {
         val vm = StaffLoginViewModel(env.repository)
         for ((header, seconds) in listOf("3" to 3, "0" to 60, "-2" to 60, "date" to 60, null to 60)) {
@@ -107,4 +119,17 @@ class StaffLoginViewModelTest {
         assertEquals(form, vm.state.value.form)
         assertEquals(StaffLoginForm(), StaffLoginViewModel(env.repository).state.value.form)
     }
+    @Test fun `R21 foco de validacion cambia por nuevo envio pero no al editar otro campo`() {
+        val vm = StaffLoginViewModel(env.repository)
+        vm.submit()
+        val attempt = vm.state.value.validationAttempt
+        assertTrue(attempt > 0)
+        vm.updateForm(StaffLoginForm(password = "primer caracter"))
+        assertTrue(StaffLoginField.Email in vm.state.value.fieldErrors)
+        assertFalse(StaffLoginField.Password in vm.state.value.fieldErrors)
+        assertEquals(attempt, vm.state.value.validationAttempt)
+        vm.submit()
+        assertTrue(vm.state.value.validationAttempt > attempt)
+    }
+
 }

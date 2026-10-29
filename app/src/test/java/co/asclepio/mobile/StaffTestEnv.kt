@@ -17,6 +17,7 @@ class StaffTestEnv(dir: File, scope: CoroutineScope? = null) {
     val server = MockWebServer().apply { start() }
     val clock = MutableClock(Instant.parse("2026-10-29T15:00:00Z"))
     private val ds = TestDataStore(dir.resolve("staff.preferences_pb"))
+    val dataStore get() = ds.dataStore
     val store = SessionStore(ds.dataStore, FakeTokenCipher())
     lateinit var manager: SessionManager
     private val client = OkHttpClient.Builder()

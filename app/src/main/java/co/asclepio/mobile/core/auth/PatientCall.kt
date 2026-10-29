@@ -10,7 +10,9 @@ class AuthHandle internal constructor(val generation: Long, val authorization: S
 }
 
 suspend fun <T> SessionManager.authenticatedCall(scope: AccessMode, block: suspend (AuthHandle) -> T): ApiResult<T> {
-    val handle = capture(scope)
+    val origin = state.value as? SessionState.Authenticated ?: throw SessionInvalidated()
+    if (origin.principal.mode != scope) throw SessionInvalidated()
+    val handle = capture(scope, origin.generation)
     val result = apiCall { block(handle) }
     finish(handle, result is ApiResult.Failure && result.error.httpStatus == 401)
     return result

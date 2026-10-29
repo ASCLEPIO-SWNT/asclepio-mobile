@@ -24,6 +24,7 @@ class StaffAccountRepositoryTest {
 
     @Test fun `R3 login envia solo correo recortado y password literal sin Bearer ni IPS`() = runTest {
         env.manager.saveTenant(env.tenant)
+        env.manager.selectAccess(AccessMode.STAFF)
         env.enqueue(200, StaffTestEnv.LOGIN_OK)
         env.enqueue(200, StaffTestEnv.staffMe())
         assertEquals(StaffLoginResult.Success, env.repository.login("  nurse@ips.co  ", " x "))

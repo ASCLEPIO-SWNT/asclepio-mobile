@@ -37,6 +37,7 @@ class LoginViewModel(
     private val repository: AccountRepository,
     private val sessionManager: SessionManager,
 ) : ViewModel() {
+    private var loginGeneration = sessionManager.generation
     private val _state = MutableStateFlow(LoginUiState())
     val state: StateFlow<LoginUiState> = _state.asStateFlow()
     private var unblockJob: Job? = null
@@ -45,13 +46,17 @@ class LoginViewModel(
         viewModelScope.launch {
             sessionManager.state.collect { s ->
                 val tenant = (s as? SessionState.LoggedOut)?.tenant
-                if (tenant != null) _state.update { it.copy(tenant = tenant) }
+                if (tenant != null && tenant != _state.value.tenant) {
+                    loginGeneration = sessionManager.generation
+                    _state.update { it.copy(tenant = tenant) }
+                }
             }
         }
         // R16: si la entrada automática tras el alta falló, el documento llega ya escrito con su mensaje.
         viewModelScope.launch {
             repository.loginPrefill.filterNotNull().collect {
                 val prefill = repository.consumeLoginPrefill() ?: return@collect
+                loginGeneration = sessionManager.generation
                 _state.update { s ->
                     s.copy(form = LoginForm(prefill.documentType, prefill.documentNumber, ""), fieldErrors = emptyMap())
                 }
@@ -81,9 +86,11 @@ class LoginViewModel(
         }
         val tenant = sessionManager.rememberedTenant() ?: return
         val form = s.form
+        val expectedGeneration = loginGeneration
         _state.update { it.copy(submitting = true, message = null, fieldErrors = emptyMap()) }
         viewModelScope.launch {
-            val result = repository.login(tenant.tenantId, checkNotNull(form.documentType), form.documentNumber, form.password)
+            val result = repository.login(tenant.tenantId, checkNotNull(form.documentType), form.documentNumber, form.password, expectedGeneration)
+            loginGeneration = sessionManager.generation
             onResult(result)
         }
     }

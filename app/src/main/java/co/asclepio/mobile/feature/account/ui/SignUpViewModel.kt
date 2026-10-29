@@ -50,6 +50,7 @@ class SignUpViewModel(
     private val sessionManager: SessionManager,
     private val clock: Clock,
 ) : ViewModel() {
+    private val originGeneration = sessionManager.generation
     private val _state = MutableStateFlow(SignUpUiState())
     val state: StateFlow<SignUpUiState> = _state.asStateFlow()
 
@@ -100,7 +101,7 @@ class SignUpViewModel(
 
     fun submit() {
         val s = _state.value
-        if (!s.canSubmit) return
+        if (!s.canSubmit || !sessionManager.isCurrent(originGeneration)) return
         val consent = s.consent as ConsentUiState.Loaded
         val errors = validateSignUp(s.form, clock)
         if (errors.isNotEmpty()) {
@@ -109,22 +110,22 @@ class SignUpViewModel(
         }
         val tenant = sessionManager.rememberedTenant() ?: return
         val form = s.form
-        val expectedGeneration = sessionManager.generation
+        val expectedGeneration = originGeneration
         _state.update { it.copy(submitting = true, message = null, fieldErrors = emptyMap(), showGoToLogin = false) }
         viewModelScope.launch {
             val result = repository.createAccount(form.toRequest(tenant.tenantId, consent.version))
             sessionManager.requireCurrent(expectedGeneration)
             when (result) {
-                is ApiResult.Success -> autoLogin(tenant.tenantId, form)
+                is ApiResult.Success -> autoLogin(tenant.tenantId, form, expectedGeneration)
                 is ApiResult.Failure -> onCreateFailed(result.error, consent.version)
             }
         }
     }
 
     /** R16: entra con los mismos datos; si falla, va al login con el documento ya escrito. */
-    private suspend fun autoLogin(tenantId: String, form: SignUpForm) {
+    private suspend fun autoLogin(tenantId: String, form: SignUpForm, expectedGeneration: Long) {
         val documentType = checkNotNull(form.documentType)
-        val result = repository.login(tenantId, documentType, form.documentNumber, form.password)
+        val result = repository.login(tenantId, documentType, form.documentNumber, form.password, expectedGeneration)
         if (result != LoginResult.Success) {
             repository.setLoginPrefill(LoginPrefill(documentType, form.documentNumber.trim(), result))
             _state.update { it.copy(submitting = false, navigateToLogin = true) }
