@@ -132,7 +132,7 @@
         "Plan aprobado por chat; docs/mobile-migration.md y specs/F-03-mobile/"
       ],
       "sdd": true,
-      "status": "pending"
+      "status": "in_progress"
     },
     {
       "id": "UI-02-mobile",
