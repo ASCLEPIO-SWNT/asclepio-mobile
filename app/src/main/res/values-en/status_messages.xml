@@ -1,0 +1,4 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="status_http_error">The service returned HTTP error %1$d. Try again.</string>
+</resources>

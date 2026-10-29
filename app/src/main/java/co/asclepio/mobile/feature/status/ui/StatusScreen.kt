@@ -21,6 +21,9 @@ import co.asclepio.mobile.core.ui.ScreenColumn
 import co.asclepio.mobile.core.ui.PageHeader
 import co.asclepio.mobile.core.ui.adaptivePaneMode
 import co.asclepio.mobile.core.ui.PaneMode
+import co.asclepio.mobile.core.ui.text
+import co.asclepio.mobile.core.ui.UiNotice
+import co.asclepio.mobile.core.ui.NoticeTone
 
 /** Teléfono (Compact): una columna. Tablet (Medium/Expanded): estado e información lado a lado. */
 @Composable
@@ -62,7 +65,7 @@ private fun StatusCard(state: StatusUiState, onRetry: () -> Unit, modifier: Modi
                     Text(stringResource(R.string.status_server_time, state.serverTimeBogota))
                 }
                 is StatusUiState.Error -> {
-                    Text(stringResource(R.string.status_error, state.message), color = MaterialTheme.colorScheme.error)
+                    UiNotice(stringResource(R.string.status_error, state.message.text()), NoticeTone.Error)
                     AsclepioButton(onClick = onRetry) { Text(stringResource(R.string.status_retry)) }
                 }
             }

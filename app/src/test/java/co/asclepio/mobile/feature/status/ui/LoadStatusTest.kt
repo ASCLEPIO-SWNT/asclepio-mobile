@@ -1,6 +1,8 @@
 package co.asclepio.mobile.feature.status.ui
 
 import co.asclepio.mobile.feature.status.data.HealthApi
+import co.asclepio.mobile.R
+import co.asclepio.mobile.core.ui.UiMessage
 import co.asclepio.mobile.core.network.createRetrofit
 import kotlinx.coroutines.test.runTest
 import okhttp3.mockwebserver.MockResponse
@@ -37,12 +39,16 @@ class LoadStatusTest {
                 .setHeader("Content-Type", "application/problem+json")
                 .setBody("""{"type":"about:blank","title":"Service Unavailable","status":503}"""),
         )
-        assertEquals(StatusUiState.Error("HTTP 503"), loadStatus(api))
+        assertEquals(StatusUiState.Error(UiMessage(R.string.status_http_error, listOf(503))), loadStatus(api))
     }
 
     @Test fun `API inalcanzable se traduce a Error sin conexion`() = runTest {
         server.shutdown()
         val result = loadStatus(api)
-        assertTrue(result is StatusUiState.Error && result.message == "sin conexión")
+        assertTrue(result is StatusUiState.Error && result.message == UiMessage(R.string.error_network))
+    }
+    @Test fun `R4 diagnostic errors retain resource ids instead of Spanish text or backend messages`() = runTest {
+        server.enqueue(MockResponse().setBody("""{"status":"unexpected","time":"2026-10-27T00:42:00.000Z"}"""))
+        assertEquals(StatusUiState.Error(UiMessage(R.string.error_general)), loadStatus(api))
     }
 }
