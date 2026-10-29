@@ -15,7 +15,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -24,7 +23,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,6 +44,8 @@ import co.asclepio.mobile.core.model.datePickerMillisToLocalDate
 import co.asclepio.mobile.core.model.toDatePickerMillis
 import co.asclepio.mobile.core.ui.PaneMode
 import co.asclepio.mobile.core.ui.UiMessage
+import co.asclepio.mobile.core.ui.PrivateDatePicker
+import co.asclepio.mobile.core.ui.rememberPrivateDatePickerState
 import co.asclepio.mobile.core.ui.markdownToAnnotated
 import co.asclepio.mobile.core.ui.paneMode
 import co.asclepio.mobile.core.ui.text
@@ -179,7 +179,7 @@ private fun BirthDateField(form: SignUpForm, error: UiMessage?, enabled: Boolean
         error?.let { Text(it.text(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
     }
     if (open) {
-        val pickerState = rememberDatePickerState(initialSelectedDateMillis = form.birthDate?.toDatePickerMillis())
+        val pickerState = rememberPrivateDatePickerState(initialSelectedDateMillis = form.birthDate?.toDatePickerMillis())
         DatePickerDialog(
             onDismissRequest = { open = false },
             confirmButton = {
@@ -189,7 +189,7 @@ private fun BirthDateField(form: SignUpForm, error: UiMessage?, enabled: Boolean
                 }) { Text(stringResource(R.string.date_picker_ok)) }
             },
             dismissButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.logout_cancel)) } },
-        ) { DatePicker(pickerState) }
+        ) { PrivateDatePicker(pickerState) }
     }
 }
 

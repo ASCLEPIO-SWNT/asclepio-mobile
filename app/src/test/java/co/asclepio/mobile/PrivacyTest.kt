@@ -26,4 +26,17 @@ class PrivacyTest {
         val keys = Regex("""PreferencesKey\("([a-z_]+)"\)""").findAll(store).map { it.groupValues[1] }.toSet()
         assertTrue(keys.toString(), keys == setOf("tenant_id", "tenant_name", "site_id", "site_name", "access_token", "expires_at"))
     }
+    @Test fun `R20 fechas privadas no usan picker saveable ni DatePicker fuera del contenedor de memoria`() {
+        val savedPattern = Regex("""rememberDatePickerState\s*\(""")
+        assertTrue(savedPattern.containsMatchIn("rememberDatePickerState(initialSelectedDateMillis = value)"))
+        val savedPicker = offenders(savedPattern)
+        assertTrue(savedPicker.toString(), savedPicker.isEmpty())
+        val rawPicker = sources.filter { it.name != "PrivateDatePicker.kt" }.flatMap { file ->
+            file.readLines().mapIndexedNotNull { index, line ->
+                if (Regex("""(?<![A-Za-z])DatePicker\s*\(""").containsMatchIn(line)) "${file.path}:${index + 1}" else null
+            }
+        }
+        assertTrue(rawPicker.toString(), rawPicker.isEmpty())
+    }
+
 }
