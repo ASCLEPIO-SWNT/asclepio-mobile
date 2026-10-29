@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="my_requests_title">My requests</string>
+    <string name="my_requests_intro">Check the current status of your pre-registrations.</string>
+    <string name="my_requests_empty">You have not sent any requests yet.</string>
+    <string name="my_requests_loading">Loading requests…</string>
+</resources>

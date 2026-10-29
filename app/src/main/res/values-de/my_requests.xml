@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="my_requests_title">Meine Anfragen</string>
+    <string name="my_requests_intro">Sehen Sie den aktuellen Status Ihrer Voranmeldungen.</string>
+    <string name="my_requests_empty">Sie haben noch keine Anfragen gesendet.</string>
+    <string name="my_requests_loading">Anfragen werden geladen…</string>
+</resources>
