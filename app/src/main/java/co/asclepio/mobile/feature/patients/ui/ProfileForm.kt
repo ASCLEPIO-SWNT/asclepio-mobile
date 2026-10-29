@@ -44,7 +44,7 @@ fun validateProfile(form: ProfileForm, clock: Clock): Map<ProfileField, UiMessag
         name.isEmpty() -> put(ProfileField.FullName, UiMessage(R.string.error_required))
         name.length > FULL_NAME_MAX -> put(ProfileField.FullName, UiMessage(R.string.error_max_length, listOf(FULL_NAME_MAX)))
     }
-    if (form.birthDate != null && !isAdult(form.birthDate, clock)) put(ProfileField.BirthDate, UiMessage(R.string.error_underage))
+    if (form.birthDate != null && !isAdult(form.birthDate, clock)) put(ProfileField.BirthDate, UiMessage(R.string.error_underage_profile))
 }
 
 /** Un valor mostrado: un texto de strings.xml o un dato tal cual llega de la API. */

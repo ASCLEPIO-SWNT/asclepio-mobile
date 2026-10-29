@@ -15,7 +15,7 @@ class ProfileErrorMessagesTest {
 
     @Test fun `R7 un 422 del PATCH marca la fecha de nacimiento con el mensaje de mayoria de edad`() {
         assertEquals(
-            ProfileErrors(fieldErrors = mapOf(ProfileField.BirthDate to UiMessage(R.string.error_underage))),
+            ProfileErrors(fieldErrors = mapOf(ProfileField.BirthDate to UiMessage(R.string.error_underage_profile))),
             profileErrorMessage(httpError(422)),
         )
     }
@@ -59,7 +59,7 @@ class ProfileErrorMessagesTest {
 
     @Test fun `R28 cada error de Mis datos se traduce a un id de R string sin textos de la API`() {
         val ids = setOf(
-            R.string.error_general, R.string.error_network, R.string.error_too_many_requests, R.string.error_underage,
+            R.string.error_general, R.string.error_network, R.string.error_too_many_requests, R.string.error_underage_profile,
             R.string.error_required, R.string.error_max_length,
         )
         for (error in allApiErrors) {

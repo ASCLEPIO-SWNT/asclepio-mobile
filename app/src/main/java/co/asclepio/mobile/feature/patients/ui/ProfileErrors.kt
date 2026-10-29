@@ -30,7 +30,7 @@ fun profileErrorMessage(error: ApiError): ProfileErrors = when (error.httpStatus
         if (fields.isEmpty()) ProfileErrors(message = UiMessage(R.string.error_general)) else ProfileErrors(fieldErrors = fields)
     }
     409 -> ProfileErrors(locked = true)
-    422 -> ProfileErrors(fieldErrors = mapOf(ProfileField.BirthDate to UiMessage(R.string.error_underage)))
+    422 -> ProfileErrors(fieldErrors = mapOf(ProfileField.BirthDate to UiMessage(R.string.error_underage_profile)))
     else -> ProfileErrors(message = error.commonMessage())
 }
 

@@ -141,7 +141,7 @@ class ProfileViewModelTest {
         vm.save()
         runCurrent()
         assertEquals(
-            mapOf(ProfileField.FullName to UiMessage(R.string.error_required), ProfileField.BirthDate to UiMessage(R.string.error_underage)),
+            mapOf(ProfileField.FullName to UiMessage(R.string.error_required), ProfileField.BirthDate to UiMessage(R.string.error_underage_profile)),
             vm.success().fieldErrors,
         )
         assertEquals(1, env.server.requestCount)
@@ -182,6 +182,25 @@ class ProfileViewModelTest {
         assertFalse(vm.success().editable)
     }
 
+    @Test fun `R6 tras un 409 si la recarga falla, Reintentar conserva el aviso de bloqueo`() = runTest {
+        val vm = opened()
+        vm.updateForm(vm.success().form.copy(fullName = "DEV Otro"))
+        env.enqueue(409, env.problem(409))
+        env.enqueue(503, env.problem(503))
+        vm.save()
+        assertEquals(
+            ProfileUiState.Error(UiMessage(R.string.error_general), retryEnabled = true),
+            vm.state.first { it is ProfileUiState.Error },
+        )
+        env.enqueue(200, PatientTestEnv.profile(editable = true))
+        vm.retry()
+        val s = vm.state.first { it is ProfileUiState.Success } as ProfileUiState.Success
+        assertEquals(4, env.server.requestCount)
+        assertTrue(s.showLockedNotice)
+        assertFalse(s.editable)
+        assertFalse(s.canSave)
+    }
+
     @Test fun `R7 un 422 marca la fecha de nacimiento y conserva lo escrito`() = runTest {
         val vm = opened()
         val form = vm.success().form.copy(fullName = "DEV Otro", birthDate = LocalDate.parse("2000-01-01"))
@@ -189,7 +208,7 @@ class ProfileViewModelTest {
         env.enqueue(422, env.problem(422))
         vm.save()
         val s = vm.settled()
-        assertEquals(mapOf(ProfileField.BirthDate to UiMessage(R.string.error_underage)), s.fieldErrors)
+        assertEquals(mapOf(ProfileField.BirthDate to UiMessage(R.string.error_underage_profile)), s.fieldErrors)
         assertEquals(form, s.form)
         assertNull(s.message)
     }

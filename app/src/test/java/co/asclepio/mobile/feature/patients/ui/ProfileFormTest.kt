@@ -19,7 +19,7 @@ class ProfileFormTest {
     private val clock = Clock.fixed(Instant.parse("2026-10-27T15:00:00Z"), ZoneOffset.UTC)
     private val loaded = PatientProfileDto("p", "CC", "DEV-1020304050", "DEV Paciente", "1990-05-17", Sex.F, true)
     private val form = loaded.toForm()
-    private val underage = UiMessage(R.string.error_underage)
+    private val underage = UiMessage(R.string.error_underage_profile)
 
     @Test fun `R3 el formulario parte del perfil cargado`() {
         assertEquals(ProfileForm("DEV Paciente", LocalDate.parse("1990-05-17"), Sex.F), form)

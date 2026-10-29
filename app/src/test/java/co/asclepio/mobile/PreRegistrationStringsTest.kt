@@ -63,7 +63,7 @@ class PreRegistrationStringsTest {
             "error_too_many_requests" to "Demasiados intentos. Espera %1\$d segundos e intenta de nuevo.",
         )
         for ((name, text) in expected) assertEquals(name, text, strings[name])
-        assertTrue(strings.getValue("error_underage").startsWith("Debes ser mayor de 18 años"))
+        assertEquals("Debes ser mayor de 18 años.", strings["error_underage_profile"])
     }
 
     @Test fun `R28 strings xml contiene exactamente los textos de estado de la tabla de PA-M02-2`() {

@@ -27,6 +27,7 @@
     <string name="error_password_length">La contraseña debe tener entre 10 y 128 caracteres</string>
     <string name="error_password_mismatch">Las contraseñas no coinciden</string>
     <string name="error_underage">Debes ser mayor de 18 años para crear una cuenta</string>
+    <string name="error_underage_profile">Debes ser mayor de 18 años.</string>
 
     <!-- Tipos de documento y sexo (PA-6). -->
     <string name="document_type_cc">Cédula de ciudadanía</string>

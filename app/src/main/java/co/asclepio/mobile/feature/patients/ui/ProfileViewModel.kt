@@ -54,17 +54,21 @@ class ProfileViewModel(private val repository: PatientProfileRepository, private
     private val _state = MutableStateFlow<ProfileUiState>(ProfileUiState.Loading)
     val state: StateFlow<ProfileUiState> = _state.asStateFlow()
 
+    /** R6: el 409 sigue vigente si la recarga posterior falla y se reintenta. */
+    private var lockedByConflict = false
+
     init {
         load()
     }
 
     fun retry() {
         val s = _state.value
-        if (s is ProfileUiState.Error && s.retryEnabled) load()
+        if (s is ProfileUiState.Error && s.retryEnabled) load(lockedByConflict)
     }
 
     private fun load(lockedByConflict: Boolean = false) {
-        if (!lockedByConflict) _state.value = ProfileUiState.Loading
+        this.lockedByConflict = lockedByConflict
+        if (_state.value !is ProfileUiState.Success) _state.value = ProfileUiState.Loading
         viewModelScope.launch {
             when (val result = repository.profile()) {
                 is ApiResult.Success -> _state.value = ProfileUiState.Success(

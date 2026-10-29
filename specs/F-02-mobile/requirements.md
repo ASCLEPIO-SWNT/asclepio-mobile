@@ -37,7 +37,7 @@ Glosario de la spec:
 | Pre-registro: sede obligatoria | "Elige una sede" |
 | 409 en pre-registro | "Ya tienes un pre-registro pendiente o una atención en curso." con la acción "Ver mi estado" |
 | 422 en pre-registro | "La sede elegida ya no está disponible. Elige otra sede." |
-| 422 en Mis datos | "Debes ser mayor de 18 años" (reutiliza el texto de F-01) |
+| 422 en Mis datos | "Debes ser mayor de 18 años." (texto propio de Mis datos, cadena `error_underage_profile`; el alta de F-01 conserva el suyo) |
 | Campo obligatorio, longitud máxima, sin conexión, error general, 429 | los de F-01-mobile |
 
 ### Textos de estado (PA-M02-2, aceptada; desarrolla PA-F02-9)

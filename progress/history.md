@@ -24,5 +24,6 @@
 - **Spec:** R1–R29; PA-M02-1..7 resueltas el 2026-10-27 aceptando las propuestas (textos de UI y de estado, solo el último pre-registro, refresco sin sondeo, la sede recordada no cambia, el pre-registro solo pide sede y motivo, 401 sin mensaje).
 - **Pruebas:** 220 JVM (99 nuevas) en verde, lint sin issues. La prueba manual del humano en teléfono y tablet (T15, T16) salió OK.
 - **Revisión:** APROBADA en la 1.ª ronda.
-- **Pendientes (no bloqueantes, sin decisión del humano):** (1) el 422 de "Mis datos" reutiliza `error_underage` ("…para crear una cuenta"); propuesta: cadena propia "Debes ser mayor de 18 años." (2) R6: el aviso de bloqueo tras un 409 se pierde si falla la recarga y se pulsa "Reintentar". (3) El `created` del repositorio es un `SharedFlow` sin réplica (un login nuevo en el mismo proceso no ve el 201 anterior; el GET lo cubre).
+- **Correcciones del 2026-10-28 (pedidas por el humano, revisión APROBADA):** (1) el 422 de "Mis datos" usa una cadena propia, `error_underage_profile` = "Debes ser mayor de 18 años."; el alta de F-01 conserva `error_underage`. (2) R6: tras un 409, el aviso de bloqueo se mantiene aunque falle la recarga y se pulse "Reintentar" (nueva prueba R6).
+- **Pendiente no bloqueante:** el `created` del repositorio es un `SharedFlow` sin réplica (un login nuevo en el mismo proceso no ve el 201 anterior; el GET lo cubre).
 - **Para el roadmap de la API (no se escribe desde aquí):** F-02-mobile done (2026-10-27), consume 0.4.0.
