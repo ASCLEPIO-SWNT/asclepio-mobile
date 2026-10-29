@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+    <string name="staff_navigation">Navegação</string>
     <string name="staff_sites_error">Não foi possível carregar as unidades.</string>
     <string name="staff_sites_all">Todas as unidades</string>
     <string name="staff_arrival_confirmed">Chegada confirmada. Horário de chegada:</string>

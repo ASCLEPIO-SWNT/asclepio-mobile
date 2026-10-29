@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+    <string name="staff_navigation">Navigation</string>
     <string name="staff_sites_error">Could not load the locations.</string>
     <string name="staff_sites_all">All locations</string>
     <string name="staff_arrival_confirmed">Arrival confirmed. Arrival time:</string>

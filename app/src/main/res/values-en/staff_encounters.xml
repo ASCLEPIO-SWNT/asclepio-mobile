@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+    <string name="staff_page">Page %1$d</string>
     <string name="staff_status">Status</string>
     <string name="staff_statuses_all">All statuses</string>
     <string name="staff_encounters_loading">Loading encounters…</string>

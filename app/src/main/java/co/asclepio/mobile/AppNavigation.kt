@@ -14,6 +14,7 @@ import androidx.compose.runtime.saveable.LocalSaveableStateRegistry
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalConfiguration
 import co.asclepio.mobile.core.ui.guide.*
 import co.asclepio.mobile.feature.encounters.ui.MyRequestsScreen
@@ -54,6 +55,7 @@ import co.asclepio.mobile.feature.patients.ui.ProfileScreen
 import co.asclepio.mobile.feature.patients.ui.ProfileViewModel
 import co.asclepio.mobile.feature.staffaccount.ui.*
 import co.asclepio.mobile.feature.reception.ui.*
+import co.asclepio.mobile.feature.staffencounters.ui.*
 import co.asclepio.mobile.feature.status.ui.StatusScreen
 import co.asclepio.mobile.feature.status.ui.StatusViewModel
 import kotlinx.coroutines.launch
@@ -245,16 +247,33 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                                 val receptionState by reception.state.collectAsStateWithLifecycle()
                                 LifecycleEventEffect(Lifecycle.Event.ON_START) { reception.setActive(true) }
                                 LifecycleEventEffect(Lifecycle.Event.ON_STOP) { reception.setActive(false) }
+                                DisposableEffect(reception) { onDispose { reception.setActive(false) } }
                                 ReceptionScreen(
                                     receptionState, reception::refresh, reception::retrySites, reception::selectSite,
                                     reception::setIdentity, reception::setRejecting, reception::setReason, reception::confirm, reception::reject,
                                     onDirectRegistration = { backStack.add(Route.StaffRegistration) },
                                     onOpenEncounter = { backStack.add(Route.StaffEncounterDetail(it)) }, onScroll = reception::rememberScroll,
                                 )
+                            }) else if (route.destination == StaffDestination.ENCOUNTERS) ({
+                                val encounters = viewModel { StaffEncountersViewModel(container.encountersRepository, container.staffSitesRepository, container.staffDataChanges) }
+                                val encountersState by encounters.state.collectAsStateWithLifecycle()
+                                LifecycleEventEffect(Lifecycle.Event.ON_START) { encounters.setActive(true) }
+                                LifecycleEventEffect(Lifecycle.Event.ON_STOP) { encounters.setActive(false) }
+                                DisposableEffect(encounters) { onDispose { encounters.setActive(false) } }
+                                StaffEncountersScreen(
+                                    encountersState, encounters::refresh, encounters::retrySites, encounters::selectSite, encounters::selectStatus,
+                                    encounters::previousPage, encounters::nextPage,
+                                    onOpen = { backStack.add(Route.StaffEncounterDetail(it)) }, onScroll = encounters::rememberScroll,
+                                )
                             }) else null
                             StaffWorkspaceScreen(
                                 principal, route.destination, widthSizeClass, confirmation,
-                                onSelect = { destination -> if (canAccessRoute(session, Route.Staff(destination))) backStack.add(Route.Staff(destination)) },
+                                onSelect = { destination ->
+                                    val next = Route.Staff(destination)
+                                    if (canAccessRoute(session, next)) {
+                                        if (next in backStack) backStack.popTo(next) else backStack.add(next)
+                                    }
+                                },
                                 onLogout = vm::requestLogout, onChangeAccess = vm::requestChangeAccess, onCancel = vm::cancel, onConfirm = vm::confirm,
                                 content = operational,
                             )
@@ -277,10 +296,16 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                     }
                     entry<Route.StaffEncounterDetail> { route ->
                         GuardedRoute(session, route, { backStack.resetTo(root) }) {
-                            co.asclepio.mobile.core.ui.ScreenColumn {
-                                co.asclepio.mobile.core.ui.PageHeader(stringResource(R.string.staff_encounter))
-                                co.asclepio.mobile.core.ui.UiNotice(stringResource(R.string.staff_destination_pending))
-                            }
+                            val principal = (session as SessionState.Authenticated).principal as VerifiedPrincipal.Staff
+                            val vm = viewModel { StaffEncounterDetailViewModel(route.id, principal.role, container.encountersRepository, container.staffDataChanges) }
+                            val state by vm.state.collectAsStateWithLifecycle()
+                            LifecycleEventEffect(Lifecycle.Event.ON_START) { vm.setActive(true) }
+                            LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.setActive(false) }
+                            DisposableEffect(vm) { onDispose { vm.setActive(false) } }
+                            StaffEncounterDetailScreen(state, vm::refresh, vm::setCancelling, vm::setReason, vm::cancel, onEncounters = {
+                                val list = Route.Staff(StaffDestination.ENCOUNTERS)
+                                if (list in backStack) backStack.popTo(list) else backStack.add(list)
+                            })
                         }
                     }
                     entry<Route.TenantPicker> {

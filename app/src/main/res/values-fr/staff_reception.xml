@@ -1,5 +1,6 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
+    <string name="staff_navigation">Navigation</string>
     <string name="staff_sites_error">Impossible de charger les établissements.</string>
     <string name="staff_sites_all">Tous les établissements</string>
     <string name="staff_arrival_confirmed">Arrivée confirmée. Heure d’arrivée :</string>
