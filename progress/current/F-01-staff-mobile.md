@@ -7,3 +7,5 @@ Base móvil:ffea8e0, incorporada por fast-forward desde origin/main. API2f2672b,
 Entorno local configurado fuera del repositorio: ../../local-analysis/mobile-env.sh (JDK21, SDK37, Gradle cache local), local.properties no versionado. ./init.sh inicial completo VERDE, FAIL0/WARN0; log ../../local-analysis/mobile-verification/baseline-init.log.
 
 Plan de esta sesión lógica: spec_author escribe requisitos/diseño/tareas y ADR local del nuevo alcance; registrar spec_ready y aprobación ya recibida; implementer amplía sesión/login/navegación; reviewer independiente C1–C8 e init; publicar sólo el bloque verificado en main, cerrar y continuar UI01.
+
+Spec completada y revisada: 21 requisitos, sin preguntas abiertas. Estado spec_ready. Aprobación humana ya recibida del usuario mediante PLEASE IMPLEMENT THIS PLAN (2026-10-29), que autoriza estas mismas decisiones; se aplica sin pedir una confirmación duplicada.
