@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="guide_title">Voice guide</string>
+    <string name="guide_listen">Listen to guide</string>
+    <string name="guide_pause">Pause guide</string>
+    <string name="guide_resume">Resume guide</string>
+    <string name="guide_repeat">Replay guide</string>
+    <string name="guide_stop">Stop guide</string>
+    <string name="guide_speaking">Guide playing</string>
+    <string name="guide_paused">Guide paused</string>
+    <string name="guide_unavailable">The voice guide is not available with a local voice in this language. You can continue using the app.</string>
+    <string name="guide_welcome_1">Choose Patient to manage your details and requests, or Staff if you work at the institution.</string>
+    <string name="guide_welcome_2">You can change the language and reading preferences before signing in.</string>
+    <string name="guide_patient_login_1">Choose your document type and enter its number and your password to sign in as a patient.</string>
+    <string name="guide_patient_login_2">If you need a different access type, go back to the Patient or Staff selection.</string>
+    <string name="guide_staff_login_1">Enter your staff credentials. Your role will be verified when you sign in.</string>
+    <string name="guide_staff_login_2">To sign in as a patient, use Change access type.</string>
+    <string name="guide_tenant_1">Select the institution and location to continue as a patient.</string>
+    <string name="guide_tenant_2">Check your selection and press Continue.</string>
+    <string name="guide_signup_1">Complete your details and review the consent displayed on the screen before accepting.</string>
+    <string name="guide_signup_2">If a validation message appears, check the indicated field before submitting the form again.</string>
+    <string name="guide_home_1">From the home screen, you can review your details and create a pre-registration when that action is available.</string>
+    <string name="guide_home_2">Open My requests to check their current statuses. Use Refresh to check again.</string>
+    <string name="guide_profile_1">Review your details and edit only the enabled fields.</string>
+    <string name="guide_profile_2">When finished, save your changes or return to the home screen. This guide will not read your details.</string>
+    <string name="guide_preregistration_1">Select the location and enter your chief complaint in the form.</string>
+    <string name="guide_preregistration_2">Review the fields before sending the pre-registration. You can then check its status from the home screen or My requests.</string>
+    <string name="guide_requests_1">This screen lets you check the current status of your requests and the times they were sent.</string>
+    <string name="guide_requests_2">Press Refresh to check again. The guide will not read the contents of the list.</string>
+    <string name="guide_staff_pending_1">This staff feature is awaiting implementation.</string>
+    <string name="guide_staff_pending_2">Use the available navigation to change sections or sign out.</string>
+    <string name="guide_status_1">This diagnostic screen lets you check the connection status with the service.</string>
+    <string name="guide_status_2">You can return to the access screen when you finish checking.</string>
+    <string name="guide_verification_1">Wait while your session is verified before opening your workspace.</string>
+    <string name="guide_verification_2">If verification fails, use Try again or Sign out.</string>
+    <string name="guide_preferences_1">Choose your language, theme, color mode, text size or accessible font.</string>
+    <string name="guide_preferences_2">You can change these preferences whenever you need. Reading changes do not modify the form data.</string>
+</resources>

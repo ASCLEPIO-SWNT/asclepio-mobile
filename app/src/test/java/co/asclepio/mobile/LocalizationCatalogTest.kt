@@ -28,7 +28,8 @@ class LocalizationCatalogTest {
         val controlled = source.filterKeys { key ->
             key.name.startsWith("error_") || key.name.startsWith("staff_error_") ||
                 key.name.startsWith("field_") || key.name.startsWith("a11y_") ||
-                key.name.startsWith("guide_") || key.name.startsWith("ui_")
+                key.name.startsWith("guide_") || key.name.startsWith("voice_") ||
+                key.name.startsWith("preferences_") || key.name.startsWith("ui_")
         }.filterValues { it.translatable }
         assertTrue("Debe comprobar errores y campos reales", controlled.size >= 20)
         for (locale in locales) {

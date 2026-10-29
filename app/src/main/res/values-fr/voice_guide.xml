@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="guide_title">Guide vocal</string>
+    <string name="guide_listen">Écouter le guide</string>
+    <string name="guide_pause">Mettre le guide en pause</string>
+    <string name="guide_resume">Reprendre le guide</string>
+    <string name="guide_repeat">Répéter le guide</string>
+    <string name="guide_stop">Arrêter le guide</string>
+    <string name="guide_speaking">Lecture du guide en cours</string>
+    <string name="guide_paused">Guide en pause</string>
+    <string name="guide_unavailable">Le guide vocal n’est pas disponible avec une voix locale dans cette langue. Vous pouvez continuer à utiliser l’application.</string>
+    <string name="guide_welcome_1">Choisissez Patient pour gérer vos informations et vos demandes, ou Personnel si vous travaillez dans l’établissement.</string>
+    <string name="guide_welcome_2">Vous pouvez changer la langue et les préférences de lecture avant de vous connecter.</string>
+    <string name="guide_patient_login_1">Choisissez votre type de document et saisissez son numéro et votre mot de passe pour vous connecter en tant que patient.</string>
+    <string name="guide_patient_login_2">Si vous avez besoin d’un autre type d’accès, revenez au choix Patient ou Personnel.</string>
+    <string name="guide_staff_login_1">Saisissez vos identifiants du personnel. Votre rôle sera vérifié lors de la connexion.</string>
+    <string name="guide_staff_login_2">Pour vous connecter en tant que patient, utilisez Changer de type d’accès.</string>
+    <string name="guide_tenant_1">Sélectionnez l’institution et l’établissement pour continuer en tant que patient.</string>
+    <string name="guide_tenant_2">Vérifiez votre sélection et appuyez sur Continuer.</string>
+    <string name="guide_signup_1">Complétez vos informations et lisez le consentement affiché à l’écran avant de l’accepter.</string>
+    <string name="guide_signup_2">Si un message de validation apparaît, vérifiez le champ indiqué avant d’envoyer à nouveau le formulaire.</string>
+    <string name="guide_home_1">Depuis l’accueil, vous pouvez consulter vos informations et créer une préinscription lorsque cette action est disponible.</string>
+    <string name="guide_home_2">Ouvrez Mes demandes pour consulter leurs états actuels. Utilisez Actualiser pour les consulter à nouveau.</string>
+    <string name="guide_profile_1">Vérifiez vos informations et modifiez uniquement les champs activés.</string>
+    <string name="guide_profile_2">Une fois terminé, enregistrez vos modifications ou revenez à l’accueil. Ce guide ne lira pas vos informations.</string>
+    <string name="guide_preregistration_1">Sélectionnez l’établissement et saisissez le motif de consultation dans le formulaire.</string>
+    <string name="guide_preregistration_2">Vérifiez les champs avant d’envoyer la préinscription. Vous pourrez ensuite consulter son état depuis l’accueil ou Mes demandes.</string>
+    <string name="guide_requests_1">Cet écran permet de consulter l’état actuel de vos demandes et leurs heures d’envoi.</string>
+    <string name="guide_requests_2">Appuyez sur Actualiser pour consulter à nouveau. Le guide ne lira pas le contenu de la liste.</string>
+    <string name="guide_staff_pending_1">Cette fonction du personnel est en attente d’implémentation.</string>
+    <string name="guide_staff_pending_2">Utilisez la navigation disponible pour changer de section ou vous déconnecter.</string>
+    <string name="guide_status_1">Cet écran de diagnostic permet de vérifier l’état de la connexion avec le service.</string>
+    <string name="guide_status_2">Vous pouvez revenir à l’écran d’accès après cette vérification.</string>
+    <string name="guide_verification_1">Patientez pendant la vérification de votre session avant l’ouverture de votre espace de travail.</string>
+    <string name="guide_verification_2">Si la vérification échoue, utilisez Réessayer ou Se déconnecter.</string>
+    <string name="guide_preferences_1">Choisissez la langue, le thème, le mode de couleur, la taille du texte ou la police accessible.</string>
+    <string name="guide_preferences_2">Vous pouvez changer ces préférences à tout moment. Les changements de lecture ne modifient pas les données du formulaire.</string>
+</resources>

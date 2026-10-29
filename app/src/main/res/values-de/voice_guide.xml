@@ -1,0 +1,38 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="guide_title">Sprachführung</string>
+    <string name="guide_listen">Anleitung anhören</string>
+    <string name="guide_pause">Anleitung pausieren</string>
+    <string name="guide_resume">Anleitung fortsetzen</string>
+    <string name="guide_repeat">Anleitung wiederholen</string>
+    <string name="guide_stop">Anleitung beenden</string>
+    <string name="guide_speaking">Anleitung wird vorgelesen</string>
+    <string name="guide_paused">Anleitung pausiert</string>
+    <string name="guide_unavailable">Die Sprachführung ist mit einer lokalen Stimme in dieser Sprache nicht verfügbar. Sie können die App weiterhin verwenden.</string>
+    <string name="guide_welcome_1">Wählen Sie Patient, um Ihre Daten und Anfragen zu verwalten, oder Personal, wenn Sie in der Einrichtung arbeiten.</string>
+    <string name="guide_welcome_2">Sie können Sprache und Leseeinstellungen vor der Anmeldung ändern.</string>
+    <string name="guide_patient_login_1">Wählen Sie Ihren Dokumenttyp und geben Sie die Dokumentnummer und Ihr Passwort ein, um sich als Patient anzumelden.</string>
+    <string name="guide_patient_login_2">Wenn Sie eine andere Zugangsart benötigen, kehren Sie zur Auswahl Patient oder Personal zurück.</string>
+    <string name="guide_staff_login_1">Geben Sie Ihre Zugangsdaten als Personal ein. Ihre Rolle wird bei der Anmeldung überprüft.</string>
+    <string name="guide_staff_login_2">Um sich als Patient anzumelden, verwenden Sie Zugangsart ändern.</string>
+    <string name="guide_tenant_1">Wählen Sie die Einrichtung und den Standort, um als Patient fortzufahren.</string>
+    <string name="guide_tenant_2">Überprüfen Sie Ihre Auswahl und wählen Sie Weiter.</string>
+    <string name="guide_signup_1">Vervollständigen Sie Ihre Angaben und prüfen Sie die auf dem Bildschirm angezeigte Einwilligung, bevor Sie zustimmen.</string>
+    <string name="guide_signup_2">Wenn eine Validierungsmeldung erscheint, prüfen Sie das angegebene Feld, bevor Sie das Formular erneut absenden.</string>
+    <string name="guide_home_1">Auf der Startseite können Sie Ihre Daten prüfen und eine Voranmeldung erstellen, wenn diese Aktion verfügbar ist.</string>
+    <string name="guide_home_2">Öffnen Sie Meine Anfragen, um deren aktuellen Status zu sehen. Verwenden Sie Aktualisieren, um erneut abzufragen.</string>
+    <string name="guide_profile_1">Prüfen Sie Ihre Daten und ändern Sie nur die freigegebenen Felder.</string>
+    <string name="guide_profile_2">Speichern Sie zum Abschluss Ihre Änderungen oder kehren Sie zur Startseite zurück. Diese Anleitung liest Ihre Daten nicht vor.</string>
+    <string name="guide_preregistration_1">Wählen Sie den Standort und tragen Sie den Vorstellungsgrund in das Formular ein.</string>
+    <string name="guide_preregistration_2">Prüfen Sie die Felder, bevor Sie die Voranmeldung senden. Anschließend können Sie ihren Status auf der Startseite oder unter Meine Anfragen sehen.</string>
+    <string name="guide_requests_1">Auf diesem Bildschirm sehen Sie den aktuellen Status Ihrer Anfragen und ihre Sendezeiten.</string>
+    <string name="guide_requests_2">Wählen Sie Aktualisieren, um erneut abzufragen. Die Anleitung liest den Inhalt der Liste nicht vor.</string>
+    <string name="guide_staff_pending_1">Diese Funktion für das Personal ist noch nicht implementiert.</string>
+    <string name="guide_staff_pending_2">Verwenden Sie die verfügbare Navigation, um den Bereich zu wechseln oder sich abzumelden.</string>
+    <string name="guide_status_1">Auf diesem Diagnosebildschirm können Sie den Verbindungsstatus zum Dienst prüfen.</string>
+    <string name="guide_status_2">Nach der Prüfung können Sie zum Zugangsbildschirm zurückkehren.</string>
+    <string name="guide_verification_1">Warten Sie, während Ihre Sitzung überprüft wird, bevor Ihr Arbeitsbereich geöffnet wird.</string>
+    <string name="guide_verification_2">Wenn die Überprüfung fehlschlägt, verwenden Sie Erneut versuchen oder Abmelden.</string>
+    <string name="guide_preferences_1">Wählen Sie Sprache, Design, Farbmodus, Textgröße oder barrierearme Schriftart.</string>
+    <string name="guide_preferences_2">Sie können diese Einstellungen jederzeit ändern. Änderungen der Lesbarkeit verändern die Formulardaten nicht.</string>
+</resources>
