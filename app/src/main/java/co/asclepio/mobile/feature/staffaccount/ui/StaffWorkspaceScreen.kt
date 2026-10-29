@@ -11,6 +11,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import co.asclepio.mobile.R
+import co.asclepio.mobile.core.ui.*
+import co.asclepio.mobile.core.ui.AsclepioButton
 import co.asclepio.mobile.core.auth.*
 
 private fun StaffDestination.label(): Int = when (this) {
@@ -41,24 +43,19 @@ fun StaffWorkspaceScreen(
     onCancel: () -> Unit,
     onConfirm: () -> Unit,
 ) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        Column(
-            Modifier.widthIn(max = 1000.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(20.dp),
-        ) {
-            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
-            Text(principal.fullName, style = MaterialTheme.typography.titleMedium)
-            Text(stringResource(principal.role.label()))
-            if (widthSizeClass == WindowWidthSizeClass.Compact) {
-                StaffNavigation(principal.role, destination, onSelect)
-                PendingDestination(destination)
-            } else Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                Column(Modifier.widthIn(max = 280.dp).weight(1f)) { StaffNavigation(principal.role, destination, onSelect) }
-                Column(Modifier.weight(2f)) { PendingDestination(destination) }
-            }
-            OutlinedButton(onClick = onLogout, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.logout_confirm)) }
-            TextButton(onClick = onChangeAccess) { Text(stringResource(R.string.change_access)) }
+    ScreenColumn(maxWidth = 1080.dp) {
+        Text(principal.fullName, style = MaterialTheme.typography.titleMedium)
+        Text(stringResource(principal.role.label()), color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (adaptivePaneMode(widthSizeClass) == PaneMode.Single) {
+            StaffNavigation(principal.role, destination, onSelect)
+            PendingDestination(destination)
+        } else Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+            Column(Modifier.widthIn(max = 280.dp).weight(1f)) { StaffNavigation(principal.role, destination, onSelect) }
+            Column(Modifier.weight(2f)) { PendingDestination(destination) }
         }
+        HorizontalDivider()
+        OutlinedButton(onClick = onLogout, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.logout_confirm)) }
+        TextButton(onClick = onChangeAccess) { Text(stringResource(R.string.change_access)) }
     }
     if (confirmation != null) AlertDialog(
         onDismissRequest = onCancel,
@@ -82,10 +79,8 @@ private fun StaffNavigation(role: StaffRole, selected: StaffDestination, onSelec
 
 @Composable
 private fun PendingDestination(destination: StaffDestination) {
-    Card(Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Text(stringResource(destination.label()), style = MaterialTheme.typography.headlineSmall)
-            Text(stringResource(R.string.staff_destination_pending))
-        }
+    Panel(Modifier.fillMaxWidth()) {
+        PageHeader(stringResource(destination.label()))
+        UiNotice(stringResource(R.string.staff_destination_pending))
     }
 }

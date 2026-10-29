@@ -26,10 +26,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import co.asclepio.mobile.R
+import co.asclepio.mobile.core.ui.AsclepioButton
 import co.asclepio.mobile.core.tenants.PublicSiteDto
 import co.asclepio.mobile.core.tenants.PublicTenantDto
 import co.asclepio.mobile.core.ui.PaneMode
 import co.asclepio.mobile.core.ui.paneMode
+import co.asclepio.mobile.core.ui.adaptivePaneMode
+import co.asclepio.mobile.core.ui.ScreenColumn
+import co.asclepio.mobile.core.ui.Panel
+import co.asclepio.mobile.core.ui.PageHeader
+import co.asclepio.mobile.core.ui.UiNotice
+import co.asclepio.mobile.core.ui.NoticeTone
 import co.asclepio.mobile.core.ui.text
 
 /** Elegir IPS y sede (R1–R5). Tablet: IPS y sedes lado a lado; teléfono: una columna (R35). */
@@ -45,29 +52,25 @@ fun TenantPickerScreen(
     modifier: Modifier = Modifier,
 ) {
     if (state is TenantPickerUiState.Success && state.confirmed) LaunchedEffect(Unit) { onConfirmed() }
-    Column(modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text(stringResource(R.string.tenant_picker_title), style = MaterialTheme.typography.headlineSmall)
+    ScreenColumn(modifier, maxWidth = 1080.dp) {
+        PageHeader(stringResource(R.string.tenant_picker_title))
         when (state) {
-            TenantPickerUiState.Loading -> Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
-            }
+            TenantPickerUiState.Loading -> CircularProgressIndicator()
             is TenantPickerUiState.Error -> {
-                Text(state.message.text(), color = MaterialTheme.colorScheme.error)
-                Button(onClick = onRetry, enabled = state.retryEnabled) { Text(stringResource(R.string.retry)) }
+                UiNotice(state.message.text(), NoticeTone.Error)
+                AsclepioButton(onClick = onRetry, enabled = state.retryEnabled) { Text(stringResource(R.string.retry)) }
             }
             is TenantPickerUiState.Success -> {
-                val tenants: @Composable (Modifier) -> Unit = { m -> TenantList(state, onSelectTenant, m) }
-                val sites: @Composable (Modifier) -> Unit = { m -> SiteList(state, onSelectSite, m) }
-                if (paneMode(widthSizeClass) == PaneMode.Dual) {
-                    Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                        tenants(Modifier.weight(1f))
-                        sites(Modifier.weight(1f))
+                if (adaptivePaneMode(widthSizeClass) == PaneMode.Dual) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                        Panel(Modifier.weight(1f)) { TenantList(state, onSelectTenant, Modifier) }
+                        Panel(Modifier.weight(1f)) { SiteList(state, onSelectSite, Modifier) }
                     }
                 } else {
-                    tenants(Modifier.weight(1f))
-                    sites(Modifier.weight(1f))
+                    TenantList(state, onSelectTenant, Modifier)
+                    SiteList(state, onSelectSite, Modifier)
                 }
-                Button(onClick = onConfirm, enabled = state.canContinue, modifier = Modifier.fillMaxWidth()) {
+                AsclepioButton(onClick = onConfirm, enabled = state.canContinue, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.tenant_picker_continue))
                 }
             }
@@ -77,8 +80,8 @@ fun TenantPickerScreen(
 
 @Composable
 private fun TenantList(state: TenantPickerUiState.Success, onSelect: (String) -> Unit, modifier: Modifier) {
-    LazyColumn(modifier) {
-        items(state.tenants, key = PublicTenantDto::id) { tenant ->
+    Column(modifier) {
+        state.tenants.forEach { tenant ->
             val enabled = state.isEnabled(tenant)
             SelectableRow(
                 title = tenant.name,
@@ -100,8 +103,8 @@ private fun SiteList(state: TenantPickerUiState.Success, onSelect: (String) -> U
         if (tenant == null) {
             Text(stringResource(R.string.tenant_picker_choose_tenant), style = MaterialTheme.typography.bodyMedium)
         } else {
-            LazyColumn {
-                items(tenant.sites, key = PublicSiteDto::id) { site ->
+            Column {
+                tenant.sites.forEach { site ->
                     SelectableRow(
                         title = site.name,
                         subtitle = null,

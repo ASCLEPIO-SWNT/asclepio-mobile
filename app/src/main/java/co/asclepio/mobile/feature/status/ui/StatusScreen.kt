@@ -16,6 +16,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import co.asclepio.mobile.R
+import co.asclepio.mobile.core.ui.AsclepioButton
+import co.asclepio.mobile.core.ui.ScreenColumn
+import co.asclepio.mobile.core.ui.PageHeader
+import co.asclepio.mobile.core.ui.adaptivePaneMode
+import co.asclepio.mobile.core.ui.PaneMode
 
 /** Teléfono (Compact): una columna. Tablet (Medium/Expanded): estado e información lado a lado. */
 @Composable
@@ -32,10 +37,9 @@ fun StatusScreen(
         StatusCard(state, onRetry, m)
         InfoCard(apiBaseUrl, contract, m)
     }
-    Column(modifier.fillMaxSize().padding(spacing), verticalArrangement = Arrangement.spacedBy(spacing)) {
-        Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
-        Text(stringResource(R.string.tagline), style = MaterialTheme.typography.bodyMedium)
-        if (widthSizeClass == WindowWidthSizeClass.Compact) {
+    ScreenColumn(modifier, maxWidth = 1080.dp) {
+        PageHeader(stringResource(R.string.status_title))
+        if (adaptivePaneMode(widthSizeClass) == PaneMode.Single) {
             Column(verticalArrangement = Arrangement.spacedBy(spacing)) { content(Modifier) }
         } else {
             Row(horizontalArrangement = Arrangement.spacedBy(spacing)) { content(Modifier.weight(1f)) }
@@ -59,7 +63,7 @@ private fun StatusCard(state: StatusUiState, onRetry: () -> Unit, modifier: Modi
                 }
                 is StatusUiState.Error -> {
                     Text(stringResource(R.string.status_error, state.message), color = MaterialTheme.colorScheme.error)
-                    Button(onClick = onRetry) { Text(stringResource(R.string.status_retry)) }
+                    AsclepioButton(onClick = onRetry) { Text(stringResource(R.string.status_retry)) }
                 }
             }
         }

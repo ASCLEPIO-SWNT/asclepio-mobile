@@ -5,14 +5,22 @@
     <!-- Dictado en el dispositivo (F-08, ADR 0006). Se solicita en tiempo de uso; el audio nunca sale del teléfono. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
 
+    <queries>
+        <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
+    </queries>
+
     <application
         android:name=".AsclepioApp"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
-        android:icon="@android:drawable/sym_def_app_icon"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
-        android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        android:theme="@style/Theme.Asclepio"
+        android:localeConfig="@xml/locales_config">
+        <service android:name="androidx.appcompat.app.AppLocalesMetadataHolderService" android:enabled="false" android:exported="false">
+            <meta-data android:name="autoStoreLocales" android:value="true" />
+        </service>
         <activity
             android:name=".MainActivity"
             android:exported="true">

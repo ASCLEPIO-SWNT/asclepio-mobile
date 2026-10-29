@@ -39,6 +39,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import co.asclepio.mobile.R
+import co.asclepio.mobile.core.ui.AsclepioTextField
+import co.asclepio.mobile.core.ui.AsclepioButton
 import co.asclepio.mobile.core.model.Sex
 import co.asclepio.mobile.core.model.datePickerMillisToLocalDate
 import co.asclepio.mobile.core.model.toDatePickerMillis
@@ -48,6 +50,13 @@ import co.asclepio.mobile.core.ui.PrivateDatePicker
 import co.asclepio.mobile.core.ui.rememberPrivateDatePickerState
 import co.asclepio.mobile.core.ui.markdownToAnnotated
 import co.asclepio.mobile.core.ui.paneMode
+import co.asclepio.mobile.core.ui.adaptivePaneMode
+import co.asclepio.mobile.core.ui.ScreenColumn
+import co.asclepio.mobile.core.ui.EntryBackdrop
+import co.asclepio.mobile.core.ui.Panel
+import co.asclepio.mobile.core.ui.PageHeader
+import co.asclepio.mobile.core.ui.UiNotice
+import co.asclepio.mobile.core.ui.NoticeTone
 import co.asclepio.mobile.core.ui.text
 import co.asclepio.mobile.feature.account.data.DocumentType
 import java.time.format.DateTimeFormatter
@@ -74,19 +83,18 @@ fun SignUpScreen(
     }
     val form: @Composable (Modifier) -> Unit = { m -> SignUpFormPane(state, onFormChange, onSubmit, onGoToLogin, m) }
     val consent: @Composable (Modifier) -> Unit = { m -> ConsentPane(state.consent, onRetryConsent, m) }
-    if (paneMode(widthSizeClass) == PaneMode.Dual) {
-        Row(modifier.fillMaxSize().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-            form(Modifier.weight(1f).verticalScroll(rememberScrollState()))
-            consent(Modifier.weight(1f).verticalScroll(rememberScrollState()))
-        }
-    } else {
-        Column(
-            modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
+    EntryBackdrop(register = true) {
+    ScreenColumn(modifier, maxWidth = 1080.dp) {
+        if (adaptivePaneMode(widthSizeClass) == PaneMode.Dual) {
+            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                Panel(Modifier.weight(1f)) { form(Modifier) }
+                Panel(Modifier.weight(1f)) { consent(Modifier) }
+            }
+        } else {
             consent(Modifier)
             form(Modifier)
         }
+    }
     }
 }
 
@@ -98,8 +106,8 @@ private fun ConsentPane(consent: ConsentUiState, onRetry: () -> Unit, modifier: 
             when (consent) {
                 ConsentUiState.Loading -> CircularProgressIndicator()
                 is ConsentUiState.Error -> {
-                    Text(consent.message.text(), color = MaterialTheme.colorScheme.error)
-                    Button(onClick = onRetry, enabled = consent.retryEnabled) { Text(stringResource(R.string.retry)) }
+                    UiNotice(consent.message.text(), NoticeTone.Error)
+                    AsclepioButton(onClick = onRetry, enabled = consent.retryEnabled) { Text(stringResource(R.string.retry)) }
                 }
                 is ConsentUiState.Loaded -> {
                     val annotated = remember(consent.text) { markdownToAnnotated(consent.text) }
@@ -122,7 +130,7 @@ private fun SignUpFormPane(
     val errors = state.fieldErrors
     val enabled = !state.submitting
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(stringResource(R.string.signup_title), style = MaterialTheme.typography.headlineSmall)
+        PageHeader(stringResource(R.string.signup_title))
         DocumentTypeSelector(form.documentType, errors[SignUpField.DocumentType], enabled) { onChange(form.copy(documentType = it)) }
         FormTextField(form.documentNumber, R.string.field_document_number, errors[SignUpField.DocumentNumber], enabled) {
             onChange(form.copy(documentNumber = it))
@@ -154,8 +162,8 @@ private fun SignUpFormPane(
             Checkbox(checked = form.consentAccepted, onCheckedChange = null, enabled = enabled)
             Text(stringResource(R.string.signup_consent_accept), Modifier.padding(start = 8.dp))
         }
-        state.message?.let { Text(it.text(), color = MaterialTheme.colorScheme.error) }
-        Button(onClick = onSubmit, enabled = state.canSubmit, modifier = Modifier.fillMaxWidth()) {
+        state.message?.let { UiNotice(it.text(), NoticeTone.Error) }
+        AsclepioButton(onClick = onSubmit, enabled = state.canSubmit, modifier = Modifier.fillMaxWidth()) {
             if (state.submitting) CircularProgressIndicator(Modifier.padding(end = 8.dp))
             Text(stringResource(R.string.signup_submit))
         }
@@ -248,7 +256,7 @@ internal fun FormTextField(
     password: Boolean = false,
     onChange: (String) -> Unit,
 ) {
-    OutlinedTextField(
+    AsclepioTextField(
         value = value,
         onValueChange = onChange,
         label = { Text(stringResource(label)) },

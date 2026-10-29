@@ -15,7 +15,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import co.asclepio.mobile.R
+import co.asclepio.mobile.core.ui.AsclepioButton
 import co.asclepio.mobile.core.ui.text
+import co.asclepio.mobile.core.ui.Panel
+import co.asclepio.mobile.core.ui.UiNotice
+import co.asclepio.mobile.core.ui.NoticeTone
 
 /**
  * Zona de estado del inicio (R17–R22): sede, texto del estado, "Enviado" y, en `PENDING`, el vencimiento; "Actualizar"
@@ -28,8 +32,7 @@ fun PreRegistrationStatusPane(
     onNewPreRegistration: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(modifier.fillMaxWidth()) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Panel(modifier.fillMaxWidth()) {
             when (state) {
                 PreRegistrationStatusUiState.Loading -> CircularProgressIndicator()
                 PreRegistrationStatusUiState.Empty ->
@@ -42,7 +45,7 @@ fun PreRegistrationStatusPane(
                         Text(stringResource(R.string.home_status_expires, it), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
-                is PreRegistrationStatusUiState.Error -> Text(state.message.text(), color = MaterialTheme.colorScheme.error)
+                is PreRegistrationStatusUiState.Error -> UiNotice(state.message.text(), NoticeTone.Error)
             }
             val refreshEnabled = when (state) {
                 PreRegistrationStatusUiState.Loading -> false
@@ -53,10 +56,9 @@ fun PreRegistrationStatusPane(
                 Text(stringResource(R.string.home_refresh))
             }
             if (state.canCreate) {
-                Button(onClick = onNewPreRegistration, modifier = Modifier.fillMaxWidth()) {
+                AsclepioButton(onClick = onNewPreRegistration, modifier = Modifier.fillMaxWidth()) {
                     Text(stringResource(R.string.home_action_new_preregistration))
                 }
             }
-        }
     }
 }

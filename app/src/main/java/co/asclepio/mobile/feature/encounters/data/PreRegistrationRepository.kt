@@ -31,6 +31,10 @@ class PreRegistrationRepository(
             if (it is ApiResult.Success) _created.tryEmit(it.value)
         }
 
+    /** UI-01: todas las solicitudes propias en el orden descendente publicado; sin ampliar el scope paciente. */
+    suspend fun list(): ApiResult<List<PatientPreRegistrationDto>> =
+        sessionManager.patientCall { bearer -> api.list(bearer) }
+
     /** El último pre-registro (el primero de la lista), o `null` si no hay ninguno (R17, R18). */
     suspend fun latest(): ApiResult<PatientPreRegistrationDto?> =
         when (val result = sessionManager.patientCall { bearer -> api.list(bearer) }) {

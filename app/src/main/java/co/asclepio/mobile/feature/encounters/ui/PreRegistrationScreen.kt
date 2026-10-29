@@ -26,8 +26,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import co.asclepio.mobile.R
+import co.asclepio.mobile.core.ui.AsclepioTextField
+import co.asclepio.mobile.core.ui.AsclepioButton
 import co.asclepio.mobile.core.ui.PaneMode
 import co.asclepio.mobile.core.ui.paneMode
+import co.asclepio.mobile.core.ui.adaptivePaneMode
+import co.asclepio.mobile.core.ui.ScreenColumn
+import co.asclepio.mobile.core.ui.Panel
+import co.asclepio.mobile.core.ui.PageHeader
+import co.asclepio.mobile.core.ui.UiNotice
+import co.asclepio.mobile.core.ui.NoticeTone
 import co.asclepio.mobile.core.ui.text
 
 /** R29: dos paneles (sedes y motivo) en `Medium`/`Expanded`; una columna en `Compact` (D14). */
@@ -49,20 +57,14 @@ fun PreRegistrationScreen(
     if (state.created) LaunchedEffect(Unit) { onCreated() }
     val sites: @Composable (Modifier) -> Unit = { m -> SitesPane(state, onSelectSite, onRetrySites, m) }
     val complaint: @Composable (Modifier) -> Unit = { m -> ComplaintPane(state, onComplaintChange, onSubmit, onViewStatus, m) }
-    if (preRegistrationPaneMode(widthSizeClass) == PaneMode.Dual) {
-        Column(modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text(stringResource(R.string.preregistration_title), style = MaterialTheme.typography.headlineSmall)
-            Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                sites(Modifier.weight(1f).verticalScroll(rememberScrollState()))
-                complaint(Modifier.weight(1f).verticalScroll(rememberScrollState()))
+    ScreenColumn(modifier, maxWidth = 1080.dp) {
+        PageHeader(stringResource(R.string.preregistration_title))
+        if (adaptivePaneMode(widthSizeClass) == PaneMode.Dual) {
+            Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                Panel(Modifier.weight(1f)) { sites(Modifier) }
+                Panel(Modifier.weight(1f)) { complaint(Modifier) }
             }
-        }
-    } else {
-        Column(
-            modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Text(stringResource(R.string.preregistration_title), style = MaterialTheme.typography.headlineSmall)
+        } else {
             sites(Modifier)
             complaint(Modifier)
         }
@@ -76,8 +78,8 @@ private fun SitesPane(state: PreRegistrationUiState, onSelect: (String) -> Unit,
         when (val sites = state.sites) {
             SitesUiState.Loading -> CircularProgressIndicator()
             is SitesUiState.Error -> {
-                Text(sites.message.text(), color = MaterialTheme.colorScheme.error)
-                Button(onClick = onRetry, enabled = sites.retryEnabled) { Text(stringResource(R.string.retry)) }
+                UiNotice(sites.message.text(), NoticeTone.Error)
+                AsclepioButton(onClick = onRetry, enabled = sites.retryEnabled) { Text(stringResource(R.string.retry)) }
             }
             is SitesUiState.Loaded -> sites.sites.forEach { site ->
                 val selected = site.id == state.form.siteId
@@ -109,7 +111,7 @@ private fun ComplaintPane(
 ) {
     val error = state.fieldErrors[PreRegistrationField.ChiefComplaint]
     Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedTextField(
+        AsclepioTextField(
             value = state.form.chiefComplaintText,
             onValueChange = onChange,
             label = { Text(stringResource(R.string.preregistration_complaint)) },
@@ -124,13 +126,13 @@ private fun ComplaintPane(
             minLines = 4,
             modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
         )
-        state.message?.let { Text(it.text(), color = MaterialTheme.colorScheme.error) }
+        state.message?.let { UiNotice(it.text(), NoticeTone.Error) }
         if (state.showViewStatus) {
             OutlinedButton(onClick = onViewStatus, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.preregistration_view_status))
             }
         }
-        Button(onClick = onSubmit, enabled = state.canSubmit, modifier = Modifier.fillMaxWidth()) {
+        AsclepioButton(onClick = onSubmit, enabled = state.canSubmit, modifier = Modifier.fillMaxWidth()) {
             if (state.submitting) CircularProgressIndicator(Modifier.padding(end = 8.dp))
             Text(stringResource(R.string.preregistration_submit))
         }

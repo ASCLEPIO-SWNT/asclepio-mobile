@@ -21,6 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import co.asclepio.mobile.R
+import co.asclepio.mobile.core.ui.ScreenColumn
+import co.asclepio.mobile.core.ui.PageHeader
+import co.asclepio.mobile.core.ui.UiNotice
+import co.asclepio.mobile.core.ui.NoticeTone
+import co.asclepio.mobile.core.ui.AsclepioButton
 import co.asclepio.mobile.core.ui.text
 
 /** Inicio de sesión de la IPS recordada (R3, R17, R18). El contenido se limita a 600 dp (D16). */
@@ -36,12 +41,8 @@ fun LoginScreen(
 ) {
     val form = state.form
     val enabled = !state.submitting
-    Box(modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        Column(
-            Modifier.widthIn(max = 600.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(stringResource(R.string.login_title), style = MaterialTheme.typography.headlineSmall)
+    ScreenColumn(modifier) {
+            PageHeader(stringResource(R.string.login_title))
             state.tenant?.let {
                 Text(stringResource(R.string.tenant_and_site, it.tenantName, it.siteName), style = MaterialTheme.typography.titleMedium)
             }
@@ -55,8 +56,8 @@ fun LoginScreen(
             FormTextField(form.password, R.string.field_password, state.fieldErrors[LoginField.Password], enabled, password = true) {
                 onFormChange(form.copy(password = it))
             }
-            state.message?.let { Text(it.text(), color = MaterialTheme.colorScheme.error) }
-            Button(onClick = onSubmit, enabled = state.canSubmit, modifier = Modifier.fillMaxWidth()) {
+            state.message?.let { UiNotice(it.text(), NoticeTone.Error) }
+            AsclepioButton(onClick = onSubmit, enabled = state.canSubmit, modifier = Modifier.fillMaxWidth()) {
                 if (state.submitting) CircularProgressIndicator(Modifier.padding(end = 8.dp))
                 Text(stringResource(R.string.login_submit))
             }
@@ -64,6 +65,5 @@ fun LoginScreen(
                 Text(stringResource(R.string.login_go_to_signup))
             }
             onOpenStatus?.let { TextButton(onClick = it) { Text(stringResource(R.string.login_status)) } }
-        }
-    }
+            }
 }

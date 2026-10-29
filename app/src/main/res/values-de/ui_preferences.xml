@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="preferences_title">Einstellungen</string>
+    <string name="preferences_description">Passen Sie Lesbarkeit, Farben und Sprache an. Diese Einstellungen bleiben nach der Abmeldung erhalten.</string>
+    <string name="preferences_theme">Design</string>
+    <string name="theme_light">Hell</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="theme_system">System</string>
+    <string name="preferences_color_mode">Farbmodus</string>
+    <string name="color_normal">Normal</string>
+    <string name="color_high_contrast">Hoher Kontrast</string>
+    <string name="color_sepia">Sepia</string>
+    <string name="color_grayscale">Graustufen</string>
+    <string name="color_alternative">Alternativ</string>
+    <string name="preferences_text_scale">Textgröße</string>
+    <string formatted="false" name="text_scale_875">87,5 %</string>
+    <string formatted="false" name="text_scale_100">100 %</string>
+    <string formatted="false" name="text_scale_125">125 %</string>
+    <string formatted="false" name="text_scale_150">150 %</string>
+    <string formatted="false" name="text_scale_200">200 %</string>
+    <string name="preferences_dyslexia_font">Barrierearme Schriftart OpenDyslexic</string>
+    <string name="preferences_font_description">Die Schriftarten sind in der App enthalten und funktionieren offline.</string>
+    <string name="preferences_language">Sprache</string>
+    <string name="language_es">Español</string>
+    <string name="language_en">English</string>
+    <string name="language_pt">Português</string>
+    <string name="language_fr">Français</string>
+    <string name="language_de">Deutsch</string>
+    <string name="close">Schließen</string>
+    <string name="navigate_back">Zurück</string>
+    <string name="home_navigation">Startseite</string>
+</resources>

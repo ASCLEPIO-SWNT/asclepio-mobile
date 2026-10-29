@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="preferences_title">Préférences</string>
+    <string name="preferences_description">Réglez la lecture, les couleurs et la langue. Ces préférences sont conservées après la déconnexion.</string>
+    <string name="preferences_theme">Thème</string>
+    <string name="theme_light">Clair</string>
+    <string name="theme_dark">Sombre</string>
+    <string name="theme_system">Système</string>
+    <string name="preferences_color_mode">Mode de couleur</string>
+    <string name="color_normal">Normal</string>
+    <string name="color_high_contrast">Contraste élevé</string>
+    <string name="color_sepia">Sépia</string>
+    <string name="color_grayscale">Niveaux de gris</string>
+    <string name="color_alternative">Alternatif</string>
+    <string name="preferences_text_scale">Taille du texte</string>
+    <string formatted="false" name="text_scale_875">87,5 %</string>
+    <string formatted="false" name="text_scale_100">100 %</string>
+    <string formatted="false" name="text_scale_125">125 %</string>
+    <string formatted="false" name="text_scale_150">150 %</string>
+    <string formatted="false" name="text_scale_200">200 %</string>
+    <string name="preferences_dyslexia_font">Police accessible OpenDyslexic</string>
+    <string name="preferences_font_description">Les polices sont incluses dans l’application et fonctionnent hors connexion.</string>
+    <string name="preferences_language">Langue</string>
+    <string name="language_es">Español</string>
+    <string name="language_en">English</string>
+    <string name="language_pt">Português</string>
+    <string name="language_fr">Français</string>
+    <string name="language_de">Deutsch</string>
+    <string name="close">Fermer</string>
+    <string name="navigate_back">Retour</string>
+    <string name="home_navigation">Accueil</string>
+</resources>

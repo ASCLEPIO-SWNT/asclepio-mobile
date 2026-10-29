@@ -21,6 +21,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import co.asclepio.mobile.R
+import co.asclepio.mobile.core.ui.ScreenColumn
+import co.asclepio.mobile.core.ui.PageHeader
+import co.asclepio.mobile.core.ui.UiNotice
+import co.asclepio.mobile.core.ui.NoticeTone
+import co.asclepio.mobile.core.ui.AsclepioButton
 
 /**
  * Inicio (R30, R31 de F-01; R16 de F-02): IPS y sede, aviso de identidad, "Mis datos", el estado del último
@@ -37,12 +42,8 @@ fun HomeScreen(
     onConfirmLogout: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        Column(
-            Modifier.widthIn(max = 600.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Text(stringResource(R.string.home_title), style = MaterialTheme.typography.headlineSmall)
+    ScreenColumn(modifier) {
+            PageHeader(stringResource(R.string.home_title))
             state.tenant?.let {
                 Text(stringResource(R.string.tenant_and_site, it.tenantName, it.siteName), style = MaterialTheme.typography.titleMedium)
             }
@@ -59,8 +60,7 @@ fun HomeScreen(
             OutlinedButton(onClick = onRequestLogout, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.logout_confirm))
             }
-        }
-    }
+            }
     if (state.showLogoutDialog) {
         AlertDialog(
             onDismissRequest = onCancelLogout,

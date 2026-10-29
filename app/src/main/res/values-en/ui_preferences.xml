@@ -1,0 +1,32 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="preferences_title">Preferences</string>
+    <string name="preferences_description">Adjust reading, colors and language. These preferences are kept when you sign out.</string>
+    <string name="preferences_theme">Theme</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">System</string>
+    <string name="preferences_color_mode">Color mode</string>
+    <string name="color_normal">Normal</string>
+    <string name="color_high_contrast">High contrast</string>
+    <string name="color_sepia">Sepia</string>
+    <string name="color_grayscale">Grayscale</string>
+    <string name="color_alternative">Alternative</string>
+    <string name="preferences_text_scale">Text size</string>
+    <string formatted="false" name="text_scale_875">87.5 %</string>
+    <string formatted="false" name="text_scale_100">100 %</string>
+    <string formatted="false" name="text_scale_125">125 %</string>
+    <string formatted="false" name="text_scale_150">150 %</string>
+    <string formatted="false" name="text_scale_200">200 %</string>
+    <string name="preferences_dyslexia_font">Accessible OpenDyslexic font</string>
+    <string name="preferences_font_description">The fonts are included in the app and work offline.</string>
+    <string name="preferences_language">Language</string>
+    <string name="language_es">Español</string>
+    <string name="language_en">English</string>
+    <string name="language_pt">Português</string>
+    <string name="language_fr">Français</string>
+    <string name="language_de">Deutsch</string>
+    <string name="close">Close</string>
+    <string name="navigate_back">Back</string>
+    <string name="home_navigation">Home</string>
+</resources>

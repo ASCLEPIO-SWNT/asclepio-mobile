@@ -1,6 +1,5 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources xmlns:tools="http://schemas.android.com/tools" tools:locale="de">
-    <!-- Preparation only. Source keys and indexed format arguments are preserved. -->
     <string name="app_name">Asclepio</string>
     <string name="tagline">Die KI schlägt vor, die Fachkraft entscheidet.</string>
     <string name="status_title">Systemstatus</string>
@@ -19,7 +18,7 @@
     <string name="error_login_invalid">Dokumentnummer oder Passwort falsch. Nach 5 fehlgeschlagenen Versuchen wird das Konto für 15 Minuten gesperrt.</string>
     <string name="error_signup_conflict">Bei dieser IPS existiert bereits ein Konto mit diesem Dokument. Melden Sie sich an.</string>
     <string name="error_signup_unprocessable">Ihr Konto konnte nicht erstellt werden. Prüfen Sie Ihr Geburtsdatum und bestätigen Sie die Einwilligung erneut, falls sie sich geändert hat.</string>
-    <string name="error_not_patient">Dies ist kein Patientenkonto. Verwenden Sie die Webanwendung für das Personal.</string>
+    <string name="error_not_patient">Dies ist ein Personalkonto. Gehen Sie zurück und wählen Sie Personalzugang.</string>
     <string name="error_required">Pflichtfeld</string>
     <string name="error_max_length" tools:ignore="PluralsCandidate">Höchstens %1$d Zeichen</string>
     <string name="error_password_length">Das Passwort muss zwischen 10 und 128 Zeichen enthalten</string>

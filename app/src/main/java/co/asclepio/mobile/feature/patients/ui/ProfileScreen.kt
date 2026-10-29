@@ -33,6 +33,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import co.asclepio.mobile.R
+import co.asclepio.mobile.core.ui.ScreenColumn
+import co.asclepio.mobile.core.ui.PageHeader
+import co.asclepio.mobile.core.ui.UiNotice
+import co.asclepio.mobile.core.ui.NoticeTone
+import co.asclepio.mobile.core.ui.AsclepioTextField
+import co.asclepio.mobile.core.ui.AsclepioButton
 import co.asclepio.mobile.core.model.Sex
 import co.asclepio.mobile.core.model.datePickerMillisToLocalDate
 import co.asclepio.mobile.core.model.toDatePickerMillis
@@ -50,22 +56,17 @@ fun ProfileScreen(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        Column(
-            Modifier.widthIn(max = 600.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Text(stringResource(R.string.profile_title), style = MaterialTheme.typography.headlineSmall)
+    ScreenColumn(modifier) {
+            PageHeader(stringResource(R.string.profile_title))
             when (state) {
                 ProfileUiState.Loading -> CircularProgressIndicator()
                 is ProfileUiState.Error -> {
-                    Text(state.message.text(), color = MaterialTheme.colorScheme.error)
-                    Button(onClick = onRetry, enabled = state.retryEnabled) { Text(stringResource(R.string.retry)) }
+                    UiNotice(state.message.text(), NoticeTone.Error)
+                    AsclepioButton(onClick = onRetry, enabled = state.retryEnabled) { Text(stringResource(R.string.retry)) }
                 }
                 is ProfileUiState.Success -> ProfileContent(state, onFormChange, onSave)
             }
-        }
-    }
+            }
 }
 
 @Composable
@@ -85,7 +86,7 @@ private fun ProfileContent(state: ProfileUiState.Success, onFormChange: (Profile
     val form = state.form
     val enabled = !state.saving && !state.reloading
     val nameError = state.fieldErrors[ProfileField.FullName]
-    OutlinedTextField(
+    AsclepioTextField(
         value = form.fullName,
         onValueChange = { onFormChange(form.copy(fullName = it)) },
         label = { Text(stringResource(R.string.field_full_name)) },
@@ -101,7 +102,7 @@ private fun ProfileContent(state: ProfileUiState.Success, onFormChange: (Profile
         val color = if (it.resId == R.string.profile_saved) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
         Text(it.text(), color = color)
     }
-    Button(onClick = onSave, enabled = state.canSave, modifier = Modifier.fillMaxWidth()) {
+    AsclepioButton(onClick = onSave, enabled = state.canSave, modifier = Modifier.fillMaxWidth()) {
         if (state.saving) CircularProgressIndicator(Modifier.padding(end = 8.dp))
         Text(stringResource(R.string.profile_save))
     }

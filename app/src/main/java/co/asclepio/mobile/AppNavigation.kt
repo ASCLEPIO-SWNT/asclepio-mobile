@@ -9,6 +9,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.saveable.LocalSaveableStateRegistry
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.rememberCoroutineScope
@@ -30,6 +32,7 @@ import co.asclepio.mobile.core.auth.*
 import co.asclepio.mobile.core.ui.AccessDeniedScreen
 import co.asclepio.mobile.core.ui.SessionVerificationScreen
 import co.asclepio.mobile.core.ui.WelcomeScreen
+import co.asclepio.mobile.core.ui.EntryBackdrop
 import co.asclepio.mobile.feature.account.ui.HomeScreen
 import co.asclepio.mobile.feature.account.ui.HomeViewModel
 import co.asclepio.mobile.feature.account.ui.LoginScreen
@@ -144,7 +147,11 @@ fun AppNavigation(container: AppContainer, widthSizeClass: WindowWidthSizeClass)
         return
     }
     key(navigationIdentity(session)) {
-        SessionGraph(container, widthSizeClass, session, root)
+        if (session is SessionState.Authenticated) {
+            SessionGraph(container, widthSizeClass, session, root)
+        } else EntryBackdrop {
+            SessionGraph(container, widthSizeClass, session, root)
+        }
     }
 }
 
@@ -313,5 +320,9 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
 
 @Composable
 private fun GuardedRoute(session: SessionState, route: Route, onHome: () -> Unit, content: @Composable () -> Unit) {
-    if (canAccessRoute(session, route)) content() else AccessDeniedScreen(onHome)
+    if (canAccessRoute(session, route)) {
+        // Prevent hidden widget Savers from serializing passwords, identity or clinical drafts.
+        // Navigation/VM decorators stay outside this boundary and retain RAM across configuration.
+        CompositionLocalProvider(LocalSaveableStateRegistry provides null) { content() }
+    } else AccessDeniedScreen(onHome)
 }

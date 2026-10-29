@@ -123,7 +123,7 @@ class ErrorMessagesTest {
             "error_login_invalid" to "Documento o contraseña incorrectos. Después de 5 intentos fallidos la cuenta se bloquea 15 minutos.",
             "error_signup_conflict" to "Ya existe una cuenta con este documento en esta IPS. Inicia sesión.",
             "error_signup_unprocessable" to "No pudimos crear la cuenta. Revisa tu fecha de nacimiento y vuelve a aceptar el consentimiento si cambió.",
-            "error_not_patient" to "Esta cuenta no es de paciente. Usa la aplicación web del personal.",
+            "error_not_patient" to "Esta cuenta es de personal. Vuelve y elige Acceso del personal.",
             "error_required" to "Campo obligatorio",
             "error_max_length" to "Máximo %d caracteres",
             "error_password_length" to "La contraseña debe tener entre 10 y 128 caracteres",

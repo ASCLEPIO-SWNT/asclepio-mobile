@@ -22,6 +22,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import co.asclepio.mobile.R
+import co.asclepio.mobile.core.ui.ScreenColumn
+import co.asclepio.mobile.core.ui.PageHeader
+import co.asclepio.mobile.core.ui.UiNotice
+import co.asclepio.mobile.core.ui.NoticeTone
+import co.asclepio.mobile.core.ui.AsclepioTextField
+import co.asclepio.mobile.core.ui.AsclepioButton
 import co.asclepio.mobile.core.ui.text
 
 @Composable
@@ -41,15 +47,10 @@ fun StaffLoginScreen(
             StaffLoginField.Password in state.fieldErrors -> passwordFocus.requestFocus()
         }
     }
-    Box(Modifier.fillMaxSize().imePadding(), contentAlignment = Alignment.TopCenter) {
-        Column(
-            Modifier.widthIn(max = if (widthSizeClass == WindowWidthSizeClass.Compact) 600.dp else 720.dp)
-                .fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-        ) {
-            Text(stringResource(R.string.staff_login_title), style = MaterialTheme.typography.headlineSmall)
+    ScreenColumn() {
+            PageHeader(stringResource(R.string.staff_login_title))
             Text(stringResource(R.string.staff_login_intro))
-            OutlinedTextField(
+            AsclepioTextField(
                 value = state.form.email,
                 onValueChange = { onFormChange(state.form.copy(email = it)) },
                 label = { Text(stringResource(R.string.staff_email)) },
@@ -61,7 +62,7 @@ fun StaffLoginScreen(
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email, imeAction = ImeAction.Next),
                 keyboardActions = KeyboardActions(onNext = { passwordFocus.requestFocus() }),
             )
-            OutlinedTextField(
+            AsclepioTextField(
                 value = state.form.password,
                 onValueChange = { onFormChange(state.form.copy(password = it)) },
                 label = { Text(stringResource(R.string.field_password)) },
@@ -77,7 +78,7 @@ fun StaffLoginScreen(
             state.message?.let {
                 Text(it.text(), color = MaterialTheme.colorScheme.error, modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
             }
-            Button(onClick = onSubmit, enabled = state.canSubmit, modifier = Modifier.fillMaxWidth()) {
+            AsclepioButton(onClick = onSubmit, enabled = state.canSubmit, modifier = Modifier.fillMaxWidth()) {
                 if (state.submitting) {
                     CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                     Spacer(Modifier.width(8.dp))
@@ -85,6 +86,5 @@ fun StaffLoginScreen(
                 Text(stringResource(R.string.login_submit))
             }
             TextButton(onClick = onChangeAccess) { Text(stringResource(R.string.change_access)) }
-        }
-    }
+            }
 }

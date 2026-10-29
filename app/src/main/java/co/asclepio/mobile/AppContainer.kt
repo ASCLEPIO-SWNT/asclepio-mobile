@@ -23,10 +23,19 @@ import co.asclepio.mobile.feature.staffaccount.data.StaffAuthApi
 import co.asclepio.mobile.feature.staffaccount.data.StaffAccountRepository
 import okhttp3.OkHttpClient
 import java.time.Clock
+import co.asclepio.mobile.core.ui.UiPreferencesRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 
 /** Inyección de dependencias manual (D4). */
 class AppContainer(context: Context) {
     val clock: Clock = Clock.systemUTC()
+    private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val uiDataStore = PreferenceDataStoreFactory.create {
+        context.applicationContext.preferencesDataStoreFile("asclepio_ui")
+    }
+    val uiPreferencesRepository = UiPreferencesRepository(uiDataStore, applicationScope)
 
     // files/datastore/asclepio_session.preferences_pb (excluido de copias de seguridad).
     private val dataStore = PreferenceDataStoreFactory.create {
