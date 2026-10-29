@@ -1,6 +1,7 @@
 package co.asclepio.mobile.core.ui
 
 import java.time.LocalDate
+import co.asclepio.mobile.core.model.toDatePickerMillis
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -29,6 +30,27 @@ class PrivateDatePickerDraftTest {
         assertFalse(open.withInput("2026-02-03").canAccept)
         assertFalse(open.withInput("").canAccept)
         assertFalse(PrivateDatePickerDraft().canAccept)
+    }
+
+    @Test fun `R6 signed and extended date years stay literal and cannot overflow or be accepted`() {
+        val open = PrivateDatePickerDraft.open(null).copy(inputMode = true)
+        for (input in listOf("03/02/+999999999", "03/02/+2001", "03/02/-0001", "0302+999999999", "03/02/10000")) {
+            val invalid = open.withInput(input)
+            assertEquals(input, invalid.inputText)
+            assertNull(invalid.date)
+            assertFalse(invalid.canAccept)
+        }
+    }
+
+    @Test fun `R6 calendar range includes valid input and retained displayed month outside default years`() {
+        for (year in listOf(0, 1800, 9999)) {
+            val millis = LocalDate.of(year, 2, 3).toDatePickerMillis()
+            assertTrue(year in privateDatePickerYearRange(millis, null))
+            assertTrue(year in privateDatePickerYearRange(null, millis))
+        }
+        val range = privateDatePickerYearRange(LocalDate.of(1800, 2, 3).toDatePickerMillis(), LocalDate.of(9999, 1, 1).toDatePickerMillis())
+        assertTrue(1800 in range)
+        assertTrue(9999 in range)
     }
 
     @Test fun `R20 date modal state has no serializer and its string representation hides private values`() {

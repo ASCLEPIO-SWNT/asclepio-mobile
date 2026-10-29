@@ -6,7 +6,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.LocalSaveableStateRegistry
 import androidx.compose.ui.platform.LocalConfiguration
-import co.asclepio.mobile.core.model.datePickerMillisToLocalDate
 
 /** The owner VM holds the unconfirmed snapshot; Android resources determine labels after locale change. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -19,12 +18,11 @@ fun rememberPrivateDatePickerState(
     val locale = LocalConfiguration.current.locales[0]
     val notify by rememberUpdatedState(onChange)
     return remember(locale) {
-        val selectedYear = initialSelectedDateMillis?.let(::datePickerMillisToLocalDate)?.year ?: 2000
         val state = DatePickerState(
             locale = locale,
             initialSelectedDateMillis = initialSelectedDateMillis,
             initialDisplayedMonthMillis = initialDisplayedMonthMillis ?: initialSelectedDateMillis,
-            yearRange = minOf(1900, selectedYear)..maxOf(2100, selectedYear),
+            yearRange = privateDatePickerYearRange(initialSelectedDateMillis, initialDisplayedMonthMillis),
         )
         object : DatePickerState by state {
             override var selectedDateMillis: Long?

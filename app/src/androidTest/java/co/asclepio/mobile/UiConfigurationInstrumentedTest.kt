@@ -8,6 +8,7 @@ import android.graphics.Paint
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.ui.test.*
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.semantics.getOrNull
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.os.LocaleListCompat
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -81,7 +82,7 @@ class UiConfigurationInstrumentedTest {
             compose.waitForIdle()
             compose.onNodeWithText("Correo electrónico").assertTextContains(email)
             val drafts = compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes()
-            assertTrue(drafts.any { it.config[androidx.compose.ui.semantics.SemanticsProperties.EditableText].text == password })
+            assertTrue(drafts.any { it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.InputText)?.text == password })
             assertTrue(probe.savedCount > 0)
             assertFalse("Private synthetic draft entered savedInstanceState", probe.privateValueFound)
         } finally { application.unregisterActivityLifecycleCallbacks(probe) }
@@ -200,6 +201,14 @@ class UiConfigurationInstrumentedTest {
             compose.waitForIdle()
             compose.onNodeWithTag("birth-date-input").assertTextContains("02/")
             compose.onNodeWithTag("birth-date-accept").assertIsNotEnabled()
+            // Mechanical calendar bounds must follow valid four-digit input without adding age rules.
+            for (year in listOf("1800", "9999")) {
+                compose.onNodeWithTag("birth-date-input").performTextReplacement("03/02/$year")
+                compose.onNodeWithTag("birth-date-toggle").performClick()
+                compose.onNodeWithTag("birth-date-toggle").performClick()
+                compose.onNodeWithTag("birth-date-input").assertTextContains("03/02/$year")
+                compose.onNodeWithTag("birth-date-accept").assertIsEnabled()
+            }
             compose.onNodeWithTag("birth-date-input").performTextReplacement("03022001")
             setSystemLocale("es")
             compose.onNodeWithTag("birth-date-input").assertTextContains("03022001")
@@ -211,7 +220,7 @@ class UiConfigurationInstrumentedTest {
             compose.waitForIdle()
             text(R.string.field_document_number).performScrollTo().assertTextContains(document)
             text(R.string.field_full_name).performScrollTo().assertTextContains(name)
-            assertTrue(compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().any { it.config[androidx.compose.ui.semantics.SemanticsProperties.EditableText].text == password })
+            assertTrue(compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes().any { it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.InputText)?.text == password })
             assertTrue(probe.savedCount > 0)
             assertFalse("Private signup fields entered the Activity Bundle", probe.privateValueFound)
         } finally { application.unregisterActivityLifecycleCallbacks(probe) }

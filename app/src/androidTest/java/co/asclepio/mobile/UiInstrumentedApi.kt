@@ -32,14 +32,14 @@ class UiInstrumentedApi : ExternalResource() {
         server.start(3000)
     }
     override fun after() { server.shutdown() }
-    private fun access(token: String) = """{"accessToken":"$token","expiresAt":"${Instant.now().plusSeconds(8*3600)}"}"""
+    private fun access(token: String) = """{"accessToken":"$token","tokenType":"Bearer","expiresAt":"${Instant.now().plusSeconds(8*3600)}"}"""
 
     companion object {
         const val TENANT = "5d0c0d4e-6a3b-4b8e-9c1f-0000000000aa"
         const val SITE = "7a1b2c3d-0000-4000-8000-000000000001"
         const val TENANTS = """[{"id":"$TENANT","name":"IPS QA Android","sites":[{"id":"$SITE","name":"Sede QA Android"}]}]"""
         const val PATIENT = """{"kind":"PATIENT","id":"a1100000-0000-4000-8000-000000000001","tenantId":"$TENANT","patientId":"b1100000-0000-4000-8000-000000000001","consentVersion":"ui01-test","identityVerified":false}"""
-        const val STAFF = """{"kind":"STAFF","id":"a1100000-0000-4000-8000-000000000002","tenantId":"$TENANT","fullName":"Personal Sintético","role":"NURSE"}"""
+        const val STAFF = """{"kind":"STAFF","id":"a1100000-0000-4000-8000-000000000002","tenantId":"$TENANT","fullName":"Personal Sintético","email":"staff-ui01@example.test","role":"NURSE"}"""
         const val PROFILE = """{"id":"b1100000-0000-4000-8000-000000000001","documentType":"CC","documentNumber":"DEV-UI01-PATIENT","fullName":"Nombre Sintético Inicial","birthDate":"1990-05-17","sex":"X","editable":true}"""
     }
 }
