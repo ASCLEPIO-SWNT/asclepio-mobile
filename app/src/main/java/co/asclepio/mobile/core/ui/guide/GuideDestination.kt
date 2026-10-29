@@ -19,9 +19,12 @@ enum class GuideDestination(@param:StringRes private val first: Int, @param:Stri
     StaffRegistration(R.string.guide_staff_registration_1, R.string.guide_staff_registration_2),
     StaffEncounters(R.string.guide_staff_encounters_1, R.string.guide_staff_encounters_2),
     StaffEncounterDetail(R.string.guide_staff_encounter_detail_1, R.string.guide_staff_encounter_detail_2),
+    NurseTray(R.string.clinical_guide_tray, R.string.clinical_guide_tray),
+    ClinicalCapture(R.string.clinical_guide_capture, R.string.clinical_guide_history),
+    ClinicalHistory(R.string.clinical_guide_history, R.string.clinical_guide_history),
     Status(R.string.guide_status_1, R.string.guide_status_2),
     SessionVerification(R.string.guide_verification_1, R.string.guide_verification_2),
     Preferences(R.string.guide_preferences_1, R.string.guide_preferences_2);
 
-    internal val resources: List<Int> get() = listOf(first, second)
+    internal val resources: List<Int> get() = listOf(first, second).distinct()
 }
