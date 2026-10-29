@@ -275,6 +275,7 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                                 onRetryConsent = vm::retryConsent,
                                 onGoToLogin = { if (backStack.lastOrNull() == Route.SignUp) backStack.removeAt(backStack.lastIndex) },
                                 onNavigatedToLogin = vm::onNavigatedToLogin,
+                                onDatePickerChange = vm::updateDatePicker,
                             )
 
                         }
@@ -319,7 +320,7 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                         GuardedRoute(session, Route.Profile, { backStack.resetTo(root) }) {
                             val vm = viewModel { ProfileViewModel(container.profileRepository, container.clock) }
                             val state by vm.state.collectAsStateWithLifecycle()
-                            ProfileScreen(state = state, onFormChange = vm::updateForm, onSave = vm::save, onRetry = vm::retry)
+                            ProfileScreen(state = state, onFormChange = vm::updateForm, onSave = vm::save, onRetry = vm::retry, onDatePickerChange = vm::updateDatePicker)
 
                         }
                     }

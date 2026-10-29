@@ -43,6 +43,8 @@ import co.asclepio.mobile.core.model.Sex
 import co.asclepio.mobile.core.model.datePickerMillisToLocalDate
 import co.asclepio.mobile.core.model.toDatePickerMillis
 import co.asclepio.mobile.core.ui.UiMessage
+import co.asclepio.mobile.core.ui.PrivateDatePickerDraft
+import co.asclepio.mobile.core.ui.BirthDateField as PrivateBirthDateField
 import co.asclepio.mobile.core.ui.PrivateDatePicker
 import co.asclepio.mobile.core.ui.rememberPrivateDatePickerState
 import co.asclepio.mobile.core.ui.text
@@ -54,6 +56,7 @@ fun ProfileScreen(
     onFormChange: (ProfileForm) -> Unit,
     onSave: () -> Unit,
     onRetry: () -> Unit,
+    onDatePickerChange: (PrivateDatePickerDraft) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     ScreenColumn(modifier) {
@@ -64,13 +67,13 @@ fun ProfileScreen(
                 UiNotice(state.message.text(), NoticeTone.Error)
                 AsclepioButton(onClick = onRetry, enabled = state.retryEnabled) { Text(stringResource(R.string.retry)) }
             }
-            is ProfileUiState.Success -> ProfileContent(state, onFormChange, onSave)
+            is ProfileUiState.Success -> ProfileContent(state, onFormChange, onSave, onDatePickerChange)
         }
         }
 }
 
 @Composable
-private fun ProfileContent(state: ProfileUiState.Success, onFormChange: (ProfileForm) -> Unit, onSave: () -> Unit) {
+private fun ProfileContent(state: ProfileUiState.Success, onFormChange: (ProfileForm) -> Unit, onSave: () -> Unit, onDatePickerChange: (PrivateDatePickerDraft) -> Unit) {
     val display = state.display
     if (state.showLockedNotice) {
         Card(Modifier.fillMaxWidth()) { Text(stringResource(R.string.profile_locked), Modifier.padding(16.dp)) }
@@ -96,7 +99,7 @@ private fun ProfileContent(state: ProfileUiState.Success, onFormChange: (Profile
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
     )
-    BirthDateField(form, state.fieldErrors[ProfileField.BirthDate], enabled, onFormChange)
+    PrivateBirthDateField(form.birthDate, state.datePicker, state.fieldErrors[ProfileField.BirthDate], enabled, { onFormChange(form.copy(birthDate = it)) }, onDatePickerChange)
     SexSelector(form.sex, state.fieldErrors[ProfileField.Sex], enabled) { onFormChange(form.copy(sex = it)) }
     state.message?.let {
         UiNotice(it.text(), if (it.resId == R.string.profile_saved) NoticeTone.Success else NoticeTone.Error)
@@ -118,33 +121,6 @@ private fun ReadOnlyValue(label: Int, value: DisplayText) {
     Column(Modifier.fillMaxWidth()) {
         Text(stringResource(label), style = MaterialTheme.typography.labelLarge)
         Text(value.text(), style = MaterialTheme.typography.bodyLarge)
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun BirthDateField(form: ProfileForm, error: UiMessage?, enabled: Boolean, onChange: (ProfileForm) -> Unit) {
-    // Solo un indicador de diálogo abierto: la fecha vive en el ViewModel, no en el estado guardado (R27).
-    var open by remember { mutableStateOf(false) }
-    Column {
-        Text(stringResource(R.string.field_birth_date), style = MaterialTheme.typography.labelLarge)
-        OutlinedButton(onClick = { open = true }, enabled = enabled) {
-            Text(form.birthDate?.let(::formatBirthDate) ?: stringResource(R.string.field_birth_date_choose))
-        }
-        error?.let { Text(it.text(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-    }
-    if (open) {
-        val pickerState = rememberPrivateDatePickerState(initialSelectedDateMillis = form.birthDate?.toDatePickerMillis())
-        DatePickerDialog(
-            onDismissRequest = { open = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    pickerState.selectedDateMillis?.let { onChange(form.copy(birthDate = datePickerMillisToLocalDate(it))) }
-                    open = false
-                }) { Text(stringResource(R.string.date_picker_ok)) }
-            },
-            dismissButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.logout_cancel)) } },
-        ) { PrivateDatePicker(pickerState) }
     }
 }
 

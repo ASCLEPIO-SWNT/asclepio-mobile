@@ -8,6 +8,7 @@ import co.asclepio.mobile.core.network.ApiResult
 import co.asclepio.mobile.core.network.httpStatus
 import co.asclepio.mobile.core.network.rateLimitSeconds
 import co.asclepio.mobile.core.ui.UiMessage
+import co.asclepio.mobile.core.ui.PrivateDatePickerDraft
 import co.asclepio.mobile.feature.account.data.AccountRepository
 import co.asclepio.mobile.feature.account.data.LoginPrefill
 import co.asclepio.mobile.feature.account.data.LoginResult
@@ -31,6 +32,7 @@ sealed interface ConsentUiState {
 data class SignUpUiState(
     val consent: ConsentUiState = ConsentUiState.Loading,
     val form: SignUpForm = SignUpForm(),
+    val datePicker: PrivateDatePickerDraft = PrivateDatePickerDraft(),
     val fieldErrors: Map<SignUpField, UiMessage> = emptyMap(),
     val message: UiMessage? = null,
     val submitting: Boolean = false,
@@ -97,6 +99,10 @@ class SignUpViewModel(
             if (old.passwordConfirmation != form.passwordConfirmation) add(SignUpField.PasswordConfirmation)
         }
         s.copy(form = form, fieldErrors = s.fieldErrors - changed)
+    }
+
+    fun updateDatePicker(draft: PrivateDatePickerDraft) = _state.update { state ->
+        if (!state.submitting) state.copy(datePicker = draft) else state
     }
 
     fun submit() {

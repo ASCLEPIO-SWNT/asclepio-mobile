@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="date_picker_calendar_mode">Choose from calendar</string>
+    <string name="date_picker_input_mode">Enter date</string>
+    <string name="date_picker_format">DD/MM/YYYY · you can also enter just the eight digits</string>
+    <string name="date_picker_invalid">Enter a valid date with day, month and a four-digit year.</string>
+</resources>

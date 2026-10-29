@@ -46,6 +46,8 @@ import co.asclepio.mobile.core.model.datePickerMillisToLocalDate
 import co.asclepio.mobile.core.model.toDatePickerMillis
 import co.asclepio.mobile.core.ui.PaneMode
 import co.asclepio.mobile.core.ui.UiMessage
+import co.asclepio.mobile.core.ui.PrivateDatePickerDraft
+import co.asclepio.mobile.core.ui.BirthDateField as PrivateBirthDateField
 import co.asclepio.mobile.core.ui.PrivateDatePicker
 import co.asclepio.mobile.core.ui.rememberPrivateDatePickerState
 import co.asclepio.mobile.core.ui.markdownToAnnotated
@@ -73,6 +75,7 @@ fun SignUpScreen(
     onRetryConsent: () -> Unit,
     onGoToLogin: () -> Unit,
     onNavigatedToLogin: () -> Unit,
+    onDatePickerChange: (PrivateDatePickerDraft) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     if (state.navigateToLogin) {
@@ -81,7 +84,7 @@ fun SignUpScreen(
             onGoToLogin()
         }
     }
-    val form: @Composable (Modifier) -> Unit = { m -> SignUpFormPane(state, onFormChange, onSubmit, onGoToLogin, m) }
+    val form: @Composable (Modifier) -> Unit = { m -> SignUpFormPane(state, onFormChange, onSubmit, onGoToLogin, onDatePickerChange, m) }
     val consent: @Composable (Modifier) -> Unit = { m -> ConsentPane(state.consent, onRetryConsent, m) }
     EntryBackdrop(register = true) {
     ScreenColumn(modifier, maxWidth = 1080.dp) {
@@ -124,6 +127,7 @@ private fun SignUpFormPane(
     onChange: (SignUpForm) -> Unit,
     onSubmit: () -> Unit,
     onGoToLogin: () -> Unit,
+    onDatePickerChange: (PrivateDatePickerDraft) -> Unit,
     modifier: Modifier,
 ) {
     val form = state.form
@@ -138,7 +142,7 @@ private fun SignUpFormPane(
         FormTextField(form.fullName, R.string.field_full_name, errors[SignUpField.FullName], enabled) {
             onChange(form.copy(fullName = it))
         }
-        BirthDateField(form, errors[SignUpField.BirthDate], enabled, onChange)
+        PrivateBirthDateField(form.birthDate, state.datePicker, errors[SignUpField.BirthDate], enabled, { onChange(form.copy(birthDate = it)) }, onDatePickerChange)
         SexSelector(form.sex, errors[SignUpField.Sex], enabled) { onChange(form.copy(sex = it)) }
         FormTextField(form.password, R.string.field_password, errors[SignUpField.Password], enabled, password = true) {
             onChange(form.copy(password = it))
@@ -172,32 +176,6 @@ private fun SignUpFormPane(
                 Text(stringResource(R.string.signup_go_to_login))
             }
         }
-    }
-}
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun BirthDateField(form: SignUpForm, error: UiMessage?, enabled: Boolean, onChange: (SignUpForm) -> Unit) {
-    var open by rememberSaveable { mutableStateOf(false) }
-    Column {
-        Text(stringResource(R.string.field_birth_date), style = MaterialTheme.typography.labelLarge)
-        OutlinedButton(onClick = { open = true }, enabled = enabled) {
-            Text(form.birthDate?.format(birthDateFormat) ?: stringResource(R.string.field_birth_date_choose))
-        }
-        error?.let { Text(it.text(), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-    }
-    if (open) {
-        val pickerState = rememberPrivateDatePickerState(initialSelectedDateMillis = form.birthDate?.toDatePickerMillis())
-        DatePickerDialog(
-            onDismissRequest = { open = false },
-            confirmButton = {
-                TextButton(onClick = {
-                    pickerState.selectedDateMillis?.let { onChange(form.copy(birthDate = datePickerMillisToLocalDate(it))) }
-                    open = false
-                }) { Text(stringResource(R.string.date_picker_ok)) }
-            },
-            dismissButton = { TextButton(onClick = { open = false }) { Text(stringResource(R.string.logout_cancel)) } },
-        ) { PrivateDatePicker(pickerState) }
     }
 }
 

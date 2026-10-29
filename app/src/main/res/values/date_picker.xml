@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="date_picker_calendar_mode">Elegir en el calendario</string>
+    <string name="date_picker_input_mode">Escribir fecha</string>
+    <string name="date_picker_format">DD/MM/AAAA · también puedes escribir solo los ocho dígitos</string>
+    <string name="date_picker_invalid">Escribe una fecha válida con día, mes y año de cuatro dígitos.</string>
+</resources>

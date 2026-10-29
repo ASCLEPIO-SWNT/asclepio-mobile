@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="date_picker_calendar_mode">Im Kalender auswählen</string>
+    <string name="date_picker_input_mode">Datum eingeben</string>
+    <string name="date_picker_format">TT/MM/JJJJ · Sie können auch nur die acht Ziffern eingeben</string>
+    <string name="date_picker_invalid">Geben Sie ein gültiges Datum mit Tag, Monat und vierstelliger Jahreszahl ein.</string>
+</resources>

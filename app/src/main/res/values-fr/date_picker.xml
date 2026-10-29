@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="date_picker_calendar_mode">Choisir dans le calendrier</string>
+    <string name="date_picker_input_mode">Saisir la date</string>
+    <string name="date_picker_format">JJ/MM/AAAA · vous pouvez aussi saisir seulement les huit chiffres</string>
+    <string name="date_picker_invalid">Saisissez une date valide avec le jour, le mois et l’année sur quatre chiffres.</string>
+</resources>

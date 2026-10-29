@@ -3,27 +3,51 @@ package co.asclepio.mobile.core.ui
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerState
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.LocalSaveableStateRegistry
 import androidx.compose.ui.platform.LocalConfiguration
+import co.asclepio.mobile.core.model.datePickerMillisToLocalDate
 
-/** Fecha privada en RAM. rememberDatePickerState usa un Saver y no debe emplearse con fechas del paciente. */
+/** The owner VM holds the unconfirmed snapshot; Android resources determine labels after locale change. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun rememberPrivateDatePickerState(initialSelectedDateMillis: Long?): DatePickerState {
+fun rememberPrivateDatePickerState(
+    initialSelectedDateMillis: Long?,
+    initialDisplayedMonthMillis: Long? = null,
+    onChange: (Long?, Long) -> Unit = { _, _ -> },
+): DatePickerState {
     val locale = LocalConfiguration.current.locales[0]
-    return remember(locale, initialSelectedDateMillis) {
-        DatePickerState(locale = locale, initialSelectedDateMillis = initialSelectedDateMillis)
+    val notify by rememberUpdatedState(onChange)
+    return remember(locale) {
+        val selectedYear = initialSelectedDateMillis?.let(::datePickerMillisToLocalDate)?.year ?: 2000
+        val state = DatePickerState(
+            locale = locale,
+            initialSelectedDateMillis = initialSelectedDateMillis,
+            initialDisplayedMonthMillis = initialDisplayedMonthMillis ?: initialSelectedDateMillis,
+            yearRange = minOf(1900, selectedYear)..maxOf(2100, selectedYear),
+        )
+        object : DatePickerState by state {
+            override var selectedDateMillis: Long?
+                get() = state.selectedDateMillis
+                set(value) {
+                    state.selectedDateMillis = value
+                    notify(state.selectedDateMillis, state.displayedMonthMillis)
+                }
+            override var displayedMonthMillis: Long
+                get() = state.displayedMonthMillis
+                set(value) {
+                    state.displayedMonthMillis = value
+                    notify(state.selectedDateMillis, state.displayedMonthMillis)
+                }
+        }
     }
 }
 
-/** Dentro del contenido del Dialog: bloquea también los Savers internos del modo de entrada de fecha. */
+/** Inside the Dialog: both calendar widgets and controlled text input exclude hidden internal Savers. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PrivateDatePicker(state: DatePickerState) {
+fun PrivateDatePicker(state: DatePickerState? = null, inputContent: (@Composable () -> Unit)? = null) {
     CompositionLocalProvider(LocalSaveableStateRegistry provides null) {
-        DatePicker(state)
+        if (inputContent != null) inputContent() else DatePicker(checkNotNull(state), showModeToggle = false)
     }
 }

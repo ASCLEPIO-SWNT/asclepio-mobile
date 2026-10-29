@@ -265,4 +265,16 @@ class SignUpViewModelTest {
         vm.updateForm(validForm)
         assertFalse(vm.state.value.toString().contains("secreta-123"))
     }
+    @Test fun `R6 signup retains partial modal date in RAM without accepting or sending it`() = runTest {
+        val vm = ready()
+        val draft = co.asclepio.mobile.core.ui.PrivateDatePickerDraft.open(null).copy(inputMode = true).withInput("02/")
+        vm.updateDatePicker(draft)
+        vm.updateForm(vm.state.value.form.copy(fullName = "Alta sintética"))
+        assertEquals(draft, vm.state.value.datePicker)
+        assertNull(vm.state.value.form.birthDate)
+        vm.updateDatePicker(co.asclepio.mobile.core.ui.PrivateDatePickerDraft())
+        assertFalse(vm.state.value.datePicker.isOpen)
+        assertNull(vm.state.value.form.birthDate)
+        assertEquals(1, env.server.requestCount)
+    }
 }

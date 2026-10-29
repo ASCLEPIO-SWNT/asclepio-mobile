@@ -7,6 +7,7 @@ import co.asclepio.mobile.core.network.ApiError
 import co.asclepio.mobile.core.network.ApiResult
 import co.asclepio.mobile.core.network.rateLimitSeconds
 import co.asclepio.mobile.core.ui.UiMessage
+import co.asclepio.mobile.core.ui.PrivateDatePickerDraft
 import co.asclepio.mobile.feature.patients.data.PatientProfileDto
 import co.asclepio.mobile.feature.patients.data.PatientProfileRepository
 import kotlinx.coroutines.delay
@@ -26,6 +27,7 @@ sealed interface ProfileUiState {
     data class Success(
         val loaded: PatientProfileDto,
         val form: ProfileForm,
+        val datePicker: PrivateDatePickerDraft = PrivateDatePickerDraft(),
         val fieldErrors: Map<ProfileField, UiMessage> = emptyMap(),
         /** Mensaje general: "Datos guardados" (R3) o un error (R7, R24). */
         val message: UiMessage? = null,
@@ -99,6 +101,10 @@ class ProfileViewModel(private val repository: PatientProfileRepository, private
         }
         val message = s.message.takeUnless { it?.resId == R.string.profile_saved && changed.isNotEmpty() }
         s.copy(form = form, fieldErrors = s.fieldErrors - changed, message = message)
+    }
+
+    fun updateDatePicker(draft: PrivateDatePickerDraft) = _state.update { state ->
+        if (state is ProfileUiState.Success && state.editable && !state.saving && !state.reloading) state.copy(datePicker = draft) else state
     }
 
     fun save() {

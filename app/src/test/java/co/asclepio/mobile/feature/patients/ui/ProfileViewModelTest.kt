@@ -304,4 +304,17 @@ class ProfileViewModelTest {
         assertFalse(text, text.contains("DEV-1020304050"))
         assertFalse(text, text.contains("1990"))
     }
+    @Test fun `R6 modal date draft stays in VM across form updates and cancel never accepts it`() = runTest {
+        val vm = opened()
+        val original = vm.success().form.birthDate
+        val draft = co.asclepio.mobile.core.ui.PrivateDatePickerDraft.open(original).copy(inputMode = true).withInput("03/0")
+        vm.updateDatePicker(draft)
+        vm.updateForm(vm.success().form.copy(fullName = "Otro nombre sintético"))
+        assertEquals(draft, vm.success().datePicker)
+        assertEquals(original, vm.success().form.birthDate)
+        vm.updateDatePicker(co.asclepio.mobile.core.ui.PrivateDatePickerDraft())
+        assertFalse(vm.success().datePicker.isOpen)
+        assertEquals(original, vm.success().form.birthDate)
+        assertEquals(1, env.server.requestCount)
+    }
 }
