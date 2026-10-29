@@ -1,27 +1,31 @@
 # Arquitectura — asclepio-mobile
 
-Kotlin + Jetpack Compose, **MVVM**, Retrofit + kotlinx.serialization y layouts adaptativos con `WindowSizeClass` (teléfono y tablet). Alcance: **app del paciente** (cuenta, pre-registro y dictado; ADR 0008 de la API).
+Kotlin + Jetpack Compose, **MVVM**, Retrofit + kotlinx.serialization y layouts adaptativos con `WindowSizeClass` (teléfono y tablet). Alcance: **una APK para pacientes y personal** (ADR local 0002). Se conserva la cuenta/perfil/pre-registro del paciente; el personal se añade por bloques con su principal y rol verificados. El ADR 0008 de la API sigue siendo la referencia del flujo paciente, sin modificarse desde este cliente.
 
 ## Paquetes
 ```
 app/src/main/java/co/asclepio/mobile/
 ├── AsclepioApp.kt       # Application: crea el AppContainer
 ├── AppContainer.kt      # DI manual: Retrofit, APIs, SessionStore, SessionManager, repositorios
-├── AppNavigation.kt     # Navigation 3 (NavDisplay): une las features; pila reiniciada según SessionManager.state
+├── AppNavigation.kt     # Navigation 3 (NavDisplay): une las features; pila y ámbito VM aislados por generación autenticada de SessionManager.state
 ├── MainActivity.kt
 ├── core/
 │   ├── network/     # ApiClient (Retrofit + OkHttp + kotlinx.serialization), ProblemDetails, ApiError + apiCall
 │   ├── auth/        # TokenCipher + KeystoreTokenCipher (AES-256-GCM), SessionStore (DataStore), SessionManager,
-│   │                # AuthInterceptor, MeApi + MeDto, Age (mayoría de edad en America/Bogota),
-│   │                # PatientCall (`SessionManager.patientCall`: un 401 de /patient/… cierra la sesión, F-02)
+│   │                # AuthInterceptor, MeApi + MeDto, VerifiedPrincipal Patient/Staff, AccessMode, StaffRole/destinos, AccessTokenDto,
+│   │                # AuthHandle y authenticatedCall (Bearer/generación inmutables), Age (mayoría de edad en America/Bogota),
+│   │                # patientCall (adaptador PATIENT de F-02; un 401 vigente cierra solo su generación)
 │   ├── tenants/     # TenantsApi (GET /api/v1/public/tenants) + PublicTenantDto/PublicSiteDto (F-01 y F-02)
 │   ├── model/       # Sex, FULL_NAME_MAX y la conversión del DatePicker (alta de F-01 y "Mis datos" de F-02)
-│   └── ui/          # Theme, DateTime, UiMessage (@StringRes), WindowLayout (paneMode), MarkdownText
+│   └── ui/          # Theme, DateTime, UiMessage (@StringRes), WindowLayout (paneMode), MarkdownText,
+│                    # AccessScreens y PrivateDatePicker (fecha en RAM, sin Savers internos)
 └── feature/
     ├── status/      # data/ (HealthApi) y ui/ (StatusScreen, StatusViewModel): GET /api/v1/health (F-00)
     ├── account/     # cuenta e inicio de sesión del paciente (F-01): data/ (PublicApi con el consentimiento,
     │                # PatientAuthApi, DTOs, TenantRepository, AccountRepository) y ui/ (TenantPicker, Login, SignUp,
     │                # Home con el slot de estado y "Mis datos", formularios y errores)
+    ├── staffaccount/ # data/ (StaffAuthApi y StaffAccountRepository: login + /me); ui/ (StaffLogin y marcadores por rol),
+    │                # sin signup público staff ni consultas operativas en F-01-staff-mobile
     ├── patients/    # "Mis datos" (F-02): data/ (PatientProfileApi, PatientProfileDto, UpdatePatientProfileRequest,
     │                # PatientProfileRepository) y ui/ (ProfileScreen, ProfileViewModel, ProfileForm + validación y diff,
     │                # ProfileErrors)
@@ -37,6 +41,7 @@ Cada `feature/<f>/` contiene `data/` (API y repositorio), `ui/` (Composables y `
 **Permitidas**
 - `feature/*` → `core/*`.
 - `ui` (Composable) → `ViewModel` → repositorio → servicio Retrofit.
+- Los DTOs de sesión compartidos viven en `core/auth`, sin dependencias core→feature. `/me` se convierte estrictamente a Patient/Staff conocido antes de exponer `Authenticated`.
 - El inicio (`feature/account`) recibe el estado del pre-registro (`feature/encounters`) como un slot `@Composable` que compone `AppNavigation` (D3 de F-02-mobile).
 
 **Prohibidas**
@@ -45,6 +50,14 @@ Cada `feature/<f>/` contiene `data/` (API y repositorio), `ui/` (Composables y `
 - Un Composable que llama al repositorio o a Retrofit.
 - Enviar audio a cualquier servidor, o usar ASR en la nube (ADR 0006 de la API).
 - Enviar horas legales a la API.
+- Montar una feature paciente para STAFF o una feature staff para PATIENT, o construir un destino/VM antes de comprobar su guard.
+- Leer el token actual dentro de una operación originada en otra generación; cada Retrofit protegido recibe la cabecera explícita capturada por `authenticatedCall`/`patientCall`.
+
+## Sesión y navegación
+
+`SessionManager` conserva las seis claves DataStore existentes: IPS/sede públicas recordadas y token cifrado/expiración. Principal y perfil solo viven en RAM. La restauración consulta `/me` antes de abrir la raíz; STAFF no exige IPS paciente. Un error de verificación conserva el cifrado pero no permite acceso y presenta Reintentar/Cerrar sesión. La comprobación de primer plano conserva la generación y evita duplicar `/me` si ya se verificó y no venció.
+
+Logout, cambio de acceso, expiración y 401 vigente invalidan la generación, limpian token y prefill privado, y cambian la identidad de la composición de Navigation 3 con sus decoradores de VM. Los resultados anteriores se descartan. Paciente conserva sus rutas Home/Profile/PreRegistration y sus reglas F-02. Personal tiene una matriz única en `core/auth/StaffDestinations.kt`: Recepción; Triage; Medicina; Administración como hogares separados. Cola permite NURSE/PHYSICIAN/ADMIN; Atenciones permite los cuatro roles; Reportes solo ADMIN. En F-01-staff-mobile son marcadores explícitamente pendientes y no hacen consultas de esas funciones.
 
 ## Plataforma
 - `minSdk 31`, `compileSdk`/`targetSdk 37` (ver `docs/adr/0001-minsdk-31.md`). AGP 9 con Kotlin integrado y catálogo de versiones en `gradle/libs.versions.toml`.

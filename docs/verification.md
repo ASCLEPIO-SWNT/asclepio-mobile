@@ -18,3 +18,13 @@
 
 ## Demo extremo a extremo
 La lista de comprobación de la demo completa está en `../asclepio-api/docs/verification.md`.
+
+
+## Acceso paciente/personal (F-01-staff-mobile)
+
+- Ejecutar `./gradlew lint testDebugUnitTest assembleDebug` y `./init.sh` completo. La regresión incluye F-01/F-02 existentes, HTTP real con MockWebServer, privacidad de disco/toString, restauración y generaciones intercaladas, guards por rol y formularios VM.
+- La fecha privada usa `rememberPrivateDatePickerState` y `PrivateDatePicker` dentro del Dialog; no usar `rememberDatePickerState` ni el DatePicker real fuera de esa frontera. La prueba estática verifica ese límite; la inspección de Bundle instrumentada se registra como evidencia aparte cuando se ejecute.
+- Mantener las pruebas Keystore instrumentadas (AES-256-GCM) separadas de los fixtures JVM. Una pasada del APK base no prueba por sí sola la UI de una APK posterior.
+- En teléfono/tablet comprobar bienvenida, paciente con/sin IPS, login staff sin selector de IPS ni registro público, cuatro hogares y destinos exactos, error local/429, restauración bloqueada ante red/5xx, confirmaciones de logout/cambio y Atrás sin contenido anterior. Verificar rotación/teclado y destrucción de borradores al cambiar generación.
+- Las funciones staff posteriores aparecen como pendientes; no se simulan listas clínicas ni se ejecutan endpoints de esos bloques desde F-01-staff-mobile.
+- Registrar para cada ejecución emulador/API, APK/commit, fixture contractual o servidor real y acciones efectivamente realizadas. No llamar integración real a un fixture; no afirmar TalkBack, rotación o persistencia del proceso sin haberlos ejercitado.
