@@ -16,11 +16,13 @@ data class HomeUiState(
     val identityVerified: Boolean? = null,
     val verifying: Boolean = true,
     val showLogoutDialog: Boolean = false,
+    val changingAccess: Boolean = false,
 ) {
     val showIdentityNotice: Boolean get() = identityVerified == false
 }
 
 class HomeViewModel(private val sessionManager: SessionManager) : ViewModel() {
+    private val generation = sessionManager.generation
     private val _state = MutableStateFlow(HomeUiState(tenant = sessionManager.rememberedTenant()))
     val state: StateFlow<HomeUiState> = _state.asStateFlow()
 
@@ -30,13 +32,16 @@ class HomeViewModel(private val sessionManager: SessionManager) : ViewModel() {
         _state.value = _state.value.copy(identityVerified = patient?.identityVerified, verifying = false)
     }
 
-    fun requestLogout() = _state.update { it.copy(showLogoutDialog = true) }
+    fun requestLogout() = _state.update { it.copy(showLogoutDialog = true, changingAccess = false) }
+
+    fun requestChangeAccess() = _state.update { it.copy(showLogoutDialog = true, changingAccess = true) }
 
     fun cancelLogout() = _state.update { it.copy(showLogoutDialog = false) }
 
     /** R30: borra la sesión sin llamar a ningún endpoint (el contrato no tiene logout). */
     fun confirmLogout() {
-        _state.update { it.copy(showLogoutDialog = false) }
-        viewModelScope.launch { sessionManager.logout() }
+        val change = _state.value.changingAccess
+        _state.update { it.copy(showLogoutDialog = false, changingAccess = false) }
+        viewModelScope.launch { if (change) sessionManager.showWelcome(generation) else sessionManager.logout(generation) }
     }
 }

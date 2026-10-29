@@ -37,6 +37,7 @@ class StaffTestEnv(dir: File, scope: CoroutineScope? = null) {
     }
     suspend fun activate(mode: AccessMode = AccessMode.STAFF, token: String = TOKEN, role: String = "NURSE") {
         if (mode == AccessMode.PATIENT) manager.saveTenant(tenant)
+        manager.selectAccess(mode)
         val attempt = manager.beginLogin(mode)
         val me = if (mode == AccessMode.STAFF) staffMeDto(role) else patientMeDto()
         check(manager.completeLogin(attempt, token, EXPIRES, me))

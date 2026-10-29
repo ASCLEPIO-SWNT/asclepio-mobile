@@ -106,4 +106,33 @@ class StaffAccountRepositoryTest {
         ).joinToString()
         for (secret in listOf("secret@ips.co", "password-private", "Nombre privado", "nurse@ips.co", "staff-id", "staff-tenant", "token-private")) assertFalse(secret, text.contains(secret))
     }
+    @Test fun `R15 login y me pendientes despues de cambiar acceso nunca restauran token ni abren personal`() = runTest {
+        for (holdMe in listOf(false, true)) {
+            val received = CountDownLatch(1)
+            val release = CountDownLatch(1)
+            val before = env.server.requestCount
+            env.server.dispatcher = object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse {
+                    val isMe = request.path == "/api/v1/me"
+                    if (isMe == holdMe) {
+                        received.countDown()
+                        check(release.await(2, TimeUnit.SECONDS))
+                    }
+                    return MockResponse().setBody(if (isMe) StaffTestEnv.staffMe() else StaffTestEnv.LOGIN_OK)
+                }
+            }
+            val old = async {
+                try { env.repository.login("a@b.co", "p"); false }
+                catch (_: SessionInvalidated) { true }
+            }
+            assertTrue(kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { received.await(2, TimeUnit.SECONDS) })
+            env.manager.showWelcome()
+            release.countDown()
+            assertTrue(old.await())
+            assertEquals(SessionState.Welcome, env.manager.state.value)
+            assertEquals(StoredSession.None, env.store.session())
+            assertEquals(if (holdMe) 2 else 1, env.server.requestCount - before)
+        }
+    }
+
 }

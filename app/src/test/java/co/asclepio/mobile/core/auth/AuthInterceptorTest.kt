@@ -46,6 +46,12 @@ class AuthInterceptorTest {
         assertEquals("Bearer tok-123", send("GET", "/api/v1/encounters/mine"))
     }
 
+    @Test fun `R18 auth personal y public eliminan incluso una cabecera explicita y me conserva la suya`() {
+        assertNull(send("POST", "/api/v1/auth/login", authorization = "Bearer anterior"))
+        assertNull(send("GET", "/api/v1/public/tenants", authorization = "Bearer anterior"))
+        assertEquals("Bearer operacion", send("GET", "/api/v1/me", authorization = "Bearer operacion"))
+    }
+
     @Test fun `R29 sin sesion no anade cabecera y no sobrescribe una cabecera explicita`() {
         token = null
         assertNull(send("GET", "/api/v1/me"))

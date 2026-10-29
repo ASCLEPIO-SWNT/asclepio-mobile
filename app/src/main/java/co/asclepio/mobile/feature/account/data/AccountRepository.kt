@@ -39,6 +39,8 @@ class AccountRepository(
     private val _loginPrefill = MutableStateFlow<LoginPrefill?>(null)
     val loginPrefill: StateFlow<LoginPrefill?> = _loginPrefill.asStateFlow()
 
+    init { sessionManager.onInvalidated { _loginPrefill.value = null } }
+
     suspend fun consent(): ApiResult<ConsentDto> = apiCall { publicApi.consent() }
 
     suspend fun createAccount(request: CreatePatientAccountRequest): ApiResult<PatientAccountCreatedDto> =

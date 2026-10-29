@@ -32,6 +32,7 @@ fun HomeScreen(
     onOpenProfile: () -> Unit,
     status: @Composable () -> Unit,
     onRequestLogout: () -> Unit,
+    onRequestChangeAccess: () -> Unit,
     onCancelLogout: () -> Unit,
     onConfirmLogout: () -> Unit,
     modifier: Modifier = Modifier,
@@ -54,6 +55,7 @@ fun HomeScreen(
             OutlinedButton(onClick = onOpenProfile, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.home_action_profile))
             }
+            TextButton(onClick = onRequestChangeAccess) { Text(stringResource(R.string.change_access)) }
             OutlinedButton(onClick = onRequestLogout, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.logout_confirm))
             }
@@ -62,8 +64,8 @@ fun HomeScreen(
     if (state.showLogoutDialog) {
         AlertDialog(
             onDismissRequest = onCancelLogout,
-            title = { Text(stringResource(R.string.logout_dialog_title)) },
-            confirmButton = { TextButton(onClick = onConfirmLogout) { Text(stringResource(R.string.logout_confirm)) } },
+            title = { Text(stringResource(if (state.changingAccess) R.string.change_access_dialog_title else R.string.logout_dialog_title)) },
+            confirmButton = { TextButton(onClick = onConfirmLogout) { Text(stringResource(if (state.changingAccess) R.string.change_access else R.string.logout_confirm)) } },
             dismissButton = { TextButton(onClick = onCancelLogout) { Text(stringResource(R.string.logout_cancel)) } },
         )
     }

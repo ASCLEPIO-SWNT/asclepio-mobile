@@ -14,6 +14,7 @@ import kotlinx.coroutines.sync.withLock
 import java.time.Clock
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.CopyOnWriteArrayList
 
 sealed interface SessionState {
     data object Loading : SessionState
@@ -49,6 +50,10 @@ class SessionManager(
     private var tenant: RememberedTenant? = null
     private var selectedAccess: AccessMode? = null
     private var expiryJob: Job? = null
+    private val invalidationListeners = CopyOnWriteArrayList<() -> Unit>()
+
+    /** Limpieza inmediata de cachés efímeras; el núcleo no conoce ninguna feature. */
+    fun onInvalidated(clear: () -> Unit) { invalidationListeners.add(clear) }
 
     fun currentToken(): String? = accessToken?.takeIf { expiresAt?.isAfter(clock.instant()) == true }
     fun rememberedTenant(): RememberedTenant? = tenant
@@ -112,18 +117,21 @@ class SessionManager(
     }
 
     /** La UI pide confirmación antes de invocarlo desde un ámbito autenticado. */
-    suspend fun selectAccess(mode: AccessMode) = mutex.withLock {
+    suspend fun selectAccess(mode: AccessMode, expectedGeneration: Long? = null) = mutex.withLock {
+        if (expectedGeneration != null && !isCurrent(expectedGeneration)) return@withLock
         selectedAccess = mode
         tenant = store.tenant()
         clearLocked()
     }
 
-    suspend fun showWelcome() = mutex.withLock {
+    suspend fun showWelcome(expectedGeneration: Long? = null) = mutex.withLock {
+        if (expectedGeneration != null && !isCurrent(expectedGeneration)) return@withLock
         selectedAccess = null
         clearLocked()
     }
 
     suspend fun beginLogin(mode: AccessMode): LoginAttempt = mutex.withLock {
+        if (_state.value is SessionState.Authenticated) throw SessionInvalidated()
         selectedAccess = mode
         tenant = store.tenant()
         clearLocked()
@@ -145,7 +153,9 @@ class SessionManager(
     fun patientPrincipal(): VerifiedPrincipal.Patient? =
         (_state.value as? SessionState.Authenticated)?.principal as? VerifiedPrincipal.Patient
 
-    suspend fun logout() = mutex.withLock { clearLocked() }
+    suspend fun logout(expectedGeneration: Long? = null) = mutex.withLock {
+        if (expectedGeneration == null || isCurrent(expectedGeneration)) clearLocked()
+    }
 
     internal suspend fun capture(scope: AccessMode): AuthHandle = mutex.withLock {
         val authenticated = _state.value as? SessionState.Authenticated ?: throw SessionInvalidated()
@@ -167,6 +177,7 @@ class SessionManager(
     }
     private fun invalidateLocked() {
         generation++
+        invalidationListeners.forEach { it() }
         accessToken = null
         expiresAt = null
         expiryJob?.cancel()

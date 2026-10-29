@@ -109,9 +109,12 @@ class SignUpViewModel(
         }
         val tenant = sessionManager.rememberedTenant() ?: return
         val form = s.form
+        val expectedGeneration = sessionManager.generation
         _state.update { it.copy(submitting = true, message = null, fieldErrors = emptyMap(), showGoToLogin = false) }
         viewModelScope.launch {
-            when (val result = repository.createAccount(form.toRequest(tenant.tenantId, consent.version))) {
+            val result = repository.createAccount(form.toRequest(tenant.tenantId, consent.version))
+            sessionManager.requireCurrent(expectedGeneration)
+            when (result) {
                 is ApiResult.Success -> autoLogin(tenant.tenantId, form)
                 is ApiResult.Failure -> onCreateFailed(result.error, consent.version)
             }

@@ -112,6 +112,7 @@ class StaffSessionLifecycleTest {
 
     @Test fun `R15 respuesta y 401 antiguos no publican ni cierran una sesion posterior`() = runTest {
         env = StaffTestEnv(tmp.root, backgroundScope)
+        for (status in listOf(200, 401)) {
         env.activate(token = "token-A")
         val received = CountDownLatch(1)
         val release = CountDownLatch(1)
@@ -119,7 +120,7 @@ class StaffSessionLifecycleTest {
             override fun dispatch(request: RecordedRequest): MockResponse {
                 received.countDown()
                 check(release.await(2, TimeUnit.SECONDS))
-                return MockResponse().setResponseCode(401)
+                return MockResponse().setResponseCode(status).setBody(if (status == 200) StaffTestEnv.staffMe() else "")
             }
         }
         val old = async {
@@ -134,6 +135,7 @@ class StaffSessionLifecycleTest {
         assertEquals(newer, env.manager.state.value)
         assertEquals("token-B", env.manager.currentToken())
         assertEquals("Bearer token-A", env.server.takeRequest().getHeader("Authorization"))
+        }
     }
 
     @Test fun `R18 una operacion suspendida conserva su Bearer y no obtiene el de la nueva sesion`() = runTest {
