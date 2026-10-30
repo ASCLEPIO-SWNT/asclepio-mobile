@@ -31,7 +31,10 @@ fun ClinicalFindingsForm(
     val keys = state.rows.flatMap { row -> FindingField.entries.map { row.key to it } }.toSet()
     focus.keys.retainAll(keys)
     bring.keys.retainAll(keys)
-    keys.forEach { focus.getOrPut(it) { FocusRequester() }; bring.getOrPut(it) { BringIntoViewRequester() } }
+    keys.forEach { target -> key(target) {
+        focus[target] = remember { FocusRequester() }
+        bring[target] = remember { BringIntoViewRequester() }
+    } }
     LaunchedEffect(state.focusVersion, state.focusPending, editable, state.saving) {
         if (state.focusPending && editable && !state.saving) {
             val rowKey = state.focusRowKey ?: state.rows.firstOrNull()?.key
