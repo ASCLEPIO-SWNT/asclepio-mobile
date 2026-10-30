@@ -220,8 +220,11 @@ class SpeechGuideControllerTest {
             engine.speeches.first().done()
             engine.speeches.last().done()
             assertTrue(engine.speeches.all { it.text.startsWith("v1:pt-BR:") })
+            assertEquals(destination.resources.size, engine.speeches.size)
+            assertEquals(SpeechGuideState.Idle, guide.state.value)
         }
-        assertEquals(GuideDestination.entries.size * 2, resolved.distinct().size)
+        val expected = GuideDestination.entries.flatMap { it.resources }.map { it to "pt-BR" }.toSet()
+        assertEquals(expected, resolved.toSet())
         assertTrue(resolved.all { (_, locale) -> locale == "pt-BR" })
         assertFalse(SpeechGuideEngine::class.java.methods.any { it.name.contains("file", ignoreCase = true) || it.name.contains("synthesize", ignoreCase = true) })
         assertFalse(SpeechGuideController::class.java.methods.any { it.name == "speak" || it.name == "setText" })
