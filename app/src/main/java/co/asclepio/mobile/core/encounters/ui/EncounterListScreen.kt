@@ -12,6 +12,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import co.asclepio.mobile.R
 import co.asclepio.mobile.core.encounters.EncounterStatus
+import co.asclepio.mobile.core.encounters.deriveWaitingPage
 import co.asclepio.mobile.core.encounters.ui.*
 import co.asclepio.mobile.core.ui.*
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -33,9 +34,21 @@ fun EncounterListScreen(
         LazyColumn(state = list, modifier = Modifier.widthIn(max = 1000.dp).fillMaxSize().padding(horizontal = 16.dp), contentPadding = PaddingValues(vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item("header") {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    PageHeader(stringResource(if (clinicalTray) R.string.staff_destination_triage else R.string.staff_destination_encounters), if (clinicalTray) stringResource(R.string.clinical_tray_intro) else null)
-                    OutlinedButton(onClick = onRefresh, enabled = !state.refreshing && (state.remote as? EncounterListRemote.Error)?.retryEnabled != false) { Text(stringResource(R.string.home_refresh)) }
-                    Panel(Modifier.fillMaxWidth()) {
+                    if (clinicalTray) DashboardHeader(stringResource(R.string.staff_destination_triage), stringResource(R.string.clinical_tray_intro), onRefresh, state.refreshing)
+                    else PageHeader(stringResource(R.string.staff_destination_encounters))
+                    if (!clinicalTray) OutlinedButton(onClick = onRefresh, enabled = !state.refreshing && (state.remote as? EncounterListRemote.Error)?.retryEnabled != false) { Text(stringResource(R.string.home_refresh)) }
+                    if (clinicalTray) {
+                        val count = when (val remote = state.remote) {
+                            EncounterListRemote.Loading -> DashboardRead.Loading
+                            EncounterListRemote.Forbidden -> DashboardRead.Forbidden
+                            EncounterListRemote.NotFound -> DashboardRead.Error(UiMessage(R.string.clinical_tray_error))
+                            is EncounterListRemote.Error -> DashboardRead.Error(remote.message, remote.retryEnabled)
+                            is EncounterListRemote.Ready -> deriveWaitingPage(state.filters.offset, remote.items.size).count?.let { DashboardRead.Ready(it) } ?: DashboardRead.Loading
+                        }
+                        DashboardSummaryBar(listOf(DashboardSummaryCell(stringResource(R.string.dash_stat_waiting), R.drawable.ic_dashboard_clock, count, NoticeTone.Warning, onRefresh)), filter = { DashboardSiteFilter(state.sites, state.filters.siteId, onSiteChange, onRetrySites) })
+                        DashboardWorkHeader(stringResource(R.string.clinical_pending))
+                    }
+                    if (!clinicalTray) Panel(Modifier.fillMaxWidth()) {
                         StaffChoiceField(
                             label = stringResource(R.string.tenant_picker_sites), selected = state.filters.siteId,
                             options = listOf(null to stringResource(R.string.staff_sites_all)) + state.sites.sites.map { it.id to it.name },
@@ -70,7 +83,7 @@ fun EncounterListScreen(
                         Panel(Modifier.fillMaxWidth()) {
                             Text(encounter.patient.fullName?.takeIf(String::isNotBlank) ?: stringResource(R.string.staff_patient_nn), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
                             encounter.patient.documentNumber?.let { StaffFact(stringResource(R.string.staff_document), listOfNotNull(encounter.patient.documentType, it).joinToString(" ")) }
-                            StaffFact(stringResource(R.string.staff_arrival), staffDateTime(encounter.arrivalAt))
+                            StaffFact(stringResource(R.string.staff_arrival), if (clinicalTray) runCatching { formatDashboardBogota(encounter.arrivalAt) }.getOrNull() ?: stringResource(R.string.staff_value_unavailable) else staffDateTime(encounter.arrivalAt))
                             StaffFact(stringResource(R.string.tenant_picker_sites), encounter.siteName)
                             StaffFact(stringResource(R.string.staff_status), stringResource(staffStatusLabel(encounter.status)))
                             StaffFact(stringResource(R.string.staff_origin), stringResource(staffOriginLabel(encounter.origin)))

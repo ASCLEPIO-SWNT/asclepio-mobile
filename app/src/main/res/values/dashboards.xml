@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="dash_indicators">Indicadores</string>
+    <string name="dash_stat_loading">Cargando indicador…</string>
+    <string name="dash_stat_error">No se pudo cargar</string>
+    <string name="dash_stat_forbidden">Sin permiso</string>
+    <string name="dash_live">Se actualiza cada %1$d s</string>
+    <string name="dash_at_least">Al menos %1$d</string>
+    <string name="dash_retry_named">Reintentar: %1$s</string>
+    <string name="dash_view_all_encounters">Ver todas las atenciones</string>
+    <string name="dash_col_action">Acción</string>
+    <string name="dash_stat_preregistered">Preregistros pendientes</string>
+    <string name="dash_stat_waiting">En espera de triage</string>
+    <string name="dash_stat_triaged">Clasificadas</string>
+    <string name="dash_stat_in_care">En atención</string>
+    <string name="dash_reception_lead">Confirma la llegada de pacientes preregistrados o registra una llegada directa.</string>
+    <string name="dash_reception_empty_hint">Cuando un paciente envíe uno desde la aplicación, aparecerá aquí.</string>
+    <string name="dash_reception_empty_action">Registrar una llegada directa</string>
+    <string name="dash_triage_empty_hint">Las llegadas confirmadas por recepción aparecerán aquí.</string>
+    <string name="dash_queue_lead">Estado de las atenciones y las llegadas más recientes.</string>
+    <string name="dash_queue_recent">Atenciones recientes</string>
+    <string name="dash_queue_recent_loading">Cargando las atenciones recientes…</string>
+    <string name="dash_queue_recent_empty">Aún no hay atenciones.</string>
+    <string name="dash_queue_recent_error">No se pudieron cargar las atenciones recientes.</string>
+    <string name="dash_recent_footer">Las %1$d atenciones más recientes</string>
+    <string name="dash_recent_footer_one">La atención más reciente</string>
+    <string name="dash_queue_pending_title">Cola por nivel y espera</string>
+    <string name="dash_queue_pending_body">Aquí aparecerá la cola priorizada por nivel de triage y tiempo de espera, con datos del servidor.</string>
+    <string name="dash_reports_lead">Resumen de las atenciones por estado y por sede.</string>
+    <string name="dash_reports_by_site">Atenciones por sede</string>
+    <string name="dash_reports_sites_loading">Cargando las sedes…</string>
+    <string name="dash_reports_sites_empty">El tenant no tiene sedes registradas.</string>
+    <string name="dash_sites_count">%1$d sedes</string>
+    <string name="dash_sites_count_one">1 sede</string>
+    <string name="dash_reports_pending_title">Indicadores y reportes</string>
+    <string name="dash_reports_pending_body">Aquí aparecerán los tiempos, el cumplimiento, la concordancia y la descarga del CSV.</string>
+    <string name="dash_pending_label">Próximamente</string>
+    <string name="dash_view_named">Ver atención: %1$s</string>
+    <string name="dash_guide_reception">Los indicadores muestran cuántos preregistros esperan confirmación y cuántas atenciones esperan triage. La pantalla se actualiza sola de forma periódica; usa Actualizar para consultar al instante. Selecciona una sede para filtrar los indicadores y los preregistros. Verifica la identidad antes de confirmar la llegada. Puedes rechazar un preregistro con motivo o abrir el registro directo.</string>
+    <string name="dash_guide_nurse">Esta es la bandeja de enfermería. El indicador muestra cuántas atenciones esperan triage. La lista se actualiza sola de forma periódica; usa Actualizar para consultar al instante. Selecciona una sede y abre una atención para registrar la información clínica. Usa Anterior y Siguiente para cambiar de página.</string>
+    <string name="dash_guide_medicine">Esta pantalla resume las atenciones por estado: en espera de triage, clasificadas y en atención. Debajo verás las atenciones más recientes; abre una para consultar su detalle. Se actualiza sola de forma periódica; usa Actualizar para consultar al instante. La cola por nivel y tiempo de espera todavía no está disponible. La guía no lee datos de pacientes.</string>
+    <string name="dash_guide_admin">Esta pantalla resume las atenciones por estado y las que esperan triage en cada sede. Se actualiza sola de forma periódica; usa Actualizar para consultar al instante. Los reportes de tiempos y la descarga del CSV todavía no están disponibles. La pantalla no muestra datos de pacientes.</string>
+    <string name="dash_guide_refresh">Se actualiza cada 30 s</string>
+</resources>

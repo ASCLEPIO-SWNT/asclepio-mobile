@@ -1,6 +1,6 @@
 # UI-02-mobile — Tareas
 
-**Spec futura:** activar después de UI-01/F-02-staff/F-03 cerrados, revalidar main y baseline. Plan autorizado, sin migraciones. Pruebas Kotlin `R<n> ` primero; checks del implementer.
+**Spec activada:** dependencias UI-01/F-02-staff/F-03 cerradas y baseline idéntica reutilizada. Plan autorizado, sin migraciones. Pruebas Kotlin `R<n> ` primero; checks del implementer.
 
 - [ ] **T1 — Lecturas/cotas.** Añadir agregados count-only y proyección mínima de recientes sobre API común 0.4.0; probar consultas100/50/8, límites0/99/100+, derivados sin GET extra, enfermería página vacía offset>0→0, sedes/admin y roles sin PHI en agregados. (R3, R4, R5, R6, R7, R8, R20, R24)
 - [ ] **T2 — Coordinador visible e invalidaciones.** Implementar un reloj de 30 s/dashboard y una petición/key, con lifecycle/foreground/sesión, coalescencia y revisión de filtros/invalidaciones; integrar triggers existentes sin duplicación ni POST retry. Probar403 por key,401 viejo, red/próximo tick/manual y pausa/reentrada, sin tocar paciente. (R10, R11, R12, R13, R14, R15, R16, R19, R20, R24)

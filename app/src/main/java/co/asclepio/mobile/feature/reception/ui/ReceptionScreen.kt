@@ -35,6 +35,9 @@ fun ReceptionScreen(
     onOpenEncounter: (String) -> Unit,
     onScroll: (Int, Int) -> Unit,
     modifier: Modifier = Modifier,
+    dashboard: Boolean = false,
+    summary: (@Composable () -> Unit)? = null,
+    onRetryPending: () -> Unit = onRefresh,
 ) {
     val listState = rememberLazyListState(state.scrollIndex, state.scrollOffset)
     val scrollCallback by rememberUpdatedState(onScroll)
@@ -46,12 +49,15 @@ fun ReceptionScreen(
         LazyColumn(state = listState, modifier = Modifier.widthIn(max = 1000.dp).fillMaxSize().padding(horizontal = 16.dp), contentPadding = PaddingValues(vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item("header") {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    PageHeader(stringResource(R.string.staff_destination_reception))
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (dashboard) DashboardHeader(stringResource(R.string.staff_destination_reception), stringResource(R.string.dash_reception_lead), onRefresh, state.refreshing, primary = {
+                        AsclepioButton(onClick = onDirectRegistration) { Text(stringResource(R.string.staff_registration_direct)) }
+                    }) else PageHeader(stringResource(R.string.staff_destination_reception))
+                    if (!dashboard) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         OutlinedButton(onClick = onRefresh, enabled = !state.refreshing && (state.remote as? ReceptionRemote.Error)?.retryEnabled != false) { Text(stringResource(R.string.home_refresh)) }
                         AsclepioButton(onClick = onDirectRegistration) { Text(stringResource(R.string.staff_registration_direct)) }
                     }
-                    Panel(Modifier.fillMaxWidth()) {
+                    summary?.invoke()
+                    if (!dashboard) Panel(Modifier.fillMaxWidth()) {
                         StaffChoiceField(
                             label = stringResource(R.string.tenant_picker_sites), selected = state.siteId,
                             options = listOf(null to stringResource(R.string.staff_sites_all)) + state.sites.sites.map { it.id to it.name },
@@ -64,14 +70,14 @@ fun ReceptionScreen(
                     }
                     when (val notice = state.notice) {
                         is ReceptionNotice.Confirmed -> {
-                            UiNotice(stringResource(R.string.staff_arrival_confirmed) + " " + formatBogota(notice.arrivalAt), NoticeTone.Success)
+                            UiNotice(stringResource(R.string.staff_arrival_confirmed) + " " + (if (dashboard) formatDashboardBogota(notice.arrivalAt) else formatBogota(notice.arrivalAt)), NoticeTone.Success)
                             TextButton(onClick = { onOpenEncounter(notice.encounterId) }) { Text(stringResource(R.string.staff_encounter_view)) }
                         }
                         ReceptionNotice.Rejected -> UiNotice(stringResource(R.string.staff_pr_rejected), NoticeTone.Success)
                         null -> Unit
                     }
                     if (state.message != null && state.drafts.values.none { it.message == state.message }) UiNotice(state.message.text(), NoticeTone.Error)
-                    Text(stringResource(R.string.staff_tray_pending), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
+                    if (dashboard) DashboardWorkHeader(stringResource(R.string.staff_tray_pending)) else Text(stringResource(R.string.staff_tray_pending), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
                     if (state.refreshing) LinearProgressIndicator(Modifier.fillMaxWidth())
                 }
             }
@@ -82,7 +88,7 @@ fun ReceptionScreen(
                 is ReceptionRemote.Error -> item("error") {
                     Panel(Modifier.fillMaxWidth()) {
                         UiNotice(remote.message.text(), NoticeTone.Error)
-                        AsclepioButton(onClick = onRefresh, enabled = remote.retryEnabled && !state.refreshing) { Text(stringResource(R.string.retry)) }
+                        AsclepioButton(onClick = onRetryPending, enabled = remote.retryEnabled && !state.refreshing) { Text(stringResource(R.string.retry)) }
                     }
                 }
                 is ReceptionRemote.Ready -> {
@@ -91,7 +97,7 @@ fun ReceptionScreen(
                         ReceptionCard(
                             row, state.drafts[row.id] ?: ReceptionDraft(), state.refreshing,
                             { onIdentityChange(row.id, it) }, { onRejectingChange(row.id, it) },
-                            { onReasonChange(row.id, it) }, { onConfirm(row.id) }, { onReject(row.id) },
+                            { onReasonChange(row.id, it) }, { onConfirm(row.id) }, { onReject(row.id) }, dashboard,
                         )
                     }
                 }
@@ -104,7 +110,7 @@ fun ReceptionScreen(
 private fun ReceptionCard(
     row: PendingPreRegistrationDto, draft: ReceptionDraft, refreshing: Boolean,
     onIdentity: (Boolean) -> Unit, onRejecting: (Boolean) -> Unit, onReason: (String) -> Unit,
-    onConfirm: () -> Unit, onReject: () -> Unit,
+    onConfirm: () -> Unit, onReject: () -> Unit, dashboard: Boolean = false,
 ) {
     val editable = draft.action == null
     val actionable = editable && !refreshing && !draft.blocked
@@ -114,8 +120,8 @@ private fun ReceptionCard(
         StaffFact(stringResource(R.string.tenant_picker_sites), row.siteName)
         StaffFact(stringResource(R.string.preregistration_complaint), row.chiefComplaintText)
         StaffFact(stringResource(R.string.staff_origin), stringResource(if (row.complaintSource == "TYPED") R.string.staff_complaint_typed else if (row.complaintSource == "VOICE_ON_DEVICE") R.string.staff_complaint_voice else R.string.staff_value_unavailable))
-        StaffFact(stringResource(R.string.staff_pr_label), formatBogota(row.preRegisteredAt))
-        StaffFact(stringResource(R.string.staff_expires), formatBogota(row.expiresAt))
+        StaffFact(stringResource(R.string.staff_pr_label), (if (dashboard) formatDashboardBogota(row.preRegisteredAt) else formatBogota(row.preRegisteredAt)))
+        StaffFact(stringResource(R.string.staff_expires), (if (dashboard) formatDashboardBogota(row.expiresAt) else formatBogota(row.expiresAt)))
         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).toggleable(value = draft.identityChecked, enabled = editable, role = Role.Checkbox, onValueChange = onIdentity), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Checkbox(draft.identityChecked, onCheckedChange = null, enabled = editable)
             Text(stringResource(R.string.staff_verify_identity))

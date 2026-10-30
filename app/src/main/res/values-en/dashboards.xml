@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="dash_indicators">Indicators</string>
+    <string name="dash_stat_loading">Loading indicator…</string>
+    <string name="dash_stat_error">Could not load</string>
+    <string name="dash_stat_forbidden">No permission</string>
+    <string name="dash_live">Updates every %1$d s</string>
+    <string name="dash_at_least">At least %1$d</string>
+    <string name="dash_retry_named">Retry: %1$s</string>
+    <string name="dash_view_all_encounters">View all encounters</string>
+    <string name="dash_col_action">Action</string>
+    <string name="dash_stat_preregistered">Pending pre-registrations</string>
+    <string name="dash_stat_waiting">Waiting for triage</string>
+    <string name="dash_stat_triaged">Triaged</string>
+    <string name="dash_stat_in_care">In care</string>
+    <string name="dash_reception_lead">Confirm the arrival of pre-registered patients or register a direct arrival.</string>
+    <string name="dash_reception_empty_hint">When a patient submits one from the app, it will appear here.</string>
+    <string name="dash_reception_empty_action">Register a direct arrival</string>
+    <string name="dash_triage_empty_hint">Arrivals confirmed by reception will appear here.</string>
+    <string name="dash_queue_lead">Status of encounters and the most recent arrivals.</string>
+    <string name="dash_queue_recent">Recent encounters</string>
+    <string name="dash_queue_recent_loading">Loading recent encounters…</string>
+    <string name="dash_queue_recent_empty">There are no encounters yet.</string>
+    <string name="dash_queue_recent_error">Unable to load recent encounters.</string>
+    <string name="dash_recent_footer">The %1$d most recent encounters</string>
+    <string name="dash_recent_footer_one">The most recent encounter</string>
+    <string name="dash_queue_pending_title">Queue by level and waiting time</string>
+    <string name="dash_queue_pending_body">The queue prioritized by triage level and waiting time will appear here, with data from the server.</string>
+    <string name="dash_reports_lead">Summary of encounters by status and by location.</string>
+    <string name="dash_reports_by_site">Encounters by location</string>
+    <string name="dash_reports_sites_loading">Loading the locations…</string>
+    <string name="dash_reports_sites_empty">The tenant has no registered locations.</string>
+    <string name="dash_sites_count">%1$d locations</string>
+    <string name="dash_sites_count_one">1 location</string>
+    <string name="dash_reports_pending_title">Indicators and reports</string>
+    <string name="dash_reports_pending_body">Times, compliance, agreement and the CSV download will appear here.</string>
+    <string name="dash_pending_label">Coming soon</string>
+    <string name="dash_view_named">View encounter: %1$s</string>
+    <string name="dash_guide_reception">The indicators show how many pre-registrations are waiting for confirmation and how many encounters are waiting for triage. The screen updates on its own periodically; use Refresh to check right away. Select a site to filter the indicators and the pre-registrations. Verify identity before confirming arrival. You can reject a pre-registration with a reason or open direct registration.</string>
+    <string name="dash_guide_nurse">This is the nursing tray. The indicator shows how many encounters are waiting for triage. The list updates on its own periodically; use Refresh to check right away. Select a site and open an encounter to record clinical information. Use Previous and Next to change pages.</string>
+    <string name="dash_guide_medicine">This screen summarizes encounters by status: waiting for triage, triaged and in care. Below you will see the most recent encounters; open one to review its details. It updates on its own periodically; use Refresh to check right away. The queue by level and waiting time is not available yet. The guide does not read patient data.</string>
+    <string name="dash_guide_admin">This screen summarizes encounters by status and those waiting for triage at each location. It updates on its own periodically; use Refresh to check right away. Time reports and the CSV download are not available yet. The screen does not show patient data.</string>
+    <string name="dash_guide_refresh">Updates every 30 s</string>
+</resources>

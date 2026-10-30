@@ -2,7 +2,7 @@
 
 ## Resumen y límites
 
-Spec futura de cuatro dashboards reales, con UI-02-web `dc280a9`/`c812c63` como referencia de lectura y el plan Android aprobado como fuente de adaptación. Se activa tras UI-01/F-02-staff/F-03 cerrados. Los flujos ya implementados siguen siendo la fuente de acciones; no se crean pantallas clínicas, de prioridad o reportes que el contrato no ofrece. Los destinos de inicio MEDICINE y ADMINISTRATION se convierten en dashboards con resúmenes reales y paneles útiles, al igual que RECEPTION/TRIAGE; la franja pendiente señala solo capacidades futuras, no reemplaza esas pantallas. El principal PATIENT y su refresco no cambian.
+Spec aprobada y activada de cuatro dashboards reales, con UI-02-web `dc280a9`/`c812c63` como referencia de lectura y el plan Android aprobado como fuente de adaptación. Se activa tras UI-01/F-02-staff/F-03 cerrados. Los flujos ya implementados siguen siendo la fuente de acciones; no se crean pantallas clínicas, de prioridad o reportes que el contrato no ofrece. Los destinos de inicio MEDICINE y ADMINISTRATION se convierten en dashboards con resúmenes reales y paneles útiles, al igual que RECEPTION/TRIAGE; la franja pendiente señala solo capacidades futuras, no reemplaza esas pantallas. El principal PATIENT y su refresco no cambian.
 
 ## Decisiones
 
