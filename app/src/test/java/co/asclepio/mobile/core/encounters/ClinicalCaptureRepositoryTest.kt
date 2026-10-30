@@ -100,7 +100,7 @@ class ClinicalCaptureRepositoryTest {
         collector.cancel()
     }
 
-    @Test fun `R20 captura conserva orden servidor null y textos literales sin imprimirse en toString`() = runTest {
+    @Test fun `R11 captura conserva orden servidor null y textos literales sin imprimirse en toString`() = runTest {
         env.login(StaffRole.PHYSICIAN)
         env.enqueue(200, capture())
         val result = (repository.getCapture(ENCOUNTER) as ApiResult.Success).value
