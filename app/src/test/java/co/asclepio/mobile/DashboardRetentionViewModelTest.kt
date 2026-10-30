@@ -50,13 +50,16 @@ class DashboardRetentionViewModelTest {
     @Volatile private var pendingIds = listOf(PENDING, SECOND)
     @Volatile private var heldSiteRead: HeldResponse? = null
     @Volatile private var heldReset: HeldResponse? = null
+    @Volatile private var heldPost: HeldResponse? = null
+    @Volatile private var postStatus: Int? = null
+    @Volatile private var retryAfter: String? = null
     private val holds = CopyOnWriteArrayList<HeldResponse>()
     private val siteQueries = CopyOnWriteArrayList<String?>()
     private val trayQueries = CopyOnWriteArrayList<Map<String, String?>>()
     private val writes = CopyOnWriteArrayList<String>()
     private val firstPages = AtomicInteger()
 
-    private class HeldResponse(val site: String?, val body: String) {
+    private class HeldResponse(val site: String?, val body: String, val code: Int = 200) {
         val received = CountDownLatch(1)
         val release = CountDownLatch(1)
         fun await() {
@@ -64,7 +67,7 @@ class DashboardRetentionViewModelTest {
             check(release.await(10, TimeUnit.SECONDS)) { "Respuesta sintética no liberada" }
         }
     }
-    private fun held(site: String?, body: String) = HeldResponse(site, body).also { holds += it }
+    private fun held(site: String?, body: String, code: Int = 200) = HeldResponse(site, body, code).also { holds += it }
     private suspend fun HeldResponse.waitForRequest() {
         assertTrue(withContext(Dispatchers.IO) { received.await(5, TimeUnit.SECONDS) })
     }
@@ -114,13 +117,17 @@ class DashboardRetentionViewModelTest {
                     }
                     request.method == "POST" -> {
                         writes += path
-                        if (path.endsWith("/confirm")) { status = 201; body = StaffEncountersTestEnv.encounter() }
-                        else { status = 200; body = StaffEncountersTestEnv.rejected() }
+                        hold = heldPost.also { heldPost = null }
+                        status = hold?.code ?: postStatus ?: if (path.endsWith("/confirm")) 201 else 200
+                        body = hold?.body ?: if (status >= 400) env.problem(status)
+                        else if (path.endsWith("/confirm")) StaffEncountersTestEnv.encounter() else StaffEncountersTestEnv.rejected()
                     }
                     else -> { status = 404; body = env.problem(404) }
                 }
                 hold?.await()
-                return MockResponse().setResponseCode(status).setHeader("Content-Type", "application/json").setHeader("Connection", "close").setBody(body)
+                return MockResponse().setResponseCode(status).setHeader("Content-Type", if (status >= 400) "application/problem+json" else "application/json").setHeader("Connection", "close").setBody(body).apply {
+                    if (status == 429) retryAfter?.let { setHeader("Retry-After", it) }
+                }
             }
         }
     }
@@ -236,6 +243,54 @@ class DashboardRetentionViewModelTest {
         assertEquals(" Texto de sede vigente ", vm.state.value.drafts[SECOND]?.reason)
         assertEquals(SECOND_SITE, siteQueries.last())
         assertTrue(writes.isEmpty())
+        vm.setActive(false)
+    }
+
+    @Test fun `R19 POST tardio libera la accion original y conserva motivo sin publicar error en otra sede`() = scenario {
+        env.login()
+        val vm = reception(); vm.setActive(true); ready(vm)
+        vm.selectSite(SITE); ready(vm)
+        draft(vm, PENDING, " Borrador pendiente Norte ")
+        val pending = held(SITE, env.problem(503), code = 503); heldPost = pending
+        val existingJobs = vm.viewModelScope.coroutineContext[Job]!!.children.toSet()
+        vm.confirm(PENDING); pending.waitForRequest()
+        assertNotNull(vm.state.value.drafts[PENDING]?.action)
+        val postJobs = vm.viewModelScope.coroutineContext[Job]!!.children.filterNot { it in existingJobs }.toList()
+        vm.selectSite(SECOND_SITE); ready(vm)
+        pending.release.countDown(); postJobs.joinAll()
+        assertEquals(SECOND_SITE, vm.state.value.siteId)
+        assertNull(vm.state.value.message)
+        assertNull(vm.state.value.notice)
+        assertEquals(listOf(SECOND), (vm.state.value.remote as ReceptionRemote.Ready).items.map { it.id })
+        vm.selectSite(SITE); ready(vm)
+        val row = vm.state.value.drafts.getValue(PENDING)
+        assertNull(row.action)
+        assertEquals(" Borrador pendiente Norte ", row.reason)
+        assertTrue(row.identityChecked)
+        assertNotNull(row.message)
+        assertEquals(1, writes.size)
+        vm.setActive(false)
+    }
+
+    @Test fun `R19 RetryAfter termina aunque cambie sede sin reenviar POST ni perder borrador original`() = scenario {
+        env.login()
+        val vm = reception(); vm.setActive(true); ready(vm)
+        vm.selectSite(SITE); ready(vm)
+        draft(vm, PENDING, " Motivo retenido durante bloqueo ")
+        postStatus = 429; retryAfter = "3"
+        vm.confirm(PENDING)
+        vm.state.first { it.drafts[PENDING]?.blocked == true && it.drafts[PENDING]?.action == null }
+        vm.selectSite(SECOND_SITE); ready(vm)
+        main.dispatcher.scheduler.advanceTimeBy(3_000)
+        main.dispatcher.scheduler.runCurrent()
+        assertEquals(1, writes.size)
+        vm.selectSite(SITE); ready(vm)
+        val row = vm.state.value.drafts.getValue(PENDING)
+        assertFalse(row.blocked)
+        assertNull(row.action)
+        assertEquals(" Motivo retenido durante bloqueo ", row.reason)
+        assertTrue(row.identityChecked)
+        assertEquals(1, writes.size)
         vm.setActive(false)
     }
 

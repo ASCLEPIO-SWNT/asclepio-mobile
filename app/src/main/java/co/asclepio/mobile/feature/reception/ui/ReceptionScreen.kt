@@ -11,6 +11,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
@@ -112,6 +113,11 @@ private fun ReceptionCard(
     onIdentity: (Boolean) -> Unit, onRejecting: (Boolean) -> Unit, onReason: (String) -> Unit,
     onConfirm: () -> Unit, onReject: () -> Unit, dashboard: Boolean = false,
 ) {
+    val patientName = row.patient.fullName?.takeIf(String::isNotBlank) ?: stringResource(R.string.staff_patient_nn)
+    val confirmLabel = stringResource(R.string.dash_confirm_named, patientName)
+    val rejectLabel = stringResource(R.string.dash_reject_named, patientName)
+    val submitLabel = stringResource(R.string.dash_reject_submit_named, patientName)
+    val cancelLabel = stringResource(R.string.dash_reject_cancel_named, patientName)
     val editable = draft.action == null
     val actionable = editable && !refreshing && !draft.blocked
     Panel(Modifier.fillMaxWidth()) {
@@ -127,8 +133,8 @@ private fun ReceptionCard(
             Text(stringResource(R.string.staff_verify_identity))
         }
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            AsclepioButton(onClick = onConfirm, enabled = actionable && draft.identityChecked) { Text(stringResource(R.string.staff_confirm_arrival)) }
-            OutlinedButton(onClick = { onRejecting(true) }, enabled = actionable && !draft.rejecting) { Text(stringResource(R.string.staff_reject)) }
+            AsclepioButton(onClick = onConfirm, enabled = actionable && draft.identityChecked, modifier = Modifier.semantics { contentDescription = confirmLabel }) { Text(stringResource(R.string.staff_confirm_arrival)) }
+            OutlinedButton(onClick = { onRejecting(true) }, enabled = actionable && !draft.rejecting, modifier = Modifier.semantics { contentDescription = rejectLabel }) { Text(stringResource(R.string.staff_reject)) }
         }
         draft.message?.let { UiNotice(it.text(), NoticeTone.Error) }
         draft.action?.let {
@@ -144,8 +150,8 @@ private fun ReceptionCard(
                 modifier = Modifier.fillMaxWidth(),
             )
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                AsclepioButton(onClick = onReject, enabled = actionable) { Text(stringResource(R.string.staff_reject_confirm)) }
-                TextButton(onClick = { onRejecting(false) }, enabled = editable) { Text(stringResource(R.string.navigate_back)) }
+                AsclepioButton(onClick = onReject, enabled = actionable, modifier = Modifier.semantics { contentDescription = submitLabel }) { Text(stringResource(R.string.staff_reject_confirm)) }
+                TextButton(onClick = { onRejecting(false) }, enabled = editable, modifier = Modifier.semantics { contentDescription = cancelLabel }) { Text(stringResource(R.string.navigate_back)) }
             }
         }
     }

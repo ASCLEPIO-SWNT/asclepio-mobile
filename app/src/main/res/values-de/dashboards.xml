@@ -41,4 +41,9 @@
     <string name="dash_guide_medicine">Diese Seite fasst die Behandlungen nach Status zusammen: wartend auf Triage, triagiert und in Behandlung. Darunter sehen Sie die neuesten Behandlungen; öffnen Sie eine, um die Angaben einzusehen. Die Seite aktualisiert sich regelmäßig von selbst; mit Aktualisieren rufen Sie sofort den aktuellen Stand ab. Die Warteschlange nach Stufe und Wartezeit ist noch nicht verfügbar. Die Anleitung liest keine Patientendaten vor.</string>
     <string name="dash_guide_admin">Diese Seite fasst die Behandlungen nach Status zusammen sowie jene, die an den einzelnen Standorten auf die Triage warten. Die Seite aktualisiert sich regelmäßig von selbst; mit Aktualisieren rufen Sie sofort den aktuellen Stand ab. Berichte zu Zeiten und der CSV-Download sind noch nicht verfügbar. Die Seite zeigt keine Patientendaten an.</string>
     <string name="dash_guide_refresh">Aktualisiert sich alle 30 s</string>
+    <string name="dash_confirm_named">Ankunft von %1$s bestätigen</string>
+    <string name="dash_reject_named">Voranmeldung von %1$s ablehnen</string>
+    <string name="dash_reject_submit_named">Ablehnung für %1$s senden</string>
+    <string name="dash_reject_cancel_named">Ablehnung für %1$s abbrechen</string>
+    <string name="dash_capture_named">Klinische Informationen für %1$s erfassen</string>
 </resources>

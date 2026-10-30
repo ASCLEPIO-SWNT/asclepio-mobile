@@ -20,6 +20,8 @@ import co.asclepio.mobile.core.ui.guide.*
 import co.asclepio.mobile.feature.encounters.ui.MyRequestsScreen
 import co.asclepio.mobile.feature.encounters.ui.MyRequestsViewModel
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -258,9 +260,7 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                             val operational: (@Composable () -> Unit)? = if (route.destination == StaffDestination.RECEPTION) ({
                                 val reception = viewModel { ReceptionViewModel(container.receptionRepository, container.staffSitesRepository, container.staffDataChanges, container.dashboardDataRepository) }
                                 val receptionState by reception.state.collectAsStateWithLifecycle()
-                                LifecycleEventEffect(Lifecycle.Event.ON_START) { reception.setActive(true) }
-                                LifecycleEventEffect(Lifecycle.Event.ON_STOP) { reception.setActive(false) }
-                                DisposableEffect(reception) { onDispose { reception.setActive(false) } }
+                                DashboardVisibility(currentRoute == route, reception::setActive)
                                 ReceptionScreen(
                                     receptionState, reception::refresh, reception::retrySites, reception::selectSite,
                                     reception::setIdentity, reception::setRejecting, reception::setReason, reception::confirm, reception::reject,
@@ -294,9 +294,7 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                             }) else if (route.destination == StaffDestination.TRIAGE) ({
                                 val tray = viewModel { TriageTrayViewModel(container.encountersRepository, container.staffSitesRepository, container.staffDataChanges) }
                                 val trayState by tray.state.collectAsStateWithLifecycle()
-                                LifecycleEventEffect(Lifecycle.Event.ON_START) { tray.setActive(true) }
-                                LifecycleEventEffect(Lifecycle.Event.ON_STOP) { tray.setActive(false) }
-                                DisposableEffect(tray) { onDispose { tray.setActive(false) } }
+                                DashboardVisibility(currentRoute == route, tray::setActive)
                                 EncounterListScreen(
                                     trayState, tray::refresh, tray::retrySites, tray::selectSite, {}, tray::previousPage, tray::nextPage,
                                     onOpen = { backStack.add(Route.ClinicalCapture(it)) }, onScroll = tray::rememberScroll, clinicalTray = true,
@@ -304,9 +302,7 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                             }) else if (route.destination in setOf(StaffDestination.MEDICINE, StaffDestination.ADMINISTRATION, StaffDestination.QUEUE, StaffDestination.REPORTS)) ({
                                 val overview = viewModel { DashboardOverviewViewModel(route.destination, principal.role, container.dashboardDataRepository, container.staffDataChanges) }
                                 val overviewState by overview.state.collectAsStateWithLifecycle()
-                                LifecycleEventEffect(Lifecycle.Event.ON_START) { overview.setActive(true) }
-                                LifecycleEventEffect(Lifecycle.Event.ON_STOP) { overview.setActive(false) }
-                                DisposableEffect(overview) { onDispose { overview.setActive(false) } }
+                                DashboardVisibility(currentRoute == route, overview::setActive)
                                 DashboardOverviewScreen(
                                     overviewState, overview::refresh, overview::retryCount, overview::retryRecent, overview::retrySites, overview::retrySite,
                                     onOpenEncounter = { backStack.add(Route.StaffEncounterDetail(it)) }, onEncounters = {
@@ -380,6 +376,7 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                                     if (tray in backStack) backStack.popTo(tray) else backStack.resetTo(tray)
                                 }, vm::updateVitals, vm::saveVitals, vm::vitalsFocusHandled,
                                 vm::updateFinding, vm::addFinding, vm::removeFinding, vm::saveFindings, vm::findingsFocusHandled,
+                                onScrollChange = vm::rememberScroll, onPresentationFocus = vm::rememberFocus, preferencesOpen = preferencesOpen,
                             )
                         }
                     }
@@ -522,4 +519,18 @@ private fun GuardedRoute(session: SessionState, route: Route, onHome: () -> Unit
         // Navigation/VM decorators stay outside this boundary and retain RAM across configuration.
         CompositionLocalProvider(LocalSaveableStateRegistry provides null) { content() }
     } else AccessDeniedScreen(onHome)
+}
+
+/** Current entry plus foreground: transitions and preference recomposition cannot install another clock. */
+@Composable
+private fun DashboardVisibility(isCurrentRoute: Boolean, onActive: (Boolean) -> Unit) {
+    val owner = LocalLifecycleOwner.current
+    val latestCallback by rememberUpdatedState(onActive)
+    val latestCurrent by rememberUpdatedState(isCurrentRoute)
+    LaunchedEffect(isCurrentRoute, owner) {
+        latestCallback(isCurrentRoute && owner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED))
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_START) { latestCallback(latestCurrent) }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { latestCallback(false) }
+    DisposableEffect(owner) { onDispose { latestCallback(false) } }
 }

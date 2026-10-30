@@ -41,4 +41,9 @@
     <string name="dash_guide_medicine">Esta pantalla resume las atenciones por estado: en espera de triage, clasificadas y en atención. Debajo verás las atenciones más recientes; abre una para consultar su detalle. Se actualiza sola de forma periódica; usa Actualizar para consultar al instante. La cola por nivel y tiempo de espera todavía no está disponible. La guía no lee datos de pacientes.</string>
     <string name="dash_guide_admin">Esta pantalla resume las atenciones por estado y las que esperan triage en cada sede. Se actualiza sola de forma periódica; usa Actualizar para consultar al instante. Los reportes de tiempos y la descarga del CSV todavía no están disponibles. La pantalla no muestra datos de pacientes.</string>
     <string name="dash_guide_refresh">Se actualiza cada 30 s</string>
+    <string name="dash_confirm_named">Confirmar llegada de %1$s</string>
+    <string name="dash_reject_named">Rechazar preregistro de %1$s</string>
+    <string name="dash_reject_submit_named">Enviar rechazo de %1$s</string>
+    <string name="dash_reject_cancel_named">Cancelar rechazo de %1$s</string>
+    <string name="dash_capture_named">Capturar información clínica de %1$s</string>
 </resources>

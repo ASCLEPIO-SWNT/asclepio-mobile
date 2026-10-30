@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -24,14 +25,24 @@ import co.asclepio.mobile.core.ui.*
 fun ClinicalVitalSignsForm(
     state: VitalSignsFormUiState, canWrite: Boolean, onChange: (RawVitalSigns) -> Unit,
     onSubmit: () -> Unit, onFocusHandled: (Long) -> Unit, editable: Boolean = true, modifier: Modifier = Modifier,
+    onFocused: (VitalField) -> Unit = {}, restoreFocus: VitalField? = null,
+    onFocusRestored: () -> Unit = {}, focusEnabled: Boolean = true,
 ) {
     val focus = remember { VitalField.entries.associateWith { FocusRequester() } }
     val bring = remember { VitalField.entries.associateWith { BringIntoViewRequester() } }
-    LaunchedEffect(state.focusVersion, state.focusField, editable, state.saving) {
-        state.focusField?.takeIf { editable && !state.saving }?.let { field ->
+    LaunchedEffect(state.focusVersion, state.focusField, editable, state.saving, focusEnabled) {
+        state.focusField?.takeIf { editable && !state.saving && focusEnabled }?.let { field ->
             bring.getValue(field).bringIntoView()
             focus.getValue(field).requestFocus()
+            onFocusRestored()
             onFocusHandled(state.focusVersion)
+        }
+    }
+    LaunchedEffect(restoreFocus, editable, state.saving, state.focusField, focusEnabled) {
+        if (restoreFocus != null && editable && !state.saving && state.focusField == null && focusEnabled) {
+            // Restauración de presentación, sin repetir bringIntoView de una validación ya consumida.
+            focus.getValue(restoreFocus).requestFocus()
+            onFocusRestored()
         }
     }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -39,6 +50,7 @@ fun ClinicalVitalSignsForm(
         UiNotice(stringResource(R.string.clinical_provisional), NoticeTone.Warning)
         VitalField.entries.forEach { field ->
             val fieldModifier = Modifier.fillMaxWidth().bringIntoViewRequester(bring.getValue(field)).focusRequester(focus.getValue(field))
+                .onFocusChanged { if (it.isFocused && focusEnabled) onFocused(field) }
             when (field) {
                 VitalField.SupplementalOxygen -> StaffChoiceField(
                     label = stringResource(vitalLabel(field)), selected = state.raw.supplementalOxygen,

@@ -232,18 +232,18 @@ class ReceptionViewModel(
     }
     private fun mutate(id: String, action: ReceptionAction) {
         val draft = _state.value.drafts.getValue(id)
-        val request = revision
+        val originSite = _state.value.siteId
         _state.update { it.copy(drafts = it.drafts + (id to draft.copy(action = action, message = null)), notice = null, message = null) }
         viewModelScope.launch {
             val result = if (action == ReceptionAction.Confirm) repository.confirm(id) else repository.reject(id, draft.reason.trim())
-            if (!current || request != revision) return@launch
+            if (!current) return@launch
             when (result) {
                 is ApiResult.Success -> {
                     val notice = if (action == ReceptionAction.Confirm) {
                         val encounter = result.value as EncounterDto
                         ReceptionNotice.Confirmed(encounter.id, encounter.arrivalAt)
                     } else ReceptionNotice.Rejected
-                    _state.update { it.copy(drafts = it.drafts - id, notice = notice) }
+                    _state.update { it.copy(drafts = it.drafts - id, notice = if (it.siteId == originSite) notice else it.notice) }
                 }
                 is ApiResult.Failure -> {
                     val error = result.error
@@ -255,17 +255,17 @@ class ReceptionViewModel(
                     }
                     val reasonError = (error as? ApiError.Http)?.problem?.errors?.any { it.field == "reason" } == true
                     _state.update { state ->
-                        val previous = state.drafts[id] ?: draft
+                        val previous = state.drafts[id]
                         state.copy(
-                            remote = if (error.httpStatus == 403) ReceptionRemote.Forbidden else state.remote,
-                            drafts = if (error.httpStatus == 404) state.drafts - id else state.drafts + (id to previous.copy(action = null, blocked = wait != null, reasonError = if (reasonError) UiMessage(R.string.staff_error_field) else null, message = message)),
-                            message = message,
+                            remote = if (error.httpStatus == 403 && state.siteId == originSite) ReceptionRemote.Forbidden else state.remote,
+                            drafts = if (error.httpStatus == 404) state.drafts - id else if (previous == null) state.drafts else state.drafts + (id to previous.copy(action = null, blocked = wait != null, reasonError = if (reasonError) UiMessage(R.string.staff_error_field) else null, message = message)),
+                            message = if (state.siteId == originSite) message else state.message,
                         )
                     }
-                    if (error.httpStatus in setOf(409, 404)) refresh(invalidated = true)
+                    if (_state.value.siteId == originSite && error.httpStatus in setOf(409, 404)) refresh(invalidated = true)
                     if (wait != null) {
                         delay(wait * 1000L)
-                        if (current && request == revision) _state.update { state ->
+                        if (current) _state.update { state ->
                             val row = state.drafts[id]
                             if (row == null) state else state.copy(drafts = state.drafts + (id to row.copy(blocked = false)))
                         }

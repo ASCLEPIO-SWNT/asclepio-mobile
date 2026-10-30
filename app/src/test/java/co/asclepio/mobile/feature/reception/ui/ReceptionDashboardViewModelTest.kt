@@ -15,7 +15,7 @@ import org.junit.rules.TemporaryFolder
 class ReceptionDashboardViewModelTest {
     @get:Rule val main = MainDispatcherRule()
     @get:Rule val tmp = TemporaryFolder()
-    @Test fun `R17 visible tick preserves identity rejection draft and scroll while deriving pending count without extra read`() = runTest {
+    @Test fun `R22 visible tick preserves identity rejection draft and scroll while deriving pending count without extra read`() = runTest {
         val env = StaffEncountersTestEnv(tmp.root)
         var pendingReads = 0
         env.server.dispatcher = object : Dispatcher() {

@@ -43,7 +43,7 @@ class DashboardOverviewViewModelTest {
             vm.setActive(false)
         } finally { env.close() }
     }
-    @Test fun `R20 unsupported staff home cannot create overview reads`() = runTest {
+    @Test fun `R1 unsupported staff home cannot create overview reads`() = runTest {
         val env = StaffEncountersTestEnv(tmp.root)
         try {
             env.login(StaffRole.RECEPTION)
@@ -51,6 +51,32 @@ class DashboardOverviewViewModelTest {
             vm.setActive(true); runCurrent()
             assertEquals(0, env.server.requestCount)
             assertTrue(vm.state.value.counts.values.all { it == DashboardRead.Forbidden })
+            vm.setActive(false)
+        } finally { env.close() }
+    }
+    @Test fun `R15 network failure hides count until the next visible tick recovers without write retry`() = runTest {
+        val env = StaffEncountersTestEnv(tmp.root)
+        val waitingHttp = java.util.concurrent.atomic.AtomicInteger(503)
+        val waitingReads = java.util.concurrent.atomic.AtomicInteger()
+        env.server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse {
+                val waiting = request.requestUrl!!.queryParameter("status") == "WAITING_TRIAGE"
+                if (waiting) waitingReads.incrementAndGet()
+                val code = if (waiting) waitingHttp.get() else 200
+                val body = if (code == 200) "{\"items\":[${StaffEncountersTestEnv.summary()}]}" else env.problem(code)
+                return MockResponse().setHeader("Content-Type", "application/json").setResponseCode(code).setBody(body)
+            }
+        }
+        try {
+            env.login(StaffRole.PHYSICIAN)
+            val vm = DashboardOverviewViewModel(StaffDestination.MEDICINE, StaffRole.PHYSICIAN, DashboardDataRepository(env.encounters, env.sites), env.changes)
+            vm.setActive(true)
+            vm.state.first { !it.refreshing && it.recent is DashboardRead.Ready && it.counts[EncounterStatus.WAITING_TRIAGE] is DashboardRead.Error }
+            assertEquals(1, waitingReads.get())
+            advanceTimeBy(29_999); runCurrent(); assertEquals(1, waitingReads.get())
+            waitingHttp.set(200); advanceTimeBy(1); runCurrent()
+            vm.state.first { !it.refreshing && it.counts[EncounterStatus.WAITING_TRIAGE] is DashboardRead.Ready }
+            assertEquals(2, waitingReads.get())
             vm.setActive(false)
         } finally { env.close() }
     }

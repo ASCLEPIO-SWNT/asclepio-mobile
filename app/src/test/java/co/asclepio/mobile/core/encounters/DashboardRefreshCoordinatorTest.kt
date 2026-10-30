@@ -73,4 +73,19 @@ class DashboardRefreshCoordinatorTest {
         advanceTimeBy(90_000); runCurrent()
         assertFalse(delivered); assertEquals(1, calls)
     }
+    @Test fun `R13 invalidation refreshes only affected keys and manual retry preserves other readings`() = runTest {
+        val counts = mutableMapOf<DashboardReadKey, Int>()
+        val coordinator = DashboardRefreshCoordinator(backgroundScope) { true }
+        val waiting = DashboardReadKey.Count(EncounterStatus.WAITING_TRIAGE)
+        val triaged = DashboardReadKey.Count(EncounterStatus.TRIAGED)
+        val recent = DashboardReadKey.Recent
+        for (key in listOf(waiting, triaged, recent)) coordinator.register(key) { counts[key] = (counts[key] ?: 0) + 1; false }
+        coordinator.setActive(true); runCurrent()
+        assertEquals(setOf(1), counts.values.toSet())
+        coordinator.invalidate(setOf(waiting)); runCurrent()
+        assertEquals(2, counts[waiting]); assertEquals(1, counts[triaged]); assertEquals(1, counts[recent])
+        coordinator.refresh(setOf(recent)); runCurrent()
+        assertEquals(2, counts[waiting]); assertEquals(1, counts[triaged]); assertEquals(2, counts[recent])
+        coordinator.setActive(false)
+    }
 }

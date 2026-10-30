@@ -14,6 +14,13 @@ sealed interface ClinicalRead<out T> {
     data object NotFound : ClinicalRead<Nothing>
 }
 
+/** Solo posición e identidad de control en RAM; nunca valores clínicos ni estado serializable. */
+sealed interface ClinicalFocusTarget {
+    data class Vital(val field: co.asclepio.mobile.core.encounters.VitalField) : ClinicalFocusTarget
+    data class Finding(val rowKey: Long, val field: co.asclepio.mobile.core.encounters.FindingField) : ClinicalFocusTarget
+}
+data class ClinicalPresentationState(val scrollOffset: Int = 0, val focusTarget: ClinicalFocusTarget? = null)
+
 data class ClinicalCaptureUiState(
     val context: ClinicalRead<EncounterDto> = ClinicalRead.Loading,
     val capture: ClinicalRead<ClinicalCaptureDto> = ClinicalRead.Loading,
@@ -23,6 +30,7 @@ data class ClinicalCaptureUiState(
     val readOnly: Boolean = false,
     val vitals: VitalSignsFormUiState = VitalSignsFormUiState(),
     val findings: FindingsFormUiState = FindingsFormUiState(),
+    val presentation: ClinicalPresentationState = ClinicalPresentationState(),
 ) {
     val canWrite: Boolean get() {
         val encounter = context as? ClinicalRead.Ready ?: return false

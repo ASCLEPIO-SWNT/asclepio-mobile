@@ -104,9 +104,9 @@ fun EntryBackdrop(register: Boolean = false, content: @Composable BoxScope.() ->
 
 /** One scroll region, bounded reading width and card composition for the existing native screens. */
 @Composable
-fun ScreenColumn(modifier: Modifier = Modifier, maxWidth: androidx.compose.ui.unit.Dp = 680.dp, content: @Composable ColumnScope.() -> Unit) {
+fun ScreenColumn(modifier: Modifier = Modifier, maxWidth: androidx.compose.ui.unit.Dp = 680.dp, scrollState: androidx.compose.foundation.ScrollState? = null, content: @Composable ColumnScope.() -> Unit) {
     Box(modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        Column(Modifier.widthIn(max = maxWidth).fillMaxWidth().verticalScroll(androidx.compose.foundation.rememberScrollState()).padding(16.dp)) {
+        Column(Modifier.widthIn(max = maxWidth).fillMaxWidth().verticalScroll(scrollState ?: androidx.compose.foundation.rememberScrollState()).padding(16.dp)) {
             Panel(Modifier.fillMaxWidth(), content)
         }
     }

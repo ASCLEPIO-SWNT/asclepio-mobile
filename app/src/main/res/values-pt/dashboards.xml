@@ -41,4 +41,9 @@
     <string name="dash_guide_medicine">Esta tela resume os atendimentos por estado: aguardando triagem, classificados e em atendimento. Abaixo você verá os atendimentos mais recentes; abra um para consultar os detalhes. Ela se atualiza sozinha periodicamente; use Atualizar para consultar na hora. A fila por nível e tempo de espera ainda não está disponível. O guia não lê dados de pacientes.</string>
     <string name="dash_guide_admin">Esta tela resume os atendimentos por estado e os que aguardam triagem em cada unidade. Ela se atualiza sozinha periodicamente; use Atualizar para consultar na hora. Os relatórios de tempos e o download do CSV ainda não estão disponíveis. A tela não mostra dados de pacientes.</string>
     <string name="dash_guide_refresh">Atualiza a cada 30 s</string>
+    <string name="dash_confirm_named">Confirmar chegada de %1$s</string>
+    <string name="dash_reject_named">Rejeitar pré-registro de %1$s</string>
+    <string name="dash_reject_submit_named">Enviar rejeição de %1$s</string>
+    <string name="dash_reject_cancel_named">Cancelar rejeição de %1$s</string>
+    <string name="dash_capture_named">Registrar informações clínicas de %1$s</string>
 </resources>

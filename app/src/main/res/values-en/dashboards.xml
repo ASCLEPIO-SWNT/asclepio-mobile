@@ -41,4 +41,9 @@
     <string name="dash_guide_medicine">This screen summarizes encounters by status: waiting for triage, triaged and in care. Below you will see the most recent encounters; open one to review its details. It updates on its own periodically; use Refresh to check right away. The queue by level and waiting time is not available yet. The guide does not read patient data.</string>
     <string name="dash_guide_admin">This screen summarizes encounters by status and those waiting for triage at each location. It updates on its own periodically; use Refresh to check right away. Time reports and the CSV download are not available yet. The screen does not show patient data.</string>
     <string name="dash_guide_refresh">Updates every 30 s</string>
+    <string name="dash_confirm_named">Confirm arrival for %1$s</string>
+    <string name="dash_reject_named">Reject preregistration for %1$s</string>
+    <string name="dash_reject_submit_named">Submit rejection for %1$s</string>
+    <string name="dash_reject_cancel_named">Cancel rejection for %1$s</string>
+    <string name="dash_capture_named">Capture clinical information for %1$s</string>
 </resources>

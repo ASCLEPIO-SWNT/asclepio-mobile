@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -23,6 +24,8 @@ fun ClinicalFindingsForm(
     state: FindingsFormUiState, canWrite: Boolean, onRowChange: (Long, RawSymptomFinding) -> Unit,
     onAdd: () -> Unit, onRemove: (Long) -> Unit, onSubmit: () -> Unit, onFocusHandled: (Long) -> Unit,
     editable: Boolean = true, modifier: Modifier = Modifier,
+    onFocused: (Long, FindingField) -> Unit = { _, _ -> }, restoreFocus: ClinicalFocusTarget.Finding? = null,
+    onFocusRestored: () -> Unit = {}, focusEnabled: Boolean = true,
 ) {
     val focus = remember { mutableMapOf<Pair<Long, FindingField>, FocusRequester>() }
     val bring = remember { mutableMapOf<Pair<Long, FindingField>, BringIntoViewRequester>() }
@@ -35,8 +38,8 @@ fun ClinicalFindingsForm(
         focus[target] = remember { FocusRequester() }
         bring[target] = remember { BringIntoViewRequester() }
     } }
-    LaunchedEffect(state.focusVersion, state.focusPending, editable, state.saving) {
-        if (state.focusPending && editable && !state.saving) {
+    LaunchedEffect(state.focusVersion, state.focusPending, editable, state.saving, focusEnabled) {
+        if (state.focusPending && editable && !state.saving && focusEnabled) {
             val rowKey = state.focusRowKey ?: state.rows.firstOrNull()?.key
             val target = rowKey?.let { it to (state.focusField ?: FindingField.Description) }
             if (target != null && target in focus) {
@@ -46,7 +49,14 @@ fun ClinicalFindingsForm(
                 addBring.bringIntoView()
                 addFocus.requestFocus()
             }
+            onFocusRestored()
             onFocusHandled(state.focusVersion)
+        }
+    }
+    LaunchedEffect(restoreFocus, editable, state.saving, state.focusPending, focusEnabled, keys) {
+        if (restoreFocus != null && editable && !state.saving && !state.focusPending && focusEnabled) {
+            focus[restoreFocus.rowKey to restoreFocus.field]?.requestFocus()
+            onFocusRestored()
         }
     }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -61,14 +71,16 @@ fun ClinicalFindingsForm(
                     options = listOf(null to stringResource(R.string.clinical_choose)) + SymptomFindingKind.entries.map { it to stringResource(findingKindLabel(it.name)) },
                     onSelect = { onRowChange(row.key, row.raw.copy(kind = it)) }, enabled = editable && !state.saving,
                     error = row.errors[FindingField.Kind]?.text(),
-                    modifier = Modifier.fillMaxWidth().bringIntoViewRequester(bring.getValue(row.key to FindingField.Kind)).focusRequester(focus.getValue(row.key to FindingField.Kind)),
+                    modifier = Modifier.fillMaxWidth().bringIntoViewRequester(bring.getValue(row.key to FindingField.Kind)).focusRequester(focus.getValue(row.key to FindingField.Kind))
+                        .onFocusChanged { if (it.isFocused && focusEnabled) onFocused(row.key, FindingField.Kind) },
                 )
                 AsclepioTextField(
                     value = row.raw.description, onValueChange = { onRowChange(row.key, row.raw.copy(description = it)) }, enabled = editable && !state.saving,
                     label = { Text(stringResource(R.string.clinical_description)) }, minLines = 3,
                     isError = row.errors[FindingField.Description] != null,
                     supportingText = row.errors[FindingField.Description]?.let { { Text(it.text()) } },
-                    modifier = Modifier.fillMaxWidth().bringIntoViewRequester(bring.getValue(row.key to FindingField.Description)).focusRequester(focus.getValue(row.key to FindingField.Description)),
+                    modifier = Modifier.fillMaxWidth().bringIntoViewRequester(bring.getValue(row.key to FindingField.Description)).focusRequester(focus.getValue(row.key to FindingField.Description))
+                        .onFocusChanged { if (it.isFocused && focusEnabled) onFocused(row.key, FindingField.Description) },
                 )
                 row.rowError?.let { UiNotice(it.text(), NoticeTone.Error) }
                 TextButton(onClick = { onRemove(row.key) }, enabled = editable && !state.saving) { Text(stringResource(R.string.clinical_remove_finding, index + 1)) }

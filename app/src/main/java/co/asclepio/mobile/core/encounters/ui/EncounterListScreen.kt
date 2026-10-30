@@ -8,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import co.asclepio.mobile.R
@@ -81,13 +82,15 @@ fun EncounterListScreen(
                     if (remote.items.isEmpty()) item("empty") { UiNotice(stringResource(if (clinicalTray) R.string.clinical_tray_empty else R.string.staff_encounters_empty)) }
                     items(remote.items, key = { it.id }, contentType = { "encounter" }) { encounter ->
                         Panel(Modifier.fillMaxWidth()) {
-                            Text(encounter.patient.fullName?.takeIf(String::isNotBlank) ?: stringResource(R.string.staff_patient_nn), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
+                            val patientName = encounter.patient.fullName?.takeIf(String::isNotBlank) ?: stringResource(R.string.staff_patient_nn)
+                            Text(patientName, style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
                             encounter.patient.documentNumber?.let { StaffFact(stringResource(R.string.staff_document), listOfNotNull(encounter.patient.documentType, it).joinToString(" ")) }
                             StaffFact(stringResource(R.string.staff_arrival), if (clinicalTray) runCatching { formatDashboardBogota(encounter.arrivalAt) }.getOrNull() ?: stringResource(R.string.staff_value_unavailable) else staffDateTime(encounter.arrivalAt))
                             StaffFact(stringResource(R.string.tenant_picker_sites), encounter.siteName)
                             StaffFact(stringResource(R.string.staff_status), stringResource(staffStatusLabel(encounter.status)))
                             StaffFact(stringResource(R.string.staff_origin), stringResource(staffOriginLabel(encounter.origin)))
-                            AsclepioButton(onClick = { onOpen(encounter.id) }, enabled = !state.refreshing) { Text(stringResource(if (clinicalTray) R.string.clinical_open else R.string.staff_encounter_view)) }
+                            val openLabel = stringResource(if (clinicalTray) R.string.dash_capture_named else R.string.dash_view_named, patientName)
+                            AsclepioButton(onClick = { onOpen(encounter.id) }, enabled = !state.refreshing, modifier = Modifier.semantics { contentDescription = openLabel }) { Text(stringResource(if (clinicalTray) R.string.clinical_open else R.string.staff_encounter_view)) }
                         }
                     }
                     item("pagination") {
