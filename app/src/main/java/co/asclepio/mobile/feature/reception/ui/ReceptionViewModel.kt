@@ -7,6 +7,7 @@ import co.asclepio.mobile.core.encounters.*
 import co.asclepio.mobile.core.encounters.ui.StaffSitesUiState
 import co.asclepio.mobile.core.network.*
 import co.asclepio.mobile.core.ui.UiMessage
+import co.asclepio.mobile.core.ui.DashboardRead
 import co.asclepio.mobile.feature.reception.data.*
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -40,6 +41,7 @@ sealed interface ReceptionNotice {
 }
 data class ReceptionUiState(
     val siteId: String? = null,
+    val waitingCount: DashboardRead<EncounterCount> = DashboardRead.Loading,
     val sites: StaffSitesUiState = StaffSitesUiState(),
     val remote: ReceptionRemote = ReceptionRemote.Loading,
     val refreshing: Boolean = false,
@@ -55,6 +57,7 @@ class ReceptionViewModel(
     private val repository: ReceptionRepository,
     private val sitesRepository: StaffSitesRepository,
     changes: StaffDataChanges,
+    private val dashboard: DashboardDataRepository? = null,
 ) : ViewModel() {
     private val originGeneration = repository.sessionGeneration
     private val _state = MutableStateFlow(ReceptionUiState())
@@ -66,11 +69,23 @@ class ReceptionViewModel(
     private var sitesJob: Job? = null
     private val current: Boolean get() = repository.sessionGeneration == originGeneration
 
+    private val knownIds = mutableMapOf<String?, Set<String>>()
+    private val coordinator = dashboard?.let { DashboardRefreshCoordinator(viewModelScope) { current } }
+    private fun pendingKey() = DashboardReadKey.PendingTray(_state.value.siteId)
+    private fun waitingKey() = DashboardReadKey.Count(EncounterStatus.WAITING_TRIAGE, _state.value.siteId)
     init {
+        registerDashboardReads()
         retrySites()
         viewModelScope.launch {
             changes.changes.collect { change ->
-                if (current && active && change.generation == originGeneration && StaffResource.Pending in change.resources) refresh(invalidated = true)
+                if (current && change.generation == originGeneration) {
+                    if (coordinator != null) {
+                        val keys = mutableSetOf<DashboardReadKey>()
+                        if (StaffResource.Pending in change.resources) keys += pendingKey()
+                        if (StaffResource.Encounters in change.resources) keys += waitingKey()
+                        coordinator.invalidate(keys)
+                    } else if (active && StaffResource.Pending in change.resources) refresh(invalidated = true)
+                }
             }
         }
     }
@@ -78,7 +93,10 @@ class ReceptionViewModel(
     fun setActive(value: Boolean) {
         if (active == value) return
         active = value
-        if (value && current) refresh()
+        if (coordinator != null) {
+            coordinator.setActive(value)
+            if (!value) { readJob?.cancel(); _state.update { it.copy(refreshing = false) } }
+        } else if (value && current) refresh()
     }
     fun rememberScroll(index: Int, offset: Int) {
         if (current) _state.update { it.copy(scrollIndex = index, scrollOffset = offset) }
@@ -86,15 +104,41 @@ class ReceptionViewModel(
     fun selectSite(siteId: String?) {
         if (!current || _state.value.siteId == siteId) return
         if (siteId != null && _state.value.sites.sites.none { it.id == siteId }) return
+        coordinator?.unregister(pendingKey()); coordinator?.unregister(waitingKey())
         revision++
         readJob?.cancel()
         readJob = null
         readAgain = false
-        _state.update { it.copy(siteId = siteId, remote = ReceptionRemote.Loading, drafts = emptyMap(), notice = null, message = null, scrollIndex = 0, scrollOffset = 0) }
-        refresh()
+        _state.update { it.copy(siteId = siteId, remote = ReceptionRemote.Loading, waitingCount = DashboardRead.Loading, notice = null, message = null, scrollIndex = 0, scrollOffset = 0) }
+        if (coordinator != null) registerDashboardReads() else refresh()
     }
-    fun refresh() = refresh(invalidated = false)
-    private fun refresh(invalidated: Boolean) {
+    fun refresh() { if (coordinator != null) coordinator.refresh() else refresh(invalidated = false) }
+    fun retryPending() { if (coordinator != null) coordinator.refresh(setOf(pendingKey())) else refresh(false) }
+    fun retryWaiting() { coordinator?.refresh(setOf(waitingKey())) }
+    private fun registerDashboardReads() {
+        val cycle = coordinator ?: return
+        val key = pendingKey()
+        cycle.register(key, eligible = { (_state.value.remote as? ReceptionRemote.Error)?.retryEnabled != false }) { token ->
+            refresh(false, key to token)
+            readJob?.join()
+            _state.value.remote == ReceptionRemote.Forbidden
+        }
+        val countKey = waitingKey()
+        cycle.register(countKey, eligible = { (_state.value.waitingCount as? DashboardRead.Error)?.retryEnabled != false }) { token ->
+            val result = dashboard!!.count(EncounterStatus.WAITING_TRIAGE, countKey.siteId)
+            if (!cycle.isLatest(countKey, token)) false else when (result) {
+                is ApiResult.Success -> { _state.update { it.copy(waitingCount = DashboardRead.Ready(result.value)) }; false }
+                is ApiResult.Failure -> {
+                    val wait = result.error.rateLimitSeconds()
+                    _state.update { it.copy(waitingCount = if (result.error.httpStatus == 403) DashboardRead.Forbidden else DashboardRead.Error(result.error.commonMessage(), wait == null)) }
+                    if (wait != null) viewModelScope.launch { delay(wait * 1000L); if (current && waitingKey() == countKey) _state.update { state -> val old = state.waitingCount as? DashboardRead.Error; if (old == null) state else state.copy(waitingCount = old.copy(retryEnabled = true)) } }
+                    result.error.httpStatus == 403
+                }
+            }
+        }
+    }
+    private fun refresh(invalidated: Boolean, expected: Pair<DashboardReadKey, Long>? = null) {
+        if (invalidated && coordinator != null) { coordinator.invalidate(setOf(pendingKey())); return }
         if (!current || (_state.value.remote as? ReceptionRemote.Error)?.retryEnabled == false) return
         if (readJob?.isActive == true) {
             if (invalidated) readAgain = true
@@ -107,11 +151,13 @@ class ReceptionViewModel(
             do {
                 readAgain = false
                 val result = repository.pending(site)
-                if (!current || request != revision) return@launch
+                if (!current || request != revision || expected != null && coordinator?.isLatest(expected.first, expected.second) != true) return@launch
                 when (result) {
                     is ApiResult.Success -> {
                         val ids = result.value.mapTo(mutableSetOf()) { it.id }
-                        _state.update { it.copy(remote = ReceptionRemote.Ready(result.value), drafts = it.drafts.filterKeys { id -> id in ids }) }
+                        val resolved = knownIds[site].orEmpty() - ids
+                        knownIds[site] = ids
+                        _state.update { it.copy(remote = ReceptionRemote.Ready(result.value), drafts = it.drafts - resolved) }
                     }
                     is ApiResult.Failure -> {
                         val remote = when (result.error.httpStatus) {
@@ -186,18 +232,18 @@ class ReceptionViewModel(
     }
     private fun mutate(id: String, action: ReceptionAction) {
         val draft = _state.value.drafts.getValue(id)
-        val request = revision
+        val originSite = _state.value.siteId
         _state.update { it.copy(drafts = it.drafts + (id to draft.copy(action = action, message = null)), notice = null, message = null) }
         viewModelScope.launch {
             val result = if (action == ReceptionAction.Confirm) repository.confirm(id) else repository.reject(id, draft.reason.trim())
-            if (!current || request != revision) return@launch
+            if (!current) return@launch
             when (result) {
                 is ApiResult.Success -> {
                     val notice = if (action == ReceptionAction.Confirm) {
                         val encounter = result.value as EncounterDto
                         ReceptionNotice.Confirmed(encounter.id, encounter.arrivalAt)
                     } else ReceptionNotice.Rejected
-                    _state.update { it.copy(drafts = it.drafts - id, notice = notice) }
+                    _state.update { it.copy(drafts = it.drafts - id, notice = if (it.siteId == originSite) notice else it.notice) }
                 }
                 is ApiResult.Failure -> {
                     val error = result.error
@@ -209,17 +255,17 @@ class ReceptionViewModel(
                     }
                     val reasonError = (error as? ApiError.Http)?.problem?.errors?.any { it.field == "reason" } == true
                     _state.update { state ->
-                        val previous = state.drafts[id] ?: draft
+                        val previous = state.drafts[id]
                         state.copy(
-                            remote = if (error.httpStatus == 403) ReceptionRemote.Forbidden else state.remote,
-                            drafts = if (error.httpStatus == 404) state.drafts - id else state.drafts + (id to previous.copy(action = null, blocked = wait != null, reasonError = if (reasonError) UiMessage(R.string.staff_error_field) else null, message = message)),
-                            message = message,
+                            remote = if (error.httpStatus == 403 && state.siteId == originSite) ReceptionRemote.Forbidden else state.remote,
+                            drafts = if (error.httpStatus == 404) state.drafts - id else if (previous == null) state.drafts else state.drafts + (id to previous.copy(action = null, blocked = wait != null, reasonError = if (reasonError) UiMessage(R.string.staff_error_field) else null, message = message)),
+                            message = if (state.siteId == originSite) message else state.message,
                         )
                     }
-                    if (error.httpStatus in setOf(409, 404)) refresh(invalidated = true)
+                    if (_state.value.siteId == originSite && error.httpStatus in setOf(409, 404)) refresh(invalidated = true)
                     if (wait != null) {
                         delay(wait * 1000L)
-                        if (current && request == revision) _state.update { state ->
+                        if (current) _state.update { state ->
                             val row = state.drafts[id]
                             if (row == null) state else state.copy(drafts = state.drafts + (id to row.copy(blocked = false)))
                         }

@@ -1,7 +1,7 @@
 # UI-02-mobile — Cuatro dashboards de trabajo
 
 Brief autorizado: `docs/mobile-migration.md`, UI-02-mobile y reglas transversales; plan completo aprobado mediante **«PLEASE IMPLEMENT THIS PLAN»** el 2026-10-29. Referencia: UI-02-web main `dc280a9`/árbol `c812c63` y sus criterios locales UI-02.AC1–AC12, consultados sin modificarlos. Las referencias F-02/F-03 indican las operaciones preservadas; los requisitos de dashboard son la ampliación móvil aprobada.
-Contrato: consume **0.4.0**, sin cambios. Dependencias: UI-01-mobile, F-02-staff-mobile y F-03-mobile terminados. **Spec futura**, sin activar bloques.
+Contrato: consume **0.4.0**, sin cambios. Dependencias: UI-01-mobile, F-02-staff-mobile y F-03-mobile terminados. **Spec activada**, sin activar bloques.
 Límites: F-06/F-07-api y sus contratos aún no aportan cola priorizada/reportes; sus briefs se consultan para no simular niveles, tiempos, umbrales, gráficos o exportaciones. El sondeo de este slice solo afecta a los cuatro dashboards STAFF, nunca a las vistas paciente.
 RNF: RNF-05, RNF-10, RNF-11, RNF-12, RNF-13, RNF-14, RNF-17 como límite de decisión humana.
 

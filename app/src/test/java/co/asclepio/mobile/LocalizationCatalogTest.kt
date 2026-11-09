@@ -31,7 +31,7 @@ class LocalizationCatalogTest {
                 key.name.startsWith("guide_") || key.name.startsWith("voice_") ||
                 key.name.startsWith("preferences_") || key.name.startsWith("status_") ||
                 key.name.startsWith("date_") || key.name.startsWith("ui_") ||
-                key.name.startsWith("clinical_")
+                key.name.startsWith("clinical_") || key.name.startsWith("dash_")
         }.filterValues { it.translatable }
         assertTrue("Debe comprobar errores y campos reales", controlled.size >= 20)
         for (locale in locales) {

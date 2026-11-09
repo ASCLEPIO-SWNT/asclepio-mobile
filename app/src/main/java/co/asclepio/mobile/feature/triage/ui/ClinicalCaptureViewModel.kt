@@ -41,6 +41,22 @@ class ClinicalCaptureViewModel(
         active = value
         if (value) refresh()
     }
+    fun rememberScroll(offset: Int) {
+        if (!current) return
+        val position = offset.coerceAtLeast(0)
+        _state.update { if (it.presentation.scrollOffset == position) it else it.copy(presentation = it.presentation.copy(scrollOffset = position)) }
+    }
+    fun rememberFocus(target: ClinicalFocusTarget) {
+        if (!current) return
+        _state.update { state ->
+            val exists = when (target) {
+                is ClinicalFocusTarget.Vital -> !state.vitals.saving
+                is ClinicalFocusTarget.Finding -> !state.findings.saving && state.findings.rows.any { it.key == target.rowKey }
+            }
+            if (!state.hasLoaded || state.unavailable || state.readOnly || !exists || state.presentation.focusTarget == target) state
+            else state.copy(presentation = state.presentation.copy(focusTarget = target))
+        }
+    }
     fun refresh() {
         if (!current || !active || (_state.value.context as? ClinicalRead.Error)?.retryEnabled == false ||
             (_state.value.capture as? ClinicalRead.Error)?.retryEnabled == false) return
@@ -89,7 +105,7 @@ class ClinicalCaptureViewModel(
         revision++
         readJob?.cancel()
         val remote = if (status == 403) ClinicalRead.Forbidden else ClinicalRead.NotFound
-        _state.update { it.copy(context = remote, capture = remote, checking = false, readRevision = revision) }
+        _state.update { it.copy(context = remote, capture = remote, checking = false, readRevision = revision, presentation = it.presentation.copy(focusTarget = null)) }
     }
     fun updateVitals(raw: RawVitalSigns) {
         if (!current || _state.value.vitals.saving) return
@@ -131,7 +147,10 @@ class ClinicalCaptureViewModel(
     }
     fun removeFinding(key: Long) {
         if (!current || _state.value.findings.saving) return
-        _state.update { it.copy(findings = clearFindingErrors(it.findings).let { form -> form.copy(rows = form.rows.filterNot { row -> row.key == key }) }) }
+        _state.update { state -> state.copy(
+            findings = clearFindingErrors(state.findings).let { form -> form.copy(rows = form.rows.filterNot { row -> row.key == key }) },
+            presentation = if ((state.presentation.focusTarget as? ClinicalFocusTarget.Finding)?.rowKey == key) state.presentation.copy(focusTarget = null) else state.presentation,
+        ) }
     }
     fun updateFinding(key: Long, raw: RawSymptomFinding) {
         if (!current || _state.value.findings.saving) return

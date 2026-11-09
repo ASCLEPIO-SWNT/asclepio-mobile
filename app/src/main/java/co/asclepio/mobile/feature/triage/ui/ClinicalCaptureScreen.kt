@@ -1,8 +1,9 @@
 package co.asclepio.mobile.feature.triage.ui
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.ScrollState
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -12,6 +13,7 @@ import co.asclepio.mobile.R
 import co.asclepio.mobile.core.encounters.*
 import co.asclepio.mobile.core.encounters.ui.*
 import co.asclepio.mobile.core.ui.*
+import kotlinx.coroutines.flow.collect
 
 @Composable
 fun ClinicalCaptureScreen(
@@ -19,8 +21,33 @@ fun ClinicalCaptureScreen(
     onVitalsChange: (RawVitalSigns) -> Unit, onSaveVitals: () -> Unit, onVitalsFocusHandled: (Long) -> Unit,
     onFindingChange: (Long, RawSymptomFinding) -> Unit, onAddFinding: () -> Unit, onRemoveFinding: (Long) -> Unit,
     onSaveFindings: () -> Unit, onFindingsFocusHandled: (Long) -> Unit, modifier: Modifier = Modifier,
+    onScrollChange: (Int) -> Unit = {}, onPresentationFocus: (ClinicalFocusTarget) -> Unit = {},
+    preferencesOpen: Boolean = false,
 ) {
-    ScreenColumn(modifier, maxWidth = 840.dp) {
+    val scroll = remember { ScrollState(state.presentation.scrollOffset) }
+    val presentation by rememberUpdatedState(state.presentation)
+    val reportScroll by rememberUpdatedState(onScrollChange)
+    var restorePending by remember { mutableStateOf(true) }
+    var restoringScroll by remember { mutableStateOf(true) }
+    var focusToRestore by remember { mutableStateOf<ClinicalFocusTarget?>(null) }
+    LaunchedEffect(preferencesOpen, state.hasLoaded, state.checking) {
+        if (preferencesOpen) {
+            restorePending = true
+            restoringScroll = true
+            focusToRestore = null
+        } else if (restorePending && state.hasLoaded && !state.checking && !state.unavailable) {
+            withFrameNanos { } // Esperar al contenido medido, sin escribir un0 transitorio sobre la posición RAM.
+            scroll.scrollTo(presentation.scrollOffset)
+            restoringScroll = false
+            restorePending = false
+            focusToRestore = presentation.focusTarget
+        }
+    }
+    LaunchedEffect(scroll, preferencesOpen, restoringScroll) {
+        if (!preferencesOpen && !restoringScroll) snapshotFlow { scroll.value }.collect { reportScroll(it) }
+    }
+    val focusAvailable = !preferencesOpen && !restoringScroll
+    ScreenColumn(modifier, maxWidth = 840.dp, scrollState = scroll) {
         PageHeader(stringResource(R.string.clinical_capture_title), stringResource(R.string.clinical_capture_intro))
         FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedButton(onClick = onRefresh, enabled = !state.checking && (state.context as? ClinicalRead.Error)?.retryEnabled != false && (state.capture as? ClinicalRead.Error)?.retryEnabled != false) { Text(stringResource(R.string.home_refresh)) }
@@ -46,10 +73,20 @@ fun ClinicalCaptureScreen(
             if (state.hasLoaded) {
                 if (!state.checking && !state.canWrite && state.context is ClinicalRead.Ready && state.capture is ClinicalRead.Ready) UiNotice(stringResource(R.string.clinical_read_only), NoticeTone.Warning)
                 Panel(Modifier.fillMaxWidth()) {
-                    ClinicalVitalSignsForm(state.vitals, state.canWrite, onVitalsChange, onSaveVitals, onVitalsFocusHandled, editable = !state.readOnly)
+                    ClinicalVitalSignsForm(
+                        state.vitals, state.canWrite, onVitalsChange, onSaveVitals, onVitalsFocusHandled, editable = !state.readOnly,
+                        onFocused = { field -> focusToRestore = null; onPresentationFocus(ClinicalFocusTarget.Vital(field)) },
+                        restoreFocus = if (focusAvailable) (focusToRestore as? ClinicalFocusTarget.Vital)?.field else null,
+                        onFocusRestored = { focusToRestore = null }, focusEnabled = !preferencesOpen,
+                    )
                 }
                 Panel(Modifier.fillMaxWidth()) {
-                    ClinicalFindingsForm(state.findings, state.canWrite, onFindingChange, onAddFinding, onRemoveFinding, onSaveFindings, onFindingsFocusHandled, editable = !state.readOnly)
+                    ClinicalFindingsForm(
+                        state.findings, state.canWrite, onFindingChange, onAddFinding, onRemoveFinding, onSaveFindings, onFindingsFocusHandled, editable = !state.readOnly,
+                        onFocused = { row, field -> focusToRestore = null; onPresentationFocus(ClinicalFocusTarget.Finding(row, field)) },
+                        restoreFocus = if (focusAvailable) focusToRestore as? ClinicalFocusTarget.Finding else null,
+                        onFocusRestored = { focusToRestore = null }, focusEnabled = !preferencesOpen,
+                    )
                 }
             }
             when (val capture = state.capture) {

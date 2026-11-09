@@ -16,7 +16,7 @@ import org.junit.rules.TemporaryFolder
 class TriageTrayViewModelTest {
     @get:Rule val main = MainDispatcherRule()
     @get:Rule val tmp = TemporaryFolder()
-    @Test fun `R2 tray fixes waiting status uses pages50 retains return filters and never polls`() = runTest {
+    @Test fun `R2 tray fixes waiting status uses pages50 retains return filters and stops hidden polling`() = runTest {
         val env = StaffEncountersTestEnv(tmp.root)
         val reads = mutableListOf<Map<String, String?>>()
         env.server.dispatcher = object : Dispatcher() {
@@ -45,6 +45,7 @@ class TriageTrayViewModelTest {
             assertEquals(50, vm.state.value.filters.offset)
             vm.selectSite(StaffEncountersTestEnv.SITE); vm.state.first { !it.refreshing && it.filters.offset == 0 }
             assertEquals(StaffEncountersTestEnv.SITE, reads.last()["siteId"])
+            vm.setActive(false)
             val count = reads.size
             advanceTimeBy(120_000); runCurrent()
             assertEquals(count, reads.size)
