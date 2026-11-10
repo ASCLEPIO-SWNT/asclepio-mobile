@@ -18,7 +18,7 @@
     <string name="error_login_invalid">Incorrect document number or password. After 5 failed attempts, the account is locked for 15 minutes.</string>
     <string name="error_signup_conflict">An account with this document already exists at this IPS. Sign in.</string>
     <string name="error_signup_unprocessable">We could not create your account. Check your date of birth and accept the consent again if it has changed.</string>
-    <string name="error_not_patient">This is a staff account. Go back and choose Staff access.</string>
+    <string name="error_not_patient">This account is not a patient account. Use the staff web application.</string>
     <string name="error_required">Required field</string>
     <string name="error_max_length" tools:ignore="PluralsCandidate">Maximum %1$d characters</string>
     <string name="error_password_length">The password must be between 10 and 128 characters</string>

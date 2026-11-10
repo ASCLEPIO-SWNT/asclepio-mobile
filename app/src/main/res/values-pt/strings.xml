@@ -18,7 +18,7 @@
     <string name="error_login_invalid">Número do documento ou senha incorretos. Após 5 tentativas sem sucesso, a conta é bloqueada por 15 minutos.</string>
     <string name="error_signup_conflict">Já existe uma conta com esse documento nesta IPS. Entre na sua conta.</string>
     <string name="error_signup_unprocessable">Não foi possível criar sua conta. Verifique sua data de nascimento e aceite novamente o consentimento se ele tiver mudado.</string>
-    <string name="error_not_patient">Esta conta é da equipe. Volte e escolha Acesso da equipe.</string>
+    <string name="error_not_patient">Esta conta não é de paciente. Use o aplicativo web da equipe.</string>
     <string name="error_required">Campo obrigatório</string>
     <string name="error_max_length" tools:ignore="PluralsCandidate">Máximo de %1$d caracteres</string>
     <string name="error_password_length">A senha deve ter entre 10 e 128 caracteres</string>

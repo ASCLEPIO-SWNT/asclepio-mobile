@@ -18,7 +18,7 @@
     <string name="error_login_invalid">Numéro de document ou mot de passe incorrect. Après 5 tentatives infructueuses, le compte est bloqué pendant 15 minutes.</string>
     <string name="error_signup_conflict">Un compte avec ce document existe déjà dans cette IPS. Connectez-vous.</string>
     <string name="error_signup_unprocessable">Impossible de créer votre compte. Vérifiez votre date de naissance et acceptez à nouveau le consentement s’il a changé.</string>
-    <string name="error_not_patient">Ce compte est un compte du personnel. Revenez en arrière et choisissez Accès du personnel.</string>
+    <string name="error_not_patient">Ce compte n’est pas un compte patient. Utilisez l’application web du personnel.</string>
     <string name="error_required">Champ obligatoire</string>
     <string name="error_max_length" tools:ignore="PluralsCandidate">%1$d caractères maximum</string>
     <string name="error_password_length">Le mot de passe doit contenir entre 10 et 128 caractères</string>
