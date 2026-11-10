@@ -52,4 +52,58 @@ class PatientOnlyResourcesTest {
             assertTrue(folder, values.none { value -> accessHints.any { value.contains(it) } })
         }
     }
+
+    private val main = File("src/main/java/co/asclepio/mobile")
+
+    @Test fun `R9 las fuentes de produccion no contienen los paquetes ni archivos de personal`() {
+        val retired = listOf(
+            "feature/staffaccount", "feature/staffencounters", "feature/reception", "feature/triage", "feature/dashboards",
+            "core/encounters", "core/auth/StaffDestinations.kt", "core/ui/DashboardComponents.kt",
+            "core/ui/DashboardDateTime.kt", "core/ui/DashboardRead.kt",
+        )
+        assertTrue("Falta $main", main.isDirectory)
+        assertEquals(emptyList<String>(), retired.filter { File(main, it).exists() })
+        val packages = listOf("feature.staffaccount", "feature.staffencounters", "feature.reception", "feature.triage", "feature.dashboards", "core.encounters")
+        val references = main.walkTopDown().filter { it.extension == "kt" }.flatMap { file ->
+            val text = file.readText()
+            packages.filter { text.contains("co.asclepio.mobile.$it") }.map { "${file.relativeTo(main)} -> $it" }
+        }.toList()
+        assertEquals(emptyList<String>(), references)
+        val container = File(main, "AppContainer.kt").readText()
+        val staffDependencies = listOf("Staff", "Reception", "Dashboard", "ClinicalCapture", "EncountersApi", "EncountersRepository")
+        assertEquals(emptyList<String>(), staffDependencies.filter { container.contains(it) })
+    }
+
+    @Test fun `R10 los cinco catalogos no contienen archivos claves ni drawables de personal y conservan el resto`() {
+        val retiredFiles = listOf(
+            "staff_encounters.xml", "staff_reception.xml", "staff_registration.xml", "staff_voice_guide.xml",
+            "dashboards.xml", "clinical_capture.xml", "clinical_guides.xml",
+        )
+        val retiredKeys = setOf(
+            "access_choose", "access_patient", "access_patient_intro", "access_patient_action", "access_staff",
+            "access_staff_intro", "access_staff_action", "change_access", "change_access_dialog_title", "change_access_dialog_body",
+        )
+        val prefixes = listOf("staff_", "dash_", "clinical_", "guide_staff_", "guide_welcome_")
+        val base = names("values")
+        for (folder in folders) {
+            assertEquals(folder, emptyList<String>(), retiredFiles.filter { File(File(resources, folder), it).exists() })
+            val keys = names(folder)
+            assertEquals(folder, emptyList<String>(), keys.filter { key -> key in retiredKeys || prefixes.any { key.startsWith(it) } })
+            assertEquals(folder, base, keys)
+        }
+        for (kept in listOf("access_denied", "access_go_home", "session_verification_title", "navigate_back", "error_not_patient")) {
+            assertTrue(kept, kept in base)
+        }
+        val drawables = File(resources, "drawable").list().orEmpty().filter { it.startsWith("ic_dashboard_") }
+        assertEquals(emptyList<String>(), drawables)
+    }
+
+    /** Nombres de todos los recursos de texto (string, plurals, string-array) de una carpeta `values*`. */
+    private fun names(folder: String): Set<String> = File(resources, folder).listFiles { file -> file.extension == "xml" }.orEmpty().flatMap { file ->
+        val root = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file).documentElement
+        listOf("string", "plurals", "string-array").flatMap { tag ->
+            val nodes = root.getElementsByTagName(tag)
+            (0 until nodes.length).map { (nodes.item(it) as Element).getAttribute("name") }
+        }
+    }.toSet()
 }
