@@ -16,4 +16,4 @@ Retirar del APK todo lo de F-01-staff-mobile, F-02-staff-mobile, F-03-mobile y U
 3. implementer → reviewer → init.sh completo en verde → done.
 
 ## Estado
-pending → spec en curso.
+spec_ready (2026-11-09). Esperando: PA-1, PA-2, la decisión sobre el estado "retirado" y la aprobación del humano.

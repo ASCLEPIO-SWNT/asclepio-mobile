@@ -166,7 +166,7 @@
         "../asclepio-api/docs/adr/0008-app-movil-del-paciente.md (Ratificación); F-01.AC7, AC8; F-02.AC8, AC10 siguen cumplidos"
       ],
       "sdd": true,
-      "status": "pending"
+      "status": "spec_ready"
     },
     {
       "id": "F-08-mobile",
