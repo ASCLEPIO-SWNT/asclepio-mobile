@@ -18,7 +18,6 @@ import co.asclepio.mobile.core.ui.*
 fun StaffEncounterDetailScreen(
     state: StaffEncounterDetailUiState, onRefresh: () -> Unit, onCancelling: (Boolean) -> Unit,
     onReason: (String) -> Unit, onCancel: () -> Unit, onEncounters: () -> Unit, modifier: Modifier = Modifier,
-    clinicalHistory: (@Composable () -> Unit)? = null,
 ) {
     ScreenColumn(modifier, maxWidth = 840.dp) {
         PageHeader(stringResource(R.string.staff_encounter))
@@ -48,7 +47,6 @@ fun StaffEncounterDetailScreen(
                 StaffPatientFacts(encounter.patient)
                 StaffFact(stringResource(R.string.preregistration_complaint), encounter.chiefComplaintText)
                 StaffFact(stringResource(R.string.staff_origin), stringResource(staffComplaintSourceLabel(encounter.complaintSource)))
-                clinicalHistory?.let { slot -> HorizontalDivider(); slot() }
                 encounter.cancellationReason?.let { StaffFact(stringResource(R.string.staff_cancellation_reason), it) }
                 val cancellationRole = state.role in setOf(StaffRole.RECEPTION, StaffRole.NURSE)
                 if (cancellationRole && canCancelEncounter(encounter.status)) {

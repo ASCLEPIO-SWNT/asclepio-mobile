@@ -71,6 +71,5 @@ class AppContainer(context: Context) {
     val staffSitesRepository = StaffSitesRepository(tenantsApi, sessionManager)
     val encountersRepository = EncountersRepository(retrofit.create(EncountersApi::class.java), sessionManager, staffDataChanges)
     val dashboardDataRepository = DashboardDataRepository(encountersRepository, staffSitesRepository)
-    val clinicalCaptureRepository = ClinicalCaptureRepository(retrofit.create(ClinicalCaptureApi::class.java), sessionManager, staffDataChanges)
     val receptionRepository = ReceptionRepository(retrofit.create(ReceptionApi::class.java), sessionManager, staffDataChanges)
 }

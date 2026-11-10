@@ -4,7 +4,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 
-enum class StaffResource { Pending, Encounters, Detail, ClinicalCapture }
+enum class StaffResource { Pending, Encounters, Detail }
 
 /** Solo invalidación de recursos de una generación; sin DTOs, motivos, pacientes ni listas. */
 data class StaffDataChange(val generation: Long, val resources: Set<StaffResource>, val encounterId: String? = null)

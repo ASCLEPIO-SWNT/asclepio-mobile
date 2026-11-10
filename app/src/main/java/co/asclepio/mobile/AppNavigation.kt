@@ -58,11 +58,9 @@ import co.asclepio.mobile.feature.patients.ui.ProfileViewModel
 import co.asclepio.mobile.feature.staffaccount.ui.*
 import co.asclepio.mobile.feature.reception.ui.*
 import co.asclepio.mobile.feature.staffencounters.ui.*
-import co.asclepio.mobile.feature.triage.ui.*
 import co.asclepio.mobile.feature.dashboards.ui.*
 import co.asclepio.mobile.core.ui.*
 import co.asclepio.mobile.core.encounters.EncounterCount
-import co.asclepio.mobile.core.encounters.ui.EncounterListScreen
 import co.asclepio.mobile.feature.status.ui.StatusScreen
 import co.asclepio.mobile.feature.status.ui.StatusViewModel
 import kotlinx.coroutines.launch
@@ -78,7 +76,6 @@ sealed interface Route : NavKey {
     @Serializable data class Staff(val destination: StaffDestination) : Route
     @Serializable data object StaffRegistration : Route
     @Serializable data class StaffEncounterDetail(val id: String) : Route
-    @Serializable data class ClinicalCapture(val id: String) : Route
 
     @Serializable data object TenantPicker : Route
 
@@ -123,7 +120,6 @@ fun canAccessRoute(state: SessionState, route: Route): Boolean = when (state) {
             is Route.Staff -> route.destination in principal.role.destinations
             Route.StaffRegistration -> principal.role == StaffRole.RECEPTION
             is Route.StaffEncounterDetail -> true
-            is Route.ClinicalCapture -> principal.role == StaffRole.NURSE
             else -> false
         }
     }
@@ -141,7 +137,6 @@ fun routeGuideDestination(route: Route, role: StaffRole? = null): GuideDestinati
     is Route.Staff -> when (route.destination) {
         StaffDestination.RECEPTION -> GuideDestination.StaffReception
         StaffDestination.ENCOUNTERS -> GuideDestination.StaffEncounters
-        StaffDestination.TRIAGE -> GuideDestination.NurseTray
         StaffDestination.MEDICINE -> GuideDestination.MedicineDashboard
         StaffDestination.ADMINISTRATION -> GuideDestination.AdministrationDashboard
         StaffDestination.QUEUE -> GuideDestination.StaffQueue
@@ -149,8 +144,7 @@ fun routeGuideDestination(route: Route, role: StaffRole? = null): GuideDestinati
         else -> GuideDestination.StaffPending
     }
     Route.StaffRegistration -> GuideDestination.StaffRegistration
-    is Route.StaffEncounterDetail -> if (role in setOf(StaffRole.NURSE, StaffRole.PHYSICIAN)) GuideDestination.ClinicalHistory else GuideDestination.StaffEncounterDetail
-    is Route.ClinicalCapture -> GuideDestination.ClinicalCapture
+    is Route.StaffEncounterDetail -> GuideDestination.StaffEncounterDetail
     Route.TenantPicker -> GuideDestination.TenantPicker
     is Route.Login -> GuideDestination.PatientLogin
     Route.SignUp -> GuideDestination.SignUp
@@ -291,14 +285,6 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                                     encounters::previousPage, encounters::nextPage,
                                     onOpen = { backStack.add(Route.StaffEncounterDetail(it)) }, onScroll = encounters::rememberScroll,
                                 )
-                            }) else if (route.destination == StaffDestination.TRIAGE) ({
-                                val tray = viewModel { TriageTrayViewModel(container.encountersRepository, container.staffSitesRepository, container.staffDataChanges) }
-                                val trayState by tray.state.collectAsStateWithLifecycle()
-                                DashboardVisibility(currentRoute == route, tray::setActive)
-                                EncounterListScreen(
-                                    trayState, tray::refresh, tray::retrySites, tray::selectSite, {}, tray::previousPage, tray::nextPage,
-                                    onOpen = { backStack.add(Route.ClinicalCapture(it)) }, onScroll = tray::rememberScroll, clinicalTray = true,
-                                )
                             }) else if (route.destination in setOf(StaffDestination.MEDICINE, StaffDestination.ADMINISTRATION, StaffDestination.QUEUE, StaffDestination.REPORTS)) ({
                                 val overview = viewModel { DashboardOverviewViewModel(route.destination, principal.role, container.dashboardDataRepository, container.staffDataChanges) }
                                 val overviewState by overview.state.collectAsStateWithLifecycle()
@@ -347,37 +333,10 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                             LifecycleEventEffect(Lifecycle.Event.ON_START) { vm.setActive(true) }
                             LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.setActive(false) }
                             DisposableEffect(vm) { onDispose { vm.setActive(false) } }
-                            val clinicalSlot: (@Composable () -> Unit)? = if (principal.role in setOf(StaffRole.NURSE, StaffRole.PHYSICIAN) && state.remote is StaffEncounterRemote.Ready) ({
-                                val history = viewModel { ClinicalHistoryViewModel(route.id, principal.role, container.clinicalCaptureRepository, container.staffDataChanges) }
-                                val clinicalState by history.state.collectAsStateWithLifecycle()
-                                LifecycleEventEffect(Lifecycle.Event.ON_START) { history.setActive(true) }
-                                LifecycleEventEffect(Lifecycle.Event.ON_STOP) { history.setActive(false) }
-                                DisposableEffect(history) { onDispose { history.setActive(false) } }
-                                val captureAction: (() -> Unit)? = if (principal.role == StaffRole.NURSE && !state.refreshing && (state.remote as? StaffEncounterRemote.Ready)?.encounter?.status == "WAITING_TRIAGE") ({ backStack.add(Route.ClinicalCapture(route.id)) }) else null
-                                ClinicalHistoryPane(clinicalState, history::refresh, captureAction)
-                            }) else null
                             StaffEncounterDetailScreen(state, vm::refresh, vm::setCancelling, vm::setReason, vm::cancel, onEncounters = {
                                 val list = Route.Staff(StaffDestination.ENCOUNTERS)
                                 if (list in backStack) backStack.popTo(list) else backStack.add(list)
-                            }, clinicalHistory = clinicalSlot)
-                        }
-                    }
-                    entry<Route.ClinicalCapture> { route ->
-                        GuardedRoute(session, route, { backStack.resetTo(root) }) {
-                            val principal = (session as SessionState.Authenticated).principal as VerifiedPrincipal.Staff
-                            val vm = viewModel { ClinicalCaptureViewModel(route.id, principal.role, container.encountersRepository, container.clinicalCaptureRepository, container.staffDataChanges) }
-                            val state by vm.state.collectAsStateWithLifecycle()
-                            LifecycleEventEffect(Lifecycle.Event.ON_START) { vm.setActive(true) }
-                            LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.setActive(false) }
-                            DisposableEffect(vm) { onDispose { vm.setActive(false) } }
-                            ClinicalCaptureScreen(
-                                state, vm::refresh, onBack = {
-                                    val tray = Route.Staff(StaffDestination.TRIAGE)
-                                    if (tray in backStack) backStack.popTo(tray) else backStack.resetTo(tray)
-                                }, vm::updateVitals, vm::saveVitals, vm::vitalsFocusHandled,
-                                vm::updateFinding, vm::addFinding, vm::removeFinding, vm::saveFindings, vm::findingsFocusHandled,
-                                onScrollChange = vm::rememberScroll, onPresentationFocus = vm::rememberFocus, preferencesOpen = preferencesOpen,
-                            )
+                            })
                         }
                     }
                     entry<Route.TenantPicker> {
@@ -515,7 +474,7 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
 @Composable
 private fun GuardedRoute(session: SessionState, route: Route, onHome: () -> Unit, content: @Composable () -> Unit) {
     if (canAccessRoute(session, route)) {
-        // Prevent hidden widget Savers from serializing passwords, identity or clinical drafts.
+        // Prevent hidden widget Savers from serializing passwords, identity or private drafts.
         // Navigation/VM decorators stay outside this boundary and retain RAM across configuration.
         CompositionLocalProvider(LocalSaveableStateRegistry provides null) { content() }
     } else AccessDeniedScreen(onHome)

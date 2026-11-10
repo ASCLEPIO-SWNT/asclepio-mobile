@@ -13,7 +13,6 @@ import co.asclepio.mobile.core.network.appJson
 import co.asclepio.mobile.feature.reception.ui.ReceptionNotice
 import co.asclepio.mobile.feature.reception.ui.ReceptionRemote
 import co.asclepio.mobile.feature.reception.ui.ReceptionViewModel
-import co.asclepio.mobile.feature.triage.ui.TriageTrayViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -140,33 +139,6 @@ class DashboardRetentionViewModelTest {
     private suspend fun ready(vm: ReceptionViewModel) = vm.state.first { it.remote is ReceptionRemote.Ready && !it.refreshing && !it.sites.loading }
     private fun draft(vm: ReceptionViewModel, id: String, reason: String) {
         vm.setIdentity(id, true); vm.setRejecting(id, true); vm.setReason(id, reason)
-    }
-
-    @Test fun `R4 pagina de enfermeria vacia en offset cincuenta vuelve cero antes de publicar cifra`() = scenario {
-        env.login(StaffRole.NURSE)
-        val vm = TriageTrayViewModel(env.encounters, env.sites, env.changes)
-        val published = CopyOnWriteArrayList<Pair<Int, Int>>()
-        val collector = launch {
-            vm.state.collect { state ->
-                val rows = (state.remote as? EncounterListRemote.Ready)?.items
-                if (rows != null && !state.refreshing) published += state.filters.offset to rows.size
-            }
-        }
-        vm.setActive(true)
-        vm.state.first { it.remote is EncounterListRemote.Ready && !it.refreshing && !it.sites.loading }
-        val reset = held(null, trayBody(12)); heldReset = reset
-        vm.nextPage(); reset.waitForRequest()
-        assertEquals(0, vm.state.value.filters.offset)
-        assertTrue(vm.state.value.refreshing)
-        assertFalse(published.any { it.first == 50 && it.second == 0 })
-        reset.release.countDown()
-        val last = vm.state.first { (it.remote as? EncounterListRemote.Ready)?.items?.size == 12 && !it.refreshing }
-        assertEquals(EncounterCount(12, false), deriveWaitingPage(last.filters.offset, 12).count)
-        assertEquals(listOf("0", "50", "0"), trayQueries.map { it["offset"] })
-        assertTrue(trayQueries.all { it["limit"] == "50" && it["status"] == "WAITING_TRIAGE" })
-        assertFalse(published.any { it.first == 50 && it.second == 0 })
-        assertTrue(writes.isEmpty())
-        vm.setActive(false); collector.cancel()
     }
 
     @Test fun `R18 lectura fallida conserva casilla y motivo pero bloquea acciones hasta recuperar datos vigentes`() = scenario {

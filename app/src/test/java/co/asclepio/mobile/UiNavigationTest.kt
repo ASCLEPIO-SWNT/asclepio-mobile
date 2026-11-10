@@ -32,7 +32,6 @@ class UiNavigationTest {
             val guide = when (it) {
                 StaffDestination.RECEPTION -> GuideDestination.StaffReception
                 StaffDestination.ENCOUNTERS -> GuideDestination.StaffEncounters
-                StaffDestination.TRIAGE -> GuideDestination.NurseTray
                 StaffDestination.MEDICINE -> GuideDestination.MedicineDashboard
                 StaffDestination.ADMINISTRATION -> GuideDestination.AdministrationDashboard
                 StaffDestination.QUEUE -> GuideDestination.StaffQueue
@@ -48,20 +47,5 @@ class UiNavigationTest {
         assertTrue(canAccessRoute(patient, Route.Profile))
         assertTrue(canAccessRoute(patient, Route.PreRegistration))
         StaffDestination.entries.forEach { assertFalse(canAccessRoute(patient, Route.Staff(it))) }
-    }
-    @Test fun `R1 clinical capture guard permits only nurse before feature composition`() {
-        StaffRole.entries.forEach { role ->
-            val session = SessionState.Authenticated(VerifiedPrincipal.Staff("s", "tenant", "Staff", role), 2)
-            assertEquals(role == StaffRole.NURSE, canAccessRoute(session, Route.ClinicalCapture("opaque")))
-        }
-        assertFalse(canAccessRoute(patient, Route.ClinicalCapture("opaque")))
-        assertFalse(canAccessRoute(SessionState.Welcome, Route.ClinicalCapture("opaque")))
-    }
-    @Test fun `R23 clinical guides are static destinations independent of encounter identity`() {
-        assertEquals(GuideDestination.NurseTray, routeGuideDestination(Route.Staff(StaffDestination.TRIAGE)))
-        assertEquals(GuideDestination.ClinicalCapture, routeGuideDestination(Route.ClinicalCapture("A")))
-        assertEquals(GuideDestination.ClinicalCapture, routeGuideDestination(Route.ClinicalCapture("B")))
-        assertEquals(GuideDestination.ClinicalHistory, routeGuideDestination(Route.StaffEncounterDetail("opaque"), StaffRole.PHYSICIAN))
-        assertEquals(GuideDestination.StaffEncounterDetail, routeGuideDestination(Route.StaffEncounterDetail("opaque"), StaffRole.RECEPTION))
     }
 }
