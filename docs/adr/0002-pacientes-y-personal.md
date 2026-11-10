@@ -1,6 +1,9 @@
 # ADR 0002 (mobile) — Una APK para pacientes y personal
 
-- **Estado:** Aceptada por autorización explícita del plan móvil completo en chat.
+> **Sustituida el 2026-11-09.** Se conserva como registro histórico; no aplica a trabajo nuevo.
+
+- **Estado:** **Sustituida** (2026-11-09). Antes: aceptada por autorización explícita del plan móvil completo en chat.
+- **Sustituida por:** `../asclepio-api/docs/adr/0008-app-movil-del-paciente.md`, sección "Ratificación" (humano, 2026-11-09): la app móvil es solo del paciente; el personal usa la web. Las funciones de personal se retiran en `DT-01-mobile`.
 - **Fecha:** 2026-10-29 (America/Bogota).
 - **Fuente:** `docs/mobile-migration.md`, mensaje del usuario **«PLEASE IMPLEMENT THIS PLAN»**.
 - **Alcance de esta decisión:** cliente Android; el contrato OpenAPI 0.4.0 y las decisiones del servidor se consultan sin modificarlos.
