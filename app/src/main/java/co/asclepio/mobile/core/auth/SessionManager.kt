@@ -1,5 +1,6 @@
 package co.asclepio.mobile.core.auth
 
+import co.asclepio.mobile.R
 import co.asclepio.mobile.core.network.ApiResult
 import co.asclepio.mobile.core.network.apiCall
 import co.asclepio.mobile.core.network.commonMessage
@@ -18,17 +19,15 @@ import java.util.concurrent.CopyOnWriteArrayList
 
 sealed interface SessionState {
     data object Loading : SessionState
-    data object Welcome : SessionState
     data object NoTenant : SessionState
     data class LoggedOut(val tenant: RememberedTenant) : SessionState
-    data object StaffEntry : SessionState
     data object Verifying : SessionState
     data class VerificationError(val message: UiMessage) : SessionState
     data class Authenticated(val principal: VerifiedPrincipal, val generation: Long) : SessionState
 }
 
-class LoginAttempt internal constructor(val generation: Long, val mode: AccessMode, internal val tenantId: String?) {
-    override fun toString() = "LoginAttempt(generation=$generation, mode=$mode, tenantId=***)"
+class LoginAttempt internal constructor(val generation: Long, internal val tenantId: String?) {
+    override fun toString() = "LoginAttempt(generation=$generation, tenantId=***)"
 }
 
 class SessionInvalidated : CancellationException("Session no longer current")
@@ -42,13 +41,16 @@ class SessionManager(
 ) {
     private val _state = MutableStateFlow<SessionState>(SessionState.Loading)
     val state: StateFlow<SessionState> = _state.asStateFlow()
+    private val _entryNotice = MutableStateFlow<UiMessage?>(null)
+
+    /** Aviso estático de la entrada (R5): la sesión restaurada no era de un paciente de la IPS recordada. */
+    val entryNotice: StateFlow<UiMessage?> = _entryNotice.asStateFlow()
     private val mutex = Mutex()
     @Volatile private var accessToken: String? = null
     @Volatile private var expiresAt: Instant? = null
     @Volatile var generation: Long = 0L
         private set
     private var tenant: RememberedTenant? = null
-    private var selectedAccess: AccessMode? = null
     private var expiryJob: Job? = null
     private var loginAttempt: LoginAttempt? = null
     private val invalidationListeners = CopyOnWriteArrayList<() -> Unit>()
@@ -93,11 +95,10 @@ class SessionManager(
                 if (!isCurrent(expected)) return@withLock
                 if (!saved.expiresAt.isAfter(clock.instant())) { clearLocked(); return@withLock }
                 when (result) {
-                    is ApiResult.Success -> {
-                        val principal = result.value.toPrincipal(tenant)
-                        if (principal == null || !saved.expiresAt.isAfter(clock.instant())) {
-                            clearLocked()
-                        } else activateLocked(saved.accessToken, saved.expiresAt, principal)
+                    is ApiResult.Success -> when (val principal = result.value.toPrincipal(tenant)) {
+                        // Un /me que no es paciente de la IPS recordada (incluido STAFF) nunca abre contenido.
+                        null -> { _entryNotice.value = NOT_PATIENT; clearLocked() }
+                        else -> activateLocked(saved.accessToken, saved.expiresAt, principal)
                     }
                     is ApiResult.Failure -> {
                         if (result.error.httpStatus == 401) clearLocked() else {
@@ -115,60 +116,47 @@ class SessionManager(
         store.clearSession()
         store.saveTenant(value)
         tenant = value
-        selectedAccess = AccessMode.PATIENT
+        _entryNotice.value = null
         _state.value = entryState()
     }
 
-    /** La UI pide confirmación antes de invocarlo desde un ámbito autenticado. */
-    suspend fun selectAccess(mode: AccessMode, expectedGeneration: Long? = null) = mutex.withLock {
-        if (expectedGeneration != null && !isCurrent(expectedGeneration)) return@withLock
-        selectedAccess = mode
-        tenant = store.tenant()
-        clearLocked()
-    }
-
-    suspend fun showWelcome(expectedGeneration: Long? = null) = mutex.withLock {
-        if (expectedGeneration != null && !isCurrent(expectedGeneration)) return@withLock
-        selectedAccess = null
-        clearLocked()
-    }
-
-    suspend fun beginLogin(mode: AccessMode, expectedGeneration: Long = generation): LoginAttempt = mutex.withLock {
+    suspend fun beginLogin(expectedGeneration: Long = generation): LoginAttempt = mutex.withLock {
         requireCurrent(expectedGeneration)
-        if (_state.value is SessionState.Authenticated || (selectedAccess != null && selectedAccess != mode)) throw SessionInvalidated()
-        selectedAccess = mode
+        if (_state.value is SessionState.Authenticated) throw SessionInvalidated()
+        _entryNotice.value = null
         tenant = store.tenant()
         clearLocked()
-        LoginAttempt(generation, mode, tenant?.tenantId).also { loginAttempt = it }
+        LoginAttempt(generation, tenant?.tenantId).also { loginAttempt = it }
     }
 
     suspend fun completeLogin(attempt: LoginAttempt, token: String, expiration: Instant, me: MeDto): Boolean = mutex.withLock {
         if (!isCurrent(attempt.generation) || loginAttempt !== attempt) throw SessionInvalidated()
         val principal = me.toPrincipal(tenant)
-        if (token.isBlank() || !expiration.isAfter(clock.instant()) || principal == null ||
-            principal.mode != attempt.mode || (attempt.mode == AccessMode.PATIENT && principal.tenantId != attempt.tenantId)
-        ) return@withLock false
+        if (token.isBlank() || !expiration.isAfter(clock.instant()) || principal == null || principal.tenantId != attempt.tenantId) {
+            return@withLock false
+        }
         store.saveSession(token, expiration)
         if (!expiration.isAfter(clock.instant())) { clearLocked(); return@withLock false }
         activateLocked(token, expiration, principal)
         true
     }
 
-    /** Compatibilidad de lectura del inicio paciente: el perfil ya se verificó antes de montar la pantalla. */
+    /** Lectura del inicio: el perfil ya se verificó antes de montar la pantalla. */
     fun patientPrincipal(): VerifiedPrincipal.Patient? =
         (_state.value as? SessionState.Authenticated)?.principal as? VerifiedPrincipal.Patient
+
+    fun dismissEntryNotice() { _entryNotice.value = null }
 
     suspend fun logout(expectedGeneration: Long? = null) = mutex.withLock {
         if (expectedGeneration == null || isCurrent(expectedGeneration)) clearLocked()
     }
 
-    internal suspend fun capture(scope: AccessMode, expectedGeneration: Long): AuthHandle = mutex.withLock {
+    internal suspend fun capture(expectedGeneration: Long): AuthHandle = mutex.withLock {
         requireCurrent(expectedGeneration)
         val authenticated = _state.value as? SessionState.Authenticated ?: throw SessionInvalidated()
-        if (authenticated.principal.mode != scope) throw SessionInvalidated()
         val token = currentToken()
         if (token == null) { clearLocked(); throw SessionInvalidated() }
-        AuthHandle(authenticated.generation, "Bearer $token", authenticated.principal)
+        AuthHandle(authenticated.generation, "Bearer $token")
     }
 
     internal suspend fun finish(handle: AuthHandle, unauthorized: Boolean) = mutex.withLock {
@@ -177,11 +165,8 @@ class SessionManager(
         if (unauthorized) clearLocked()
     }
 
-    private fun entryState(): SessionState = when (selectedAccess) {
-        null -> SessionState.Welcome
-        AccessMode.STAFF -> SessionState.StaffEntry
-        AccessMode.PATIENT -> tenant?.let { SessionState.LoggedOut(it) } ?: SessionState.NoTenant
-    }
+    /** Sin sesión, la entrada es directamente la del paciente: selección de IPS o inicio de sesión. */
+    private fun entryState(): SessionState = tenant?.let { SessionState.LoggedOut(it) } ?: SessionState.NoTenant
     private fun invalidateLocked() {
         generation++
         loginAttempt = null
@@ -197,7 +182,6 @@ class SessionManager(
         _state.value = entryState()
     }
     private fun activateLocked(token: String, expiration: Instant, principal: VerifiedPrincipal) {
-        selectedAccess = principal.mode
         loginAttempt = null
         accessToken = token
         expiresAt = expiration
@@ -216,4 +200,8 @@ class SessionManager(
         }
     }
     fun close() { expiryJob?.cancel() }
+
+    private companion object {
+        val NOT_PATIENT = UiMessage(R.string.error_not_patient)
+    }
 }

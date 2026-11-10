@@ -18,7 +18,7 @@
     <string name="error_login_invalid">Dokumentnummer oder Passwort falsch. Nach 5 fehlgeschlagenen Versuchen wird das Konto für 15 Minuten gesperrt.</string>
     <string name="error_signup_conflict">Bei dieser IPS existiert bereits ein Konto mit diesem Dokument. Melden Sie sich an.</string>
     <string name="error_signup_unprocessable">Ihr Konto konnte nicht erstellt werden. Prüfen Sie Ihr Geburtsdatum und bestätigen Sie die Einwilligung erneut, falls sie sich geändert hat.</string>
-    <string name="error_not_patient">Dies ist ein Personalkonto. Gehen Sie zurück und wählen Sie Personalzugang.</string>
+    <string name="error_not_patient">Dieses Konto ist kein Patientenkonto. Verwenden Sie die Webanwendung für das Personal.</string>
     <string name="error_required">Pflichtfeld</string>
     <string name="error_max_length" tools:ignore="PluralsCandidate">Höchstens %1$d Zeichen</string>
     <string name="error_password_length">Das Passwort muss zwischen 10 und 128 Zeichen enthalten</string>
@@ -95,36 +95,7 @@
     <string name="status_closed">Behandlung abgeschlossen</string>
     <string name="status_cancelled">Behandlung storniert</string>
     <string name="status_unknown">Status nicht verfügbar. Versuchen Sie später erneut zu aktualisieren.</string>
-    <string name="access_choose">Wählen Sie Ihre Zugangsart</string>
-    <string name="access_patient">Patient</string>
-    <string name="access_staff">Personal</string>
-    <string name="access_patient_intro">Ihr Konto, Ihre Daten und Ihre Voranmeldung zur Behandlung.</string>
-    <string name="access_staff_intro">Zugang für das IPS-Team mit institutioneller E-Mail-Adresse.</string>
-    <string name="access_patient_action">Als Patient fortfahren</string>
-    <string name="access_staff_action">Als Personal anmelden</string>
-    <string name="change_access">Zugangsart ändern</string>
-    <string name="change_access_dialog_title">Zugangsart ändern?</string>
-    <string name="change_access_dialog_body">Die aktuelle Sitzung wird beendet und ihre privaten Formulare werden verworfen.</string>
     <string name="access_denied">Sie haben keinen Zugriff auf diesen Bildschirm.</string>
     <string name="access_go_home">Zur erlaubten Startseite</string>
     <string name="session_verification_title">Ihre Sitzung konnte nicht überprüft werden</string>
-    <string name="staff_login_title">Personalzugang</string>
-    <string name="staff_login_intro">Melden Sie sich mit der E-Mail-Adresse und dem Passwort Ihres IPS-Kontos an.</string>
-    <string name="staff_email">E-Mail-Adresse</string>
-    <string name="staff_error_email">Geben Sie eine gültige E-Mail-Adresse ein.</string>
-    <string name="staff_error_credentials">E-Mail oder Passwort falsch.</string>
-    <string name="staff_error_access">Dieses Konto hat keinen Personalzugang. Überprüfen Sie die gewählte Zugangsart.</string>
-    <string name="staff_error_field">Überprüfen Sie dieses Feld.</string>
-    <string name="staff_role_reception">Empfang</string>
-    <string name="staff_role_nurse">Pflege</string>
-    <string name="staff_role_physician">Ärztlicher Dienst</string>
-    <string name="staff_role_admin">Verwaltung</string>
-    <string name="staff_destination_reception">Empfang</string>
-    <string name="staff_destination_triage">Triage</string>
-    <string name="staff_destination_medicine">Ärztlicher Dienst</string>
-    <string name="staff_destination_administration">Verwaltung</string>
-    <string name="staff_destination_queue">Behandlungswarteschlange</string>
-    <string name="staff_destination_encounters">Behandlungen</string>
-    <string name="staff_destination_reports">Berichte</string>
-    <string name="staff_destination_pending">Diese Funktion ist für den nächsten Schritt vorgesehen. Hier sind noch keine Vorgänge verfügbar.</string>
 </resources>

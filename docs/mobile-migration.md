@@ -1,4 +1,6 @@
-# Android: pacientes y personal
+# Android: pacientes y personal (registro histórico, sustituido)
+
+> **Sustituido el 2026-11-09 por ADR 0008 (Ratificación); ver DT-01-mobile.** La app móvil es solo del paciente: F-01-staff-mobile, F-02-staff-mobile, F-03-mobile y UI-02-mobile quedaron retirados y DT-01-mobile borró su código. Este documento se conserva solo como registro del plan anterior; nada de lo que describe sobre el personal está vigente.
 
 Plan completo aprobado expresamente por el usuario mediante «PLEASE IMPLEMENT THIS PLAN» el 2026-10-29 (America/Bogota). La aprobación comprende un APK Kotlin/Compose con accesos separados, una sesión activa y los siete bloques descritos abajo. Los requisitos y diseños de cada slice se materializan antes del código y registran esa aprobación; una decisión nueva fuera del alcance aprobado se consulta por chat.
 

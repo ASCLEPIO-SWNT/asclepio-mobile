@@ -4,8 +4,6 @@ import androidx.lifecycle.viewModelScope
 import co.asclepio.mobile.MainDispatcherRule
 import co.asclepio.mobile.PatientTestEnv
 import co.asclepio.mobile.R
-import co.asclepio.mobile.core.auth.AccessMode
-import co.asclepio.mobile.core.auth.MeDto
 import co.asclepio.mobile.core.auth.SessionInvalidated
 import co.asclepio.mobile.core.auth.SessionState
 import co.asclepio.mobile.core.auth.StoredSession
@@ -30,7 +28,6 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.time.Instant
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
@@ -175,11 +172,9 @@ class MyRequestsViewModelTest {
         assertEquals(MyRequestsUiState.Empty, vm.state.first { it !is MyRequestsUiState.Loading })
     }
 
-    @Test fun `R20 lista es paciente only y no llama HTTP ni almacena filas para personal`() = runTest {
-        env.sessionManager.selectAccess(AccessMode.STAFF)
-        val attempt = env.sessionManager.beginLogin(AccessMode.STAFF)
-        env.sessionManager.completeLogin(attempt, "staff", Instant.parse("2026-10-28T01:00:00Z"), MeDto("STAFF", "staff", "tenant", role = "NURSE", email = "nurse@ips.co", fullName = "Nombre"))
-        try { env.preRegistrationRepository.list(); fail("El personal no usa lista paciente") } catch (_: SessionInvalidated) { }
+    @Test fun `R20 lista es paciente only y sin sesion de paciente no llama HTTP ni almacena filas`() = runTest {
+        env.sessionManager.saveTenant(env.tenant)
+        try { env.preRegistrationRepository.list(); fail("Sin sesion de paciente no hay lista") } catch (_: SessionInvalidated) { }
         assertEquals(0, env.server.requestCount)
     }
 

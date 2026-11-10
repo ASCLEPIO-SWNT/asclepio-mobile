@@ -1,6 +1,6 @@
 {
   "project": "asclepio-mobile",
-  "description": "App Android Kotlin + Compose de Asclepio para pacientes y personal, con accesos separados y una sesión activa.",
+  "description": "App Android Kotlin + Compose de Asclepio solo para pacientes (ADR 0008 de la API, ratificado el 2026-11-09); el personal usa la web.",
   "rules": {
     "one_feature_per_session": true,
     "require_tests_to_close": true,
@@ -10,7 +10,8 @@
       "spec_ready",
       "in_progress",
       "done",
-      "blocked"
+      "blocked",
+      "retired"
     ],
     "sdd_required_when": "feature has \"sdd\": true"
   },
@@ -82,7 +83,8 @@
         "Plan aprobado por chat; docs/mobile-migration.md y specs/F-01-staff-mobile/"
       ],
       "sdd": true,
-      "status": "done"
+      "status": "retired",
+      "retired_by": "DT-01-mobile"
     },
     {
       "id": "UI-01-mobile",
@@ -115,7 +117,8 @@
         "Plan aprobado por chat; docs/mobile-migration.md y specs/F-02-staff-mobile/"
       ],
       "sdd": true,
-      "status": "done"
+      "status": "retired",
+      "retired_by": "DT-01-mobile"
     },
     {
       "id": "F-03-mobile",
@@ -132,7 +135,8 @@
         "Plan aprobado por chat; docs/mobile-migration.md y specs/F-03-mobile/"
       ],
       "sdd": true,
-      "status": "done"
+      "status": "retired",
+      "retired_by": "DT-01-mobile"
     },
     {
       "id": "UI-02-mobile",
@@ -147,6 +151,24 @@
       "consumes_contract": "0.4.0",
       "acceptance": [
         "Plan aprobado por chat; docs/mobile-migration.md y specs/UI-02-mobile/"
+      ],
+      "sdd": true,
+      "status": "retired",
+      "retired_by": "DT-01-mobile"
+    },
+    {
+      "id": "DT-01-mobile",
+      "global_id": "DT-01",
+      "name": "staff_removal",
+      "title": "Retirar del APK las funciones de personal",
+      "description": "La app móvil es solo del paciente (ADR 0008 de la API, ratificado el 2026-11-09). Retira acceso, recepción, captura clínica y dashboards de personal; conserva cuenta, pre-registro, mis solicitudes, identidad, cinco idiomas y guía TTS del paciente.",
+      "depends_on": [
+        "F-02-mobile",
+        "UI-01-mobile"
+      ],
+      "consumes_contract": "0.4.0",
+      "acceptance": [
+        "../asclepio-api/docs/adr/0008-app-movil-del-paciente.md (Ratificación); F-01.AC7, AC8; F-02.AC8, AC10 siguen cumplidos"
       ],
       "sdd": true,
       "status": "in_progress"

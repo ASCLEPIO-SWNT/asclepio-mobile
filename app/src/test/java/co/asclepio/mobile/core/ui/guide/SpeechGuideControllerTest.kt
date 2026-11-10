@@ -13,9 +13,9 @@ class SpeechGuideControllerTest {
         resolveString = { resource, locale -> resolved.add(resource to locale); "$catalogRevision:$locale:$resource" },
     )
     private fun SpeechGuideController.configure(
-        destination: GuideDestination = GuideDestination.Welcome,
+        destination: GuideDestination = GuideDestination.PatientLogin,
         locale: String = "es-CO",
-        session: String = "entry-Welcome",
+        session: String = "entry-Login",
     ) = update(destination, locale, session)
     private fun SpeechGuideController.play(): FakeEngine {
         start()
@@ -32,7 +32,7 @@ class SpeechGuideControllerTest {
         assertEquals(SpeechGuideState.Speaking, guide.state.value)
         assertTrue(engines.single().speeches.isEmpty())
         engines.single().ready(true)
-        assertEquals("v1:es-CO:${R.string.guide_welcome_1}", engines.single().speeches.single().text)
+        assertEquals("v1:es-CO:${R.string.guide_patient_login_1}", engines.single().speeches.single().text)
     }
 
     @Test fun `R11 cada instruccion estatica se narra en orden una vez y termina inactiva`() {
