@@ -34,7 +34,7 @@ class SessionTestEnv(dir: File, scope: CoroutineScope? = null) {
     /** IPS confirmada y sesión de paciente verificada (cada llamada abre una generación nueva). */
     suspend fun activate(token: String = TOKEN) {
         manager.saveTenant(tenant)
-        val attempt = manager.beginLogin(AccessMode.PATIENT)
+        val attempt = manager.beginLogin()
         check(manager.completeLogin(attempt, token, EXPIRES, patientMeDto()))
     }
 

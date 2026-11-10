@@ -96,7 +96,7 @@ class PatientSessionLifecycleTest {
         assertEquals(StoredSession.None, env.store.session())
         assertFalse(env.manager.state.value is SessionState.Authenticated)
         assertEquals(0, env.server.requestCount)
-        val attempt = env.manager.beginLogin(AccessMode.PATIENT)
+        val attempt = env.manager.beginLogin()
         val expiry = env.clock.instant().plusSeconds(10)
         assertTrue(env.manager.completeLogin(attempt, "token", expiry, SessionTestEnv.patientMeDto()))
         runCurrent()
@@ -125,7 +125,7 @@ class PatientSessionLifecycleTest {
     @Test fun `R11 cerrar sesion invalida un inicio de sesion pendiente y conserva solo la IPS publica`() = runTest {
         env = SessionTestEnv(tmp.root, backgroundScope)
         env.manager.saveTenant(env.tenant)
-        val attempt = env.manager.beginLogin(AccessMode.PATIENT)
+        val attempt = env.manager.beginLogin()
         env.manager.logout()
         assertFalse(env.manager.isCurrent(attempt.generation))
         try {
@@ -193,7 +193,7 @@ class PatientSessionLifecycleTest {
         val cipher = GateCipher()
         val manager = SessionManager(SessionStore(env.dataStore, cipher), env.meApi, env.clock, backgroundScope).also { subject = it }
         manager.saveTenant(env.tenant)
-        val attempt = manager.beginLogin(AccessMode.PATIENT)
+        val attempt = manager.beginLogin()
         val installingB = async(Dispatchers.IO) { manager.completeLogin(attempt, "B", SessionTestEnv.EXPIRES, SessionTestEnv.patientMeDto()) }
         assertTrue(withContext(Dispatchers.IO) { cipher.entered.await(3, TimeUnit.SECONDS) })
         var operations = 0
@@ -215,7 +215,7 @@ class PatientSessionLifecycleTest {
         val store = SessionStore(env.dataStore, cipher)
         val manager = SessionManager(store, env.meApi, env.clock, backgroundScope).also { subject = it }
         manager.saveTenant(env.tenant)
-        val attempt = manager.beginLogin(AccessMode.PATIENT)
+        val attempt = manager.beginLogin()
         val expires = env.clock.instant().plusSeconds(10)
         val login = async(Dispatchers.IO) { manager.completeLogin(attempt, "B", expires, SessionTestEnv.patientMeDto()) }
         assertTrue(withContext(Dispatchers.IO) { cipher.entered.await(3, TimeUnit.SECONDS) })
@@ -236,7 +236,7 @@ class PatientSessionLifecycleTest {
         val changed = async { manager.logout() }
         pausing.entered.await()
         val previous = async {
-            try { manager.beginLogin(AccessMode.PATIENT, expectedGeneration = origin); false }
+            try { manager.beginLogin(expectedGeneration = origin); false }
             catch (_: SessionInvalidated) { true }
         }
         runCurrent()
@@ -264,8 +264,7 @@ class PatientSessionLifecycleTest {
         env.clock.now = expires
         release.countDown(); restore.await()
         assertEquals(StoredSession.None, env.store.session())
-        assertFalse(env.manager.state.value is SessionState.Authenticated)
-        assertFalse(env.manager.state.value is SessionState.VerificationError)
+        assertEquals(SessionState.LoggedOut(env.tenant), env.manager.state.value)
     }
 
     @Test fun `R11 respuesta protegida que vence durante HTTP se descarta aunque el temporizador no haya corrido`() = runTest {
@@ -342,5 +341,35 @@ class PatientSessionLifecycleTest {
         vm.viewModelScope.coroutineContext[Job]!!.children.toList().joinAll()
         assertEquals(SessionState.LoggedOut(account.tenant), account.sessionManager.state.value)
         assertEquals(account.tenant, account.store.tenant())
+    }
+
+    @Test fun `R8 el modelo de sesion solo tiene principal paciente sin modo de acceso ni rol de personal`() {
+        val principals = VerifiedPrincipal::class.java.declaredClasses.filter { VerifiedPrincipal::class.java.isAssignableFrom(it) }
+        assertEquals(listOf("Patient"), principals.map { it.simpleName })
+        val states = SessionState::class.java.declaredClasses.filter { SessionState::class.java.isAssignableFrom(it) }.map { it.simpleName }.toSet()
+        assertEquals(setOf("Loading", "NoTenant", "LoggedOut", "Verifying", "VerificationError", "Authenticated"), states)
+        for (retired in listOf("AccessMode", "StaffRole", "StaffDestination", "StaffDestinationsKt")) {
+            try {
+                Class.forName("co.asclepio.mobile.core.auth.$retired")
+                fail("$retired no debe existir")
+            } catch (_: ClassNotFoundException) { }
+        }
+        assertTrue(LoginAttempt::class.java.declaredFields.none { it.name == "mode" })
+        assertTrue(VerifiedPrincipal::class.java.methods.none { it.name == "getMode" })
+    }
+
+    @Test fun `R8 me de personal con cualquiera de los cuatro roles u otro kind no se convierte en principal`() {
+        val tenant = RememberedTenant(SessionTestEnv.TENANT, "IPS Uno", "site", "Sede Norte")
+        for (role in listOf("RECEPTION", "NURSE", "PHYSICIAN", "ADMIN")) {
+            val staff = MeDto("STAFF", "staff-id", SessionTestEnv.TENANT, role = role, email = "staff@ips.co", fullName = "Nombre")
+            assertNull(staff.toPrincipal(tenant))
+            assertNull(staff.toPrincipal(null))
+        }
+        assertNull(MeDto("ADMIN", "id", SessionTestEnv.TENANT, "patient", "v1", false).toPrincipal(tenant))
+        assertNull(MeDto("PATIENT", "id", SessionTestEnv.TENANT, null, "v1", false).toPrincipal(tenant))
+        assertNull(MeDto("PATIENT", "id", "other-tenant", "patient", "v1", false).toPrincipal(tenant))
+        val patient = SessionTestEnv.patientMeDto().toPrincipal(tenant)
+        assertTrue(patient is VerifiedPrincipal.Patient)
+        assertEquals(tenant, patient?.tenant)
     }
 }

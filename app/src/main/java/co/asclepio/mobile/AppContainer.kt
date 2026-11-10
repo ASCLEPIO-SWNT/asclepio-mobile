@@ -19,8 +19,6 @@ import co.asclepio.mobile.feature.encounters.data.PreRegistrationsApi
 import co.asclepio.mobile.feature.patients.data.PatientProfileApi
 import co.asclepio.mobile.feature.patients.data.PatientProfileRepository
 import co.asclepio.mobile.feature.status.data.HealthApi
-import co.asclepio.mobile.feature.staffaccount.data.StaffAuthApi
-import co.asclepio.mobile.feature.staffaccount.data.StaffAccountRepository
 import okhttp3.OkHttpClient
 import java.time.Clock
 import co.asclepio.mobile.core.ui.UiPreferencesRepository
@@ -49,7 +47,6 @@ class AppContainer(context: Context) {
         .build()
     private val retrofit = createRetrofit(BuildConfig.API_BASE_URL, okHttp)
 
-    private val staffAuthApi: StaffAuthApi = retrofit.create(StaffAuthApi::class.java)
     val healthApi: HealthApi = retrofit.create(HealthApi::class.java)
     private val publicApi: PublicApi = retrofit.create(PublicApi::class.java)
     private val tenantsApi: TenantsApi = retrofit.create(TenantsApi::class.java)
@@ -60,7 +57,6 @@ class AppContainer(context: Context) {
 
     val sessionManager = SessionManager(sessionStore, meApi, clock)
     val tenantRepository = TenantRepository(tenantsApi)
-    val staffAccountRepository = StaffAccountRepository(staffAuthApi, meApi, sessionManager)
     val accountRepository = AccountRepository(publicApi, authApi, meApi, sessionManager)
     val profileRepository = PatientProfileRepository(profileApi, sessionManager)
     val preRegistrationRepository = PreRegistrationRepository(preRegistrationsApi, tenantsApi, sessionManager)

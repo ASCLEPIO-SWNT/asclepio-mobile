@@ -9,12 +9,8 @@
     <string name="guide_speaking">Guía en reproducción</string>
     <string name="guide_paused">Guía en pausa</string>
     <string name="guide_unavailable">La guía por voz no está disponible con una voz local en este idioma. Puedes seguir usando la aplicación.</string>
-    <string name="guide_welcome_1">Elige Paciente para gestionar tus datos y solicitudes, o Personal si trabajas en la institución.</string>
-    <string name="guide_welcome_2">Puedes cambiar idioma y preferencias de lectura antes de ingresar.</string>
     <string name="guide_patient_login_1">Elige tu tipo de documento y escribe su número y tu contraseña para ingresar como paciente.</string>
-    <string name="guide_patient_login_2">Si necesitas usar otro acceso, vuelve a la selección de Paciente o Personal.</string>
-    <string name="guide_staff_login_1">Escribe tus credenciales de personal. Tu rol se comprobará al iniciar sesión.</string>
-    <string name="guide_staff_login_2">Si quieres ingresar como paciente, usa Cambiar tipo de acceso.</string>
+    <string name="guide_patient_login_2">Si necesitas otra institución o sede, usa Cambiar IPS.</string>
     <string name="guide_tenant_1">Selecciona la institución y la sede para continuar como paciente.</string>
     <string name="guide_tenant_2">Comprueba tu selección y pulsa Continuar.</string>
     <string name="guide_signup_1">Completa tus datos y revisa el consentimiento mostrado en la pantalla antes de aceptar.</string>
@@ -27,8 +23,6 @@
     <string name="guide_preregistration_2">Revisa los campos antes de enviar el preregistro. Después podrás consultar su estado desde el inicio o Mis solicitudes.</string>
     <string name="guide_requests_1">Esta pantalla permite consultar el estado actual de tus solicitudes y sus horas de envío.</string>
     <string name="guide_requests_2">Pulsa Actualizar para consultar de nuevo. La guía no leerá el contenido de la lista.</string>
-    <string name="guide_staff_pending_1">Esta función de personal está pendiente de implementación.</string>
-    <string name="guide_staff_pending_2">Usa la navegación disponible para cambiar de sección o cerrar tu sesión.</string>
     <string name="guide_status_1">Esta pantalla de diagnóstico permite consultar el estado de conexión con el servicio.</string>
     <string name="guide_status_2">Puedes volver a la pantalla de acceso cuando termines la revisión.</string>
     <string name="guide_verification_1">Espera mientras se verifica la sesión antes de abrir tu espacio de trabajo.</string>

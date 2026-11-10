@@ -36,7 +36,6 @@ import androidx.navigation3.ui.NavDisplay
 import co.asclepio.mobile.core.auth.*
 import co.asclepio.mobile.core.ui.AccessDeniedScreen
 import co.asclepio.mobile.core.ui.SessionVerificationScreen
-import co.asclepio.mobile.core.ui.WelcomeScreen
 import co.asclepio.mobile.core.ui.EntryBackdrop
 import co.asclepio.mobile.feature.account.ui.HomeScreen
 import co.asclepio.mobile.feature.account.ui.HomeViewModel
@@ -52,22 +51,15 @@ import co.asclepio.mobile.feature.encounters.ui.PreRegistrationStatusViewModel
 import co.asclepio.mobile.feature.encounters.ui.PreRegistrationViewModel
 import co.asclepio.mobile.feature.patients.ui.ProfileScreen
 import co.asclepio.mobile.feature.patients.ui.ProfileViewModel
-import co.asclepio.mobile.feature.staffaccount.ui.*
 import co.asclepio.mobile.core.ui.*
 import co.asclepio.mobile.feature.status.ui.StatusScreen
 import co.asclepio.mobile.feature.status.ui.StatusViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
-/** Rutas de Navigation 3 (D3). */
+/** Rutas de Navigation 3 (D3): solo las del paciente. */
 @Serializable
 sealed interface Route : NavKey {
-    @Serializable data object Welcome : Route
-
-    @Serializable data object StaffLogin : Route
-
-    @Serializable data class Staff(val destination: StaffDestination) : Route
-
     @Serializable data object TenantPicker : Route
 
     /** Public entry identity: confirming even the same IPS discards the previous login VM/draft. */
@@ -89,41 +81,24 @@ sealed interface Route : NavKey {
     @Serializable data object Status : Route
 }
 
-/** Raíz de la pila según la sesión (R1, R3, R27, R28, R30, R31). `null` mientras se carga. */
+/** Raíz de la pila según la sesión (R1, R3, R27, R28, R30, R31). `null` mientras se carga o verifica. */
 fun rootRoute(state: SessionState): Route? = when (state) {
-    SessionState.Loading -> null
+    SessionState.Loading, SessionState.Verifying, is SessionState.VerificationError -> null
     SessionState.NoTenant -> Route.TenantPicker
     is SessionState.LoggedOut -> Route.Login()
-    is SessionState.Authenticated -> when (val principal = state.principal) {
-        is VerifiedPrincipal.Patient -> Route.Home
-        is VerifiedPrincipal.Staff -> Route.Staff(principal.role.home)
-    }
-    SessionState.Verifying, is SessionState.VerificationError -> null
-    SessionState.Welcome -> Route.Welcome
-    SessionState.StaffEntry -> Route.StaffLogin
+    is SessionState.Authenticated -> Route.Home
 }
 
 /** Se evalúa antes de crear el Composable/VM de cualquier destino, también con una pila restaurada. */
 fun canAccessRoute(state: SessionState, route: Route): Boolean = when (state) {
-    is SessionState.Authenticated -> when (val principal = state.principal) {
-        is VerifiedPrincipal.Patient -> route in setOf(Route.Home, Route.Profile, Route.PreRegistration, Route.MyRequests)
-        is VerifiedPrincipal.Staff -> when (route) {
-            is Route.Staff -> route.destination in principal.role.destinations
-            else -> false
-        }
-    }
-    SessionState.Welcome -> route == Route.Welcome
+    is SessionState.Authenticated -> route in setOf(Route.Home, Route.Profile, Route.PreRegistration, Route.MyRequests)
     SessionState.NoTenant -> route == Route.TenantPicker
     is SessionState.LoggedOut -> route is Route.Login || route in setOf(Route.TenantPicker, Route.SignUp) || (BuildConfig.DEBUG && route == Route.Status)
-    SessionState.StaffEntry -> route == Route.StaffLogin
     else -> false
 }
 
 /** Closed resource catalog: no identity, patient data or form values can become guide text. */
-fun routeGuideDestination(route: Route, role: StaffRole? = null): GuideDestination = when (route) {
-    Route.Welcome -> GuideDestination.Welcome
-    Route.StaffLogin -> GuideDestination.StaffLogin
-    is Route.Staff -> GuideDestination.StaffPending
+fun routeGuideDestination(route: Route): GuideDestination = when (route) {
     Route.TenantPicker -> GuideDestination.TenantPicker
     is Route.Login -> GuideDestination.PatientLogin
     Route.SignUp -> GuideDestination.SignUp
@@ -189,20 +164,16 @@ fun AppNavigation(container: AppContainer, widthSizeClass: WindowWidthSizeClass,
 
 @Composable
 private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSizeClass, session: SessionState, root: Route, guide: SpeechGuideController, preferencesOpen: Boolean) {
-    val scope = rememberCoroutineScope()
     val backStack = rememberNavBackStack(root)
     val currentRoute = backStack.lastOrNull() as? Route ?: root
     val locale = LocalConfiguration.current.locales[0].toLanguageTag()
     LaunchedEffect(currentRoute, locale, preferencesOpen, navigationIdentity(session)) {
-        // Route names contain no parameters/private data. Distinct pending STAFF routes must also reset.
-        guide.update(if (preferencesOpen) GuideDestination.Preferences else routeGuideDestination(currentRoute, ((session as? SessionState.Authenticated)?.principal as? VerifiedPrincipal.Staff)?.role), locale, navigationIdentity(session) + "|" + currentRoute.toString())
+        // Route names contain no private data; the session identity resets the guide between generations.
+        guide.update(if (preferencesOpen) GuideDestination.Preferences else routeGuideDestination(currentRoute), locale, navigationIdentity(session) + "|" + currentRoute.toString())
     }
     Column(Modifier.fillMaxSize()) {
         if (backStack.size > 1) TextButton(onClick = { backStack.removeAt(backStack.lastIndex) }) {
             Text(stringResource(R.string.navigate_back))
-        }
-        if (session is SessionState.LoggedOut || session == SessionState.NoTenant) {
-            TextButton(onClick = { scope.launch { container.sessionManager.showWelcome() } }) { Text(stringResource(R.string.change_access)) }
         }
         Box(Modifier.weight(1f).fillMaxWidth()) {
             NavDisplay(
@@ -213,35 +184,6 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                     rememberViewModelStoreNavEntryDecorator(),
                 ),
                 entryProvider = entryProvider {
-                    entry<Route.Welcome> {
-                        GuardedRoute(session, Route.Welcome, { backStack.resetTo(root) }) {
-                            WelcomeScreen(widthSizeClass) { mode -> scope.launch { container.sessionManager.selectAccess(mode) } }
-                        }
-                    }
-                    entry<Route.StaffLogin> {
-                        GuardedRoute(session, Route.StaffLogin, { backStack.resetTo(root) }) {
-                            val vm = viewModel { StaffLoginViewModel(container.staffAccountRepository) }
-                            val state by vm.state.collectAsStateWithLifecycle()
-                            StaffLoginScreen(state, widthSizeClass, vm::updateForm, vm::submit, onChangeAccess = { scope.launch { container.sessionManager.showWelcome() } })
-                        }
-                    }
-                    entry<Route.Staff> { route ->
-                        GuardedRoute(session, route, { backStack.resetTo(root) }) {
-                            val principal = (session as SessionState.Authenticated).principal as VerifiedPrincipal.Staff
-                            val vm = viewModel { StaffHomeViewModel(container.sessionManager) }
-                            val confirmation by vm.confirmation.collectAsStateWithLifecycle()
-                            StaffWorkspaceScreen(
-                                principal, route.destination, widthSizeClass, confirmation,
-                                onSelect = { destination ->
-                                    val next = Route.Staff(destination)
-                                    if (canAccessRoute(session, next)) {
-                                        if (next in backStack) backStack.popTo(next) else backStack.add(next)
-                                    }
-                                },
-                                onLogout = vm::requestLogout, onChangeAccess = vm::requestChangeAccess, onCancel = vm::cancel, onConfirm = vm::confirm,
-                            )
-                        }
-                    }
                     entry<Route.TenantPicker> {
                         GuardedRoute(session, Route.TenantPicker, { backStack.resetTo(root) }) {
                             val vm = viewModel { TenantPickerViewModel(container.tenantRepository, container.sessionManager) }
@@ -310,7 +252,6 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                                         onNewPreRegistration = { backStack.add(Route.PreRegistration) },
                                     )
                                 },
-                                onRequestChangeAccess = vm::requestChangeAccess,
                                 onRequestLogout = vm::requestLogout,
                                 onCancelLogout = vm::cancelLogout,
                                 onConfirmLogout = vm::confirmLogout,
