@@ -12,8 +12,8 @@ Retirar del APK todo lo de F-01-staff-mobile, F-02-staff-mobile, F-03-mobile y U
 
 ## Plan
 1. spec_author → specs/DT-01-mobile/ → spec_ready → ⏸ aprobación humana.
-2. Estado de F-01-staff-mobile, F-02-staff-mobile, F-03-mobile y UI-02-mobile: pendiente de decisión del humano (el harness no tiene estado "retirado").
+2. Hecho: los cuatro slices de personal quedan `retired` (retired_by DT-01-mobile); progreso de UI-02-mobile archivado en history.md.
 3. implementer → reviewer → init.sh completo en verde → done.
 
 ## Estado
-spec_ready (2026-11-09). Esperando: PA-1, PA-2, la decisión sobre el estado "retirado" y la aprobación del humano.
+in_progress. Aprobación: "aprobado" del humano por chat, 2026-11-09, con PA-1 (traza ADR como excepción), PA-2 (tabla R12 en impl_) y estado `retired` para los cuatro slices de personal.
