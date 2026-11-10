@@ -17,7 +17,7 @@ App Android (Kotlin + Jetpack Compose) de Asclepio **solo del paciente** (ADR 00
 | `specs/<id>/` | requirements, design y tasks del slice | Al especificar, implementar o revisar |
 | `docs/specs.md` | Proceso SDD, EARS y la puerta de aprobación | Antes de cualquier spec |
 | `docs/architecture.md` | Paquetes, MVVM y dependencias permitidas | Antes de diseñar o implementar |
-| `docs/conventions.md` | Nombres, estados de UI, fechas, commits | Antes de implementar |
+| `docs/conventions.md` | Nombres, estados de UI, fechas, commits, **ramas y PRs** | Antes de implementar |
 | `docs/verification.md` | Cómo probar y la trazabilidad | Antes de implementar o revisar |
 | `docs/adr/` | ADR locales: minSdk (0001) y alcance (0002, sustituido por ADR 0008 de la API; ver DT-01-mobile) | Antes de cambiar plataforma o alcance |
 | `CHECKPOINTS.md` | C1–C8 | Al revisar o cerrar |
@@ -29,6 +29,7 @@ App Android (Kotlin + Jetpack Compose) de Asclepio **solo del paciente** (ADR 00
 
 ## 3. Reglas duras
 - **Una feature por sesión.**
+- **Ramas:** `feature/<id>`, `fix/<id>` o `chore/<id>` desde `develop`, siempre por PR; `main` solo por PR `develop → main` (ver `docs/conventions.md`, "Ramas y PRs").
 - **No se marca `done` sin pruebas en verde** (`./init.sh` completo: `./gradlew lint testDebugUnitTest`).
 - **No se salta la spec** cuando `sdd: true`.
 - **No se salta la aprobación humana**, que se da **por chat**.

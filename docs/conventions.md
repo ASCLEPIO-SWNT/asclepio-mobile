@@ -25,3 +25,11 @@
 
 ## Commits
 - Conventional Commits (`feat(voice): …`, `fix(patients): …`, `chore: …`), con `Refs: F-0X-mobile` en el cuerpo.
+
+## Ramas y PRs
+Decisión del humano (2026-11-10), igual en los tres repos:
+- `develop` es la rama de integración. Cada feature va en `feature/<id>` (p. ej. `feature/F-08-mobile`), creada desde `develop` actualizado, y entra por PR a `develop`.
+- Correcciones y cierres de harness: `fix/<id>` o `chore/<id>`, también desde `develop` y por PR.
+- `main` solo se actualiza por PR `develop → main`.
+- Nunca push directo a `develop` ni a `main`; nunca force-push ni reescritura de historial.
+- Los PRs los fusiona el humano.
