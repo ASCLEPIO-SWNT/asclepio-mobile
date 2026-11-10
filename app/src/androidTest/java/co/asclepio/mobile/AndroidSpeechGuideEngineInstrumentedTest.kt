@@ -33,15 +33,15 @@ class AndroidSpeechGuideEngineInstrumentedTest {
         }
         val spanishContext = context.createConfigurationContext(configuration)
         val allowedTexts = setOf(
-            spanishContext.getString(R.string.guide_welcome_1),
-            spanishContext.getString(R.string.guide_welcome_2),
+            spanishContext.getString(R.string.guide_patient_login_1),
+            spanishContext.getString(R.string.guide_patient_login_2),
         )
         lateinit var probe: RealEngineProbe
         lateinit var guide: SpeechGuideController
         instrumentation.runOnMainSync {
             probe = RealEngineProbe(AndroidSpeechGuideEngine(context))
             guide = SpeechGuideController({ probe }) { id, _ -> spanishContext.getString(id) }
-            guide.update(GuideDestination.Welcome, "es", "instrumented-entry")
+            guide.update(GuideDestination.PatientLogin, "es", "instrumented-entry")
             assertEquals(SpeechGuideState.Idle, guide.state.value)
             assertEquals(0, probe.initializations.get())
             assertEquals(0, probe.spokenTexts.size)

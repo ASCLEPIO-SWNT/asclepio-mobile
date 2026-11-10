@@ -34,22 +34,20 @@ class SessionManagerTest {
     }
     @After fun tearDown() { manager.close(); ds.close(); server.shutdown() }
 
-    @Test fun `R1 sin sesion el estado es bienvenida y paciente conserva selector de IPS`() = runTest {
+    @Test fun `R1 sin sesion ni IPS recordada el estado es la seleccion de IPS`() = runTest {
         manager.refresh()
-        assertEquals(SessionState.Welcome, manager.state.value)
-        manager.selectAccess(AccessMode.PATIENT)
         assertEquals(SessionState.NoTenant, manager.state.value)
+        assertNull(manager.currentToken())
     }
     @Test fun `R3 con IPS recordada paciente entra en LoggedOut con esa IPS`() = runTest {
         store.saveTenant(tenant)
         manager.refresh()
-        manager.selectAccess(AccessMode.PATIENT)
         assertEquals(SessionState.LoggedOut(tenant), manager.state.value)
         assertNull(manager.currentToken())
     }
     private suspend fun loggedIn() {
         manager.saveTenant(tenant)
-        val attempt = manager.beginLogin(AccessMode.PATIENT)
+        val attempt = manager.beginLogin()
         check(manager.completeLogin(attempt, "tok", expiresAt, MeDto("PATIENT", "a", "t-1", "p", "v1", false)))
     }
     @Test fun `R27 sesion guardada vigente verifica me y una vencida al abrir se borra`() = runTest {
@@ -76,9 +74,6 @@ class SessionManagerTest {
         store.saveTenant(tenant)
         SessionStore(ds.dataStore, BrokenTokenCipher()).saveSession("tok", expiresAt)
         val broken = SessionManager(SessionStore(ds.dataStore, BrokenTokenCipher()), meApi, clock)
-        broken.selectAccess(AccessMode.PATIENT)
-        // selectAccess limpia cualquier sesión anterior; se simula el token ilegible tras elegir entrada.
-        SessionStore(ds.dataStore, BrokenTokenCipher()).saveSession("tok", expiresAt)
         broken.refresh()
         assertEquals(SessionState.LoggedOut(tenant), broken.state.value)
         assertEquals(StoredSession.None, store.session())

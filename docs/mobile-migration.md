@@ -1,4 +1,6 @@
-# Android: pacientes y personal
+# Android: pacientes y personal (registro histórico, sustituido)
+
+> **Sustituido el 2026-11-09 por ADR 0008 (Ratificación); ver DT-01-mobile.** La app móvil es solo del paciente: F-01-staff-mobile, F-02-staff-mobile, F-03-mobile y UI-02-mobile quedaron retirados y DT-01-mobile borró su código. Este documento se conserva solo como registro del plan anterior; nada de lo que describe sobre el personal está vigente.
 
 Plan completo aprobado expresamente por el usuario mediante «PLEASE IMPLEMENT THIS PLAN» el 2026-10-29 (America/Bogota). La aprobación comprende un APK Kotlin/Compose con accesos separados, una sesión activa y los siete bloques descritos abajo. Los requisitos y diseños de cada slice se materializan antes del código y registran esa aprobación; una decisión nueva fuera del alcance aprobado se consulta por chat.
 
@@ -29,6 +31,7 @@ Plan completo aprobado expresamente por el usuario mediante «PLEASE IMPLEMENT T
 - Un refresco no borra campos/posición/foco. En error no se presentan datos antiguos como actuales y se bloquean las acciones afectadas hasta revalidar; los borradores permanecen en RAM. Página de enfermería vacía con offset>0 se reconsulta desde0 antes de recalcular el resumen.
 - Borradores de paciente y clínicos en ViewModel, sin SavedStateHandle ni persistencia/logs/URL/voz. Rotación/idioma/tema conservan; cambio de atención/sesión y muerte de proceso descartan. Horas, actor y tenant legales vienen del servidor.
 - Una feature activa a la vez. Cada bloque es una sesión lógica con spec, implementación, revisión C1–C8, init verde, historial y cierre antes del siguiente. Commits convencionales frecuentes con Refs; ramas codex/<id-feature>; publicación verificada en main de ASCLEPIO-SWNT/asclepio-mobile sin reescritura de historial.
+  _Nota (2026-11-10): el esquema de ramas `codex/<id>` y la publicación directa en `main` ya no rigen; el flujo vigente está en `docs/conventions.md`, sección "Ramas y PRs"._
 
 ## Verificación y entrega
 

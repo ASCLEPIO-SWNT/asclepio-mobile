@@ -32,21 +32,20 @@ class UiConfigurationInstrumentedTest {
         val container = (compose.activity.application as AsclepioApp).container
         runBlocking {
             container.sessionManager.logout()
-            container.sessionManager.showWelcome()
             container.uiPreferencesRepository.update { UiPreferences() }
         }
         compose.activityRule.scenario.onActivity { AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags("es")) }
         compose.waitForIdle()
     }
 
-    @Test fun `R2 welcome keeps two authorized entries and a single brand`() {
+    @Test fun `R2 patient entry opens directly with a single brand and no staff access`() {
+        compose.waitUntil(10_000) { exists(R.string.login_title) || exists(R.string.tenant_picker_title) }
         compose.onAllNodesWithTag("app-brand").assertCountEquals(1)
         compose.onAllNodesWithText("Asclepio").assertCountEquals(1)
-        compose.onNodeWithText("Continuar como paciente").assertExists()
-        compose.onNodeWithText("Ingresar como personal").performClick()
-        compose.onNodeWithText("Acceso del personal").assertIsDisplayed()
-        compose.onAllNodesWithText("Asclepio").assertCountEquals(1)
-        compose.onNodeWithText("Correo electrónico").assertExists()
+        compose.onAllNodesWithText("Ingresar como personal").assertCountEquals(0)
+        compose.onAllNodesWithText("Acceso del personal").assertCountEquals(0)
+        compose.onAllNodesWithText("Cambiar tipo de acceso").assertCountEquals(0)
+        compose.onAllNodesWithText("Correo electrónico").assertCountEquals(0)
     }
 
     @Test fun `R3 native fonts load and have distinct metrics`() {
@@ -59,33 +58,6 @@ class UiConfigurationInstrumentedTest {
         val regularWidth = paint.measureText("Asclepio ñ ã œ ß ü")
         paint.typeface = dyslexic
         assertTrue(kotlin.math.abs(regularWidth - paint.measureText("Asclepio ñ ã œ ß ü")) > 1f)
-    }
-
-    @Test fun `R6 locale theme and recreation preserve staff draft without private saved state`() {
-        val email = "ui-private@example.test"
-        val password = "Synthetic-Only-Password!"
-        compose.onNodeWithText("Ingresar como personal").performClick()
-        compose.onNodeWithText("Correo electrónico").performTextInput(email)
-        compose.onNodeWithText("Contraseña").performTextInput(password)
-        val application = compose.activity.application
-        val probe = BundleProbe(listOf(email, password))
-        application.registerActivityLifecycleCallbacks(probe)
-        try {
-            compose.onNodeWithTag("open-preferences").performClick()
-            compose.onNodeWithTag("preference-theme-DARK").performScrollTo().performClick()
-            for (locale in listOf("en", "pt", "fr", "de", "es")) {
-                compose.onNodeWithTag("preference-locale-$locale").performScrollTo().performClick()
-                compose.waitForIdle()
-            }
-            compose.onNodeWithTag("preferences-close").performScrollTo().performClick()
-            compose.activityRule.scenario.recreate()
-            compose.waitForIdle()
-            compose.onNodeWithText("Correo electrónico").assertTextContains(email)
-            val drafts = compose.onAllNodes(hasSetTextAction()).fetchSemanticsNodes()
-            assertTrue(drafts.any { it.config.getOrNull(androidx.compose.ui.semantics.SemanticsProperties.InputText)?.text == password })
-            assertTrue(probe.savedCount > 0)
-            assertFalse("Private synthetic draft entered savedInstanceState", probe.privateValueFound)
-        } finally { application.unregisterActivityLifecycleCallbacks(probe) }
     }
 
     @Test fun `R20 profile date input and clinical draft stay in RAM across configuration`() {
@@ -231,7 +203,6 @@ class UiConfigurationInstrumentedTest {
     private fun text(id: Int) = compose.onNodeWithText(compose.activity.getString(id))
 
     private fun enterPatientLogin() {
-        if (exists(R.string.access_patient_action)) text(R.string.access_patient_action).performScrollTo().performClick()
         compose.waitUntil(10_000) { exists(R.string.login_title) || exists(R.string.tenant_picker_title) }
         if (exists(R.string.login_title)) text(R.string.login_change_tenant).performClick()
         compose.waitUntil(10_000) { compose.onAllNodesWithText("IPS QA Android").fetchSemanticsNodes().isNotEmpty() }

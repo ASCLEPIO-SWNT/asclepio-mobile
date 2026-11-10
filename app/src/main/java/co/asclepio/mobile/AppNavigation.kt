@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -14,17 +15,15 @@ import androidx.compose.runtime.saveable.LocalSaveableStateRegistry
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.platform.LocalConfiguration
 import co.asclepio.mobile.core.ui.guide.*
 import co.asclepio.mobile.feature.encounters.ui.MyRequestsScreen
 import co.asclepio.mobile.feature.encounters.ui.MyRequestsViewModel
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -39,7 +38,6 @@ import androidx.navigation3.ui.NavDisplay
 import co.asclepio.mobile.core.auth.*
 import co.asclepio.mobile.core.ui.AccessDeniedScreen
 import co.asclepio.mobile.core.ui.SessionVerificationScreen
-import co.asclepio.mobile.core.ui.WelcomeScreen
 import co.asclepio.mobile.core.ui.EntryBackdrop
 import co.asclepio.mobile.feature.account.ui.HomeScreen
 import co.asclepio.mobile.feature.account.ui.HomeViewModel
@@ -55,31 +53,15 @@ import co.asclepio.mobile.feature.encounters.ui.PreRegistrationStatusViewModel
 import co.asclepio.mobile.feature.encounters.ui.PreRegistrationViewModel
 import co.asclepio.mobile.feature.patients.ui.ProfileScreen
 import co.asclepio.mobile.feature.patients.ui.ProfileViewModel
-import co.asclepio.mobile.feature.staffaccount.ui.*
-import co.asclepio.mobile.feature.reception.ui.*
-import co.asclepio.mobile.feature.staffencounters.ui.*
-import co.asclepio.mobile.feature.triage.ui.*
-import co.asclepio.mobile.feature.dashboards.ui.*
 import co.asclepio.mobile.core.ui.*
-import co.asclepio.mobile.core.encounters.EncounterCount
-import co.asclepio.mobile.core.encounters.ui.EncounterListScreen
 import co.asclepio.mobile.feature.status.ui.StatusScreen
 import co.asclepio.mobile.feature.status.ui.StatusViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
-/** Rutas de Navigation 3 (D3). */
+/** Rutas de Navigation 3 (D3): solo las del paciente. */
 @Serializable
 sealed interface Route : NavKey {
-    @Serializable data object Welcome : Route
-
-    @Serializable data object StaffLogin : Route
-
-    @Serializable data class Staff(val destination: StaffDestination) : Route
-    @Serializable data object StaffRegistration : Route
-    @Serializable data class StaffEncounterDetail(val id: String) : Route
-    @Serializable data class ClinicalCapture(val id: String) : Route
-
     @Serializable data object TenantPicker : Route
 
     /** Public entry identity: confirming even the same IPS discards the previous login VM/draft. */
@@ -101,56 +83,24 @@ sealed interface Route : NavKey {
     @Serializable data object Status : Route
 }
 
-/** Raíz de la pila según la sesión (R1, R3, R27, R28, R30, R31). `null` mientras se carga. */
+/** Raíz de la pila según la sesión (R1, R3, R27, R28, R30, R31). `null` mientras se carga o verifica. */
 fun rootRoute(state: SessionState): Route? = when (state) {
-    SessionState.Loading -> null
+    SessionState.Loading, SessionState.Verifying, is SessionState.VerificationError -> null
     SessionState.NoTenant -> Route.TenantPicker
     is SessionState.LoggedOut -> Route.Login()
-    is SessionState.Authenticated -> when (val principal = state.principal) {
-        is VerifiedPrincipal.Patient -> Route.Home
-        is VerifiedPrincipal.Staff -> Route.Staff(principal.role.home)
-    }
-    SessionState.Verifying, is SessionState.VerificationError -> null
-    SessionState.Welcome -> Route.Welcome
-    SessionState.StaffEntry -> Route.StaffLogin
+    is SessionState.Authenticated -> Route.Home
 }
 
 /** Se evalúa antes de crear el Composable/VM de cualquier destino, también con una pila restaurada. */
 fun canAccessRoute(state: SessionState, route: Route): Boolean = when (state) {
-    is SessionState.Authenticated -> when (val principal = state.principal) {
-        is VerifiedPrincipal.Patient -> route in setOf(Route.Home, Route.Profile, Route.PreRegistration, Route.MyRequests)
-        is VerifiedPrincipal.Staff -> when (route) {
-            is Route.Staff -> route.destination in principal.role.destinations
-            Route.StaffRegistration -> principal.role == StaffRole.RECEPTION
-            is Route.StaffEncounterDetail -> true
-            is Route.ClinicalCapture -> principal.role == StaffRole.NURSE
-            else -> false
-        }
-    }
-    SessionState.Welcome -> route == Route.Welcome
+    is SessionState.Authenticated -> route in setOf(Route.Home, Route.Profile, Route.PreRegistration, Route.MyRequests)
     SessionState.NoTenant -> route == Route.TenantPicker
     is SessionState.LoggedOut -> route is Route.Login || route in setOf(Route.TenantPicker, Route.SignUp) || (BuildConfig.DEBUG && route == Route.Status)
-    SessionState.StaffEntry -> route == Route.StaffLogin
     else -> false
 }
 
 /** Closed resource catalog: no identity, patient data or form values can become guide text. */
-fun routeGuideDestination(route: Route, role: StaffRole? = null): GuideDestination = when (route) {
-    Route.Welcome -> GuideDestination.Welcome
-    Route.StaffLogin -> GuideDestination.StaffLogin
-    is Route.Staff -> when (route.destination) {
-        StaffDestination.RECEPTION -> GuideDestination.StaffReception
-        StaffDestination.ENCOUNTERS -> GuideDestination.StaffEncounters
-        StaffDestination.TRIAGE -> GuideDestination.NurseTray
-        StaffDestination.MEDICINE -> GuideDestination.MedicineDashboard
-        StaffDestination.ADMINISTRATION -> GuideDestination.AdministrationDashboard
-        StaffDestination.QUEUE -> GuideDestination.StaffQueue
-        StaffDestination.REPORTS -> GuideDestination.StaffReports
-        else -> GuideDestination.StaffPending
-    }
-    Route.StaffRegistration -> GuideDestination.StaffRegistration
-    is Route.StaffEncounterDetail -> if (role in setOf(StaffRole.NURSE, StaffRole.PHYSICIAN)) GuideDestination.ClinicalHistory else GuideDestination.StaffEncounterDetail
-    is Route.ClinicalCapture -> GuideDestination.ClinicalCapture
+fun routeGuideDestination(route: Route): GuideDestination = when (route) {
     Route.TenantPicker -> GuideDestination.TenantPicker
     is Route.Login -> GuideDestination.PatientLogin
     Route.SignUp -> GuideDestination.SignUp
@@ -216,20 +166,20 @@ fun AppNavigation(container: AppContainer, widthSizeClass: WindowWidthSizeClass,
 
 @Composable
 private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSizeClass, session: SessionState, root: Route, guide: SpeechGuideController, preferencesOpen: Boolean) {
-    val scope = rememberCoroutineScope()
     val backStack = rememberNavBackStack(root)
     val currentRoute = backStack.lastOrNull() as? Route ?: root
     val locale = LocalConfiguration.current.locales[0].toLanguageTag()
     LaunchedEffect(currentRoute, locale, preferencesOpen, navigationIdentity(session)) {
-        // Route names contain no parameters/private data. Distinct pending STAFF routes must also reset.
-        guide.update(if (preferencesOpen) GuideDestination.Preferences else routeGuideDestination(currentRoute, ((session as? SessionState.Authenticated)?.principal as? VerifiedPrincipal.Staff)?.role), locale, navigationIdentity(session) + "|" + currentRoute.toString())
+        // Route names contain no private data; the session identity resets the guide between generations.
+        guide.update(if (preferencesOpen) GuideDestination.Preferences else routeGuideDestination(currentRoute), locale, navigationIdentity(session) + "|" + currentRoute.toString())
     }
     Column(Modifier.fillMaxSize()) {
         if (backStack.size > 1) TextButton(onClick = { backStack.removeAt(backStack.lastIndex) }) {
             Text(stringResource(R.string.navigate_back))
         }
         if (session is SessionState.LoggedOut || session == SessionState.NoTenant) {
-            TextButton(onClick = { scope.launch { container.sessionManager.showWelcome() } }) { Text(stringResource(R.string.change_access)) }
+            val notice by container.sessionManager.entryNotice.collectAsStateWithLifecycle()
+            notice?.let { EntryNotice(it, container.sessionManager::dismissEntryNotice) }
         }
         Box(Modifier.weight(1f).fillMaxWidth()) {
             NavDisplay(
@@ -240,146 +190,6 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                     rememberViewModelStoreNavEntryDecorator(),
                 ),
                 entryProvider = entryProvider {
-                    entry<Route.Welcome> {
-                        GuardedRoute(session, Route.Welcome, { backStack.resetTo(root) }) {
-                            WelcomeScreen(widthSizeClass) { mode -> scope.launch { container.sessionManager.selectAccess(mode) } }
-                        }
-                    }
-                    entry<Route.StaffLogin> {
-                        GuardedRoute(session, Route.StaffLogin, { backStack.resetTo(root) }) {
-                            val vm = viewModel { StaffLoginViewModel(container.staffAccountRepository) }
-                            val state by vm.state.collectAsStateWithLifecycle()
-                            StaffLoginScreen(state, widthSizeClass, vm::updateForm, vm::submit, onChangeAccess = { scope.launch { container.sessionManager.showWelcome() } })
-                        }
-                    }
-                    entry<Route.Staff> { route ->
-                        GuardedRoute(session, route, { backStack.resetTo(root) }) {
-                            val principal = (session as SessionState.Authenticated).principal as VerifiedPrincipal.Staff
-                            val vm = viewModel { StaffHomeViewModel(container.sessionManager) }
-                            val confirmation by vm.confirmation.collectAsStateWithLifecycle()
-                            val operational: (@Composable () -> Unit)? = if (route.destination == StaffDestination.RECEPTION) ({
-                                val reception = viewModel { ReceptionViewModel(container.receptionRepository, container.staffSitesRepository, container.staffDataChanges, container.dashboardDataRepository) }
-                                val receptionState by reception.state.collectAsStateWithLifecycle()
-                                DashboardVisibility(currentRoute == route, reception::setActive)
-                                ReceptionScreen(
-                                    receptionState, reception::refresh, reception::retrySites, reception::selectSite,
-                                    reception::setIdentity, reception::setRejecting, reception::setReason, reception::confirm, reception::reject,
-                                    onDirectRegistration = { backStack.add(Route.StaffRegistration) },
-                                    onOpenEncounter = { backStack.add(Route.StaffEncounterDetail(it)) }, onScroll = reception::rememberScroll,
-                                    dashboard = true, onRetryPending = reception::retryPending, summary = {
-                                        val pending = when (val remote = receptionState.remote) {
-                                            ReceptionRemote.Loading -> DashboardRead.Loading
-                                            ReceptionRemote.Forbidden -> DashboardRead.Forbidden
-                                            ReceptionRemote.NotFound -> DashboardRead.Error(UiMessage(R.string.staff_pr_gone))
-                                            is ReceptionRemote.Error -> DashboardRead.Error(remote.message, remote.retryEnabled)
-                                            is ReceptionRemote.Ready -> DashboardRead.Ready(EncounterCount(remote.items.size, false))
-                                        }
-                                        DashboardSummaryBar(listOf(
-                                            DashboardSummaryCell(stringResource(R.string.dash_stat_preregistered), R.drawable.ic_dashboard_pending, pending, onRetry = reception::retryPending),
-                                            DashboardSummaryCell(stringResource(R.string.dash_stat_waiting), R.drawable.ic_dashboard_clock, receptionState.waitingCount, NoticeTone.Warning, reception::retryWaiting),
-                                        ), filter = { co.asclepio.mobile.core.encounters.ui.DashboardSiteFilter(receptionState.sites, receptionState.siteId, reception::selectSite, reception::retrySites) })
-                                    },
-                                )
-                            }) else if (route.destination == StaffDestination.ENCOUNTERS) ({
-                                val encounters = viewModel { StaffEncountersViewModel(container.encountersRepository, container.staffSitesRepository, container.staffDataChanges) }
-                                val encountersState by encounters.state.collectAsStateWithLifecycle()
-                                LifecycleEventEffect(Lifecycle.Event.ON_START) { encounters.setActive(true) }
-                                LifecycleEventEffect(Lifecycle.Event.ON_STOP) { encounters.setActive(false) }
-                                DisposableEffect(encounters) { onDispose { encounters.setActive(false) } }
-                                StaffEncountersScreen(
-                                    encountersState, encounters::refresh, encounters::retrySites, encounters::selectSite, encounters::selectStatus,
-                                    encounters::previousPage, encounters::nextPage,
-                                    onOpen = { backStack.add(Route.StaffEncounterDetail(it)) }, onScroll = encounters::rememberScroll,
-                                )
-                            }) else if (route.destination == StaffDestination.TRIAGE) ({
-                                val tray = viewModel { TriageTrayViewModel(container.encountersRepository, container.staffSitesRepository, container.staffDataChanges) }
-                                val trayState by tray.state.collectAsStateWithLifecycle()
-                                DashboardVisibility(currentRoute == route, tray::setActive)
-                                EncounterListScreen(
-                                    trayState, tray::refresh, tray::retrySites, tray::selectSite, {}, tray::previousPage, tray::nextPage,
-                                    onOpen = { backStack.add(Route.ClinicalCapture(it)) }, onScroll = tray::rememberScroll, clinicalTray = true,
-                                )
-                            }) else if (route.destination in setOf(StaffDestination.MEDICINE, StaffDestination.ADMINISTRATION, StaffDestination.QUEUE, StaffDestination.REPORTS)) ({
-                                val overview = viewModel { DashboardOverviewViewModel(route.destination, principal.role, container.dashboardDataRepository, container.staffDataChanges) }
-                                val overviewState by overview.state.collectAsStateWithLifecycle()
-                                DashboardVisibility(currentRoute == route, overview::setActive)
-                                DashboardOverviewScreen(
-                                    overviewState, overview::refresh, overview::retryCount, overview::retryRecent, overview::retrySites, overview::retrySite,
-                                    onOpenEncounter = { backStack.add(Route.StaffEncounterDetail(it)) }, onEncounters = {
-                                        val list = Route.Staff(StaffDestination.ENCOUNTERS)
-                                        if (list in backStack) backStack.popTo(list) else backStack.add(list)
-                                    }, onScroll = overview::rememberScroll,
-                                )
-                            }) else null
-                            StaffWorkspaceScreen(
-                                principal, route.destination, widthSizeClass, confirmation,
-                                onSelect = { destination ->
-                                    val next = Route.Staff(destination)
-                                    if (canAccessRoute(session, next)) {
-                                        if (next in backStack) backStack.popTo(next) else backStack.add(next)
-                                    }
-                                },
-                                onLogout = vm::requestLogout, onChangeAccess = vm::requestChangeAccess, onCancel = vm::cancel, onConfirm = vm::confirm,
-                                content = operational,
-                            )
-                        }
-                    }
-                    entry<Route.StaffRegistration> {
-                        GuardedRoute(session, Route.StaffRegistration, { backStack.resetTo(root) }) {
-                            val vm = viewModel { DirectRegistrationViewModel(container.receptionRepository, container.encountersRepository, container.staffSitesRepository, container.clock) }
-                            val state by vm.state.collectAsStateWithLifecycle()
-                            LaunchedEffect(state.createdEncounterId) {
-                                state.createdEncounterId?.let { id -> vm.consumeCreatedEncounter(); backStack.add(Route.StaffEncounterDetail(id)) }
-                            }
-                            DirectRegistrationScreen(
-                                state, vm::updateSearch, vm::search, vm::startDocumentedPatient, vm::startNnPatient,
-                                vm::updatePatient, vm::updateDatePicker, vm::createPatient, vm::cancelPatientCreation,
-                                vm::updateArrival, vm::registerArrival, vm::retrySites,
-                                onReception = { backStack.resetTo(Route.Staff(StaffDestination.RECEPTION)) },
-                            )
-                        }
-                    }
-                    entry<Route.StaffEncounterDetail> { route ->
-                        GuardedRoute(session, route, { backStack.resetTo(root) }) {
-                            val principal = (session as SessionState.Authenticated).principal as VerifiedPrincipal.Staff
-                            val vm = viewModel { StaffEncounterDetailViewModel(route.id, principal.role, container.encountersRepository, container.staffDataChanges) }
-                            val state by vm.state.collectAsStateWithLifecycle()
-                            LifecycleEventEffect(Lifecycle.Event.ON_START) { vm.setActive(true) }
-                            LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.setActive(false) }
-                            DisposableEffect(vm) { onDispose { vm.setActive(false) } }
-                            val clinicalSlot: (@Composable () -> Unit)? = if (principal.role in setOf(StaffRole.NURSE, StaffRole.PHYSICIAN) && state.remote is StaffEncounterRemote.Ready) ({
-                                val history = viewModel { ClinicalHistoryViewModel(route.id, principal.role, container.clinicalCaptureRepository, container.staffDataChanges) }
-                                val clinicalState by history.state.collectAsStateWithLifecycle()
-                                LifecycleEventEffect(Lifecycle.Event.ON_START) { history.setActive(true) }
-                                LifecycleEventEffect(Lifecycle.Event.ON_STOP) { history.setActive(false) }
-                                DisposableEffect(history) { onDispose { history.setActive(false) } }
-                                val captureAction: (() -> Unit)? = if (principal.role == StaffRole.NURSE && !state.refreshing && (state.remote as? StaffEncounterRemote.Ready)?.encounter?.status == "WAITING_TRIAGE") ({ backStack.add(Route.ClinicalCapture(route.id)) }) else null
-                                ClinicalHistoryPane(clinicalState, history::refresh, captureAction)
-                            }) else null
-                            StaffEncounterDetailScreen(state, vm::refresh, vm::setCancelling, vm::setReason, vm::cancel, onEncounters = {
-                                val list = Route.Staff(StaffDestination.ENCOUNTERS)
-                                if (list in backStack) backStack.popTo(list) else backStack.add(list)
-                            }, clinicalHistory = clinicalSlot)
-                        }
-                    }
-                    entry<Route.ClinicalCapture> { route ->
-                        GuardedRoute(session, route, { backStack.resetTo(root) }) {
-                            val principal = (session as SessionState.Authenticated).principal as VerifiedPrincipal.Staff
-                            val vm = viewModel { ClinicalCaptureViewModel(route.id, principal.role, container.encountersRepository, container.clinicalCaptureRepository, container.staffDataChanges) }
-                            val state by vm.state.collectAsStateWithLifecycle()
-                            LifecycleEventEffect(Lifecycle.Event.ON_START) { vm.setActive(true) }
-                            LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.setActive(false) }
-                            DisposableEffect(vm) { onDispose { vm.setActive(false) } }
-                            ClinicalCaptureScreen(
-                                state, vm::refresh, onBack = {
-                                    val tray = Route.Staff(StaffDestination.TRIAGE)
-                                    if (tray in backStack) backStack.popTo(tray) else backStack.resetTo(tray)
-                                }, vm::updateVitals, vm::saveVitals, vm::vitalsFocusHandled,
-                                vm::updateFinding, vm::addFinding, vm::removeFinding, vm::saveFindings, vm::findingsFocusHandled,
-                                onScrollChange = vm::rememberScroll, onPresentationFocus = vm::rememberFocus, preferencesOpen = preferencesOpen,
-                            )
-                        }
-                    }
                     entry<Route.TenantPicker> {
                         GuardedRoute(session, Route.TenantPicker, { backStack.resetTo(root) }) {
                             val vm = viewModel { TenantPickerViewModel(container.tenantRepository, container.sessionManager) }
@@ -448,7 +258,6 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                                         onNewPreRegistration = { backStack.add(Route.PreRegistration) },
                                     )
                                 },
-                                onRequestChangeAccess = vm::requestChangeAccess,
                                 onRequestLogout = vm::requestLogout,
                                 onCancelLogout = vm::cancelLogout,
                                 onConfirmLogout = vm::confirmLogout,
@@ -512,25 +321,20 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
     }
 }
 
+/** Aviso de R5 encima de la pila de entrada; texto estático, sin datos del /me rechazado. */
+@Composable
+private fun EntryNotice(message: UiMessage, onClose: () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        UiNotice(message.text(), NoticeTone.Warning)
+        TextButton(onClick = onClose, modifier = Modifier.align(Alignment.End)) { Text(stringResource(R.string.close)) }
+    }
+}
+
 @Composable
 private fun GuardedRoute(session: SessionState, route: Route, onHome: () -> Unit, content: @Composable () -> Unit) {
     if (canAccessRoute(session, route)) {
-        // Prevent hidden widget Savers from serializing passwords, identity or clinical drafts.
+        // Prevent hidden widget Savers from serializing passwords, identity or private drafts.
         // Navigation/VM decorators stay outside this boundary and retain RAM across configuration.
         CompositionLocalProvider(LocalSaveableStateRegistry provides null) { content() }
     } else AccessDeniedScreen(onHome)
-}
-
-/** Current entry plus foreground: transitions and preference recomposition cannot install another clock. */
-@Composable
-private fun DashboardVisibility(isCurrentRoute: Boolean, onActive: (Boolean) -> Unit) {
-    val owner = LocalLifecycleOwner.current
-    val latestCallback by rememberUpdatedState(onActive)
-    val latestCurrent by rememberUpdatedState(isCurrentRoute)
-    LaunchedEffect(isCurrentRoute, owner) {
-        latestCallback(isCurrentRoute && owner.lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED))
-    }
-    LifecycleEventEffect(Lifecycle.Event.ON_START) { latestCallback(latestCurrent) }
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { latestCallback(false) }
-    DisposableEffect(owner) { onDispose { latestCallback(false) } }
 }

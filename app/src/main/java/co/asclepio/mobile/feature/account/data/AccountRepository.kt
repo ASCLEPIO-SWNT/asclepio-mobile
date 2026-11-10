@@ -1,6 +1,5 @@
 package co.asclepio.mobile.feature.account.data
 
-import co.asclepio.mobile.core.auth.AccessMode
 import co.asclepio.mobile.core.auth.MeApi
 import co.asclepio.mobile.core.auth.SessionManager
 import co.asclepio.mobile.core.network.ApiError
@@ -51,7 +50,7 @@ class AccountRepository(
      * se guarda la sesión; en otro caso el token se descarta sin guardarse.
      */
     suspend fun login(tenantId: String, documentType: DocumentType, documentNumber: String, password: String, expectedGeneration: Long = sessionManager.generation): LoginResult {
-        val attempt = sessionManager.beginLogin(AccessMode.PATIENT, expectedGeneration)
+        val attempt = sessionManager.beginLogin(expectedGeneration)
         val request = PatientLoginRequest(tenantId, documentType, documentNumber.trim(), password)
         val token = when (val result = apiCall { authApi.login(request) }) {
             is ApiResult.Success -> result.value

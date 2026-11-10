@@ -64,3 +64,25 @@ APROBADO por reviewer independiente (ac62b6e); contrato0.4.0 sin cambios. Bandej
 Initfinal reparación VERDE FAIL0/WARN0: lint y386JVM/56clases,0fallos/errores/omitidos. APKfinal95d3af60a6c210ce9bd474efe2589294c136029fe656283851350ef369a87950. PrimerinitdetectóRememberInComposition, corregido con key/remember sin suppress. QA Android37/360dp sintética: focoRR inválido, toma false/opcionalesvacíos, historial servidor, ESclaro→ENoscuro y borradorRR22conservado al guardar hallazgos. Recorrido completo APKfdb416; final95d3af smokeinicio/bandeja, sin atribuir repetición completa. Evidencia e informes archivados fuera del repo en local-analysis/mobile-verification/f03/.
 
 API/DBreal y matrizextendida API31/tablet/320dp200/5idiomas/TalkBack/teclado/movimiento/audio quedan para validación combinada final, explícitamente sin ejecutar en este bloque. No IA/decisión/cola priorizada/reportes/polling hasta los siguientes bloques. Publicaciónmain exclusivaASCLEPIO-SWNT; legacy sólolectura.
+
+
+## 2026-11-09 — UI-02-mobile: retirado sin cerrar
+- **Motivo:** el humano ratificó que la app móvil es solo del paciente (ADR 0008 de la API, "Ratificación"); ADR local 0002 sustituido. UI-02-mobile estaba in_progress (commits hasta f732a10) y no se cierra.
+- **Estado:** F-01-staff-mobile, F-02-staff-mobile, F-03-mobile y UI-02-mobile pasan a `retired` (`retired_by: DT-01-mobile`); el código se retira en DT-01-mobile. Sus specs se conservan como registro histórico.
+- **Progreso vivo archivado tal cual:**
+
+> # UI-02-mobile — Dashboards nativos de los cuatro roles
+> 
+> 2026-10-29. Plan completo aprobado por el usuario mediante PLEASE IMPLEMENT THIS PLAN, spec24R ya materializada; no preguntas nuevas. Una feature activa, rama codex/ui-02-mobile desde main143815b publicado y fetchsinavances. F03APROBADOcerrado, baseline386JVM/56clases+lint/initverde sobre idénticoárboldeaplicación; evidencia reutilizada sin volver a ejecutar la misma batería. UI01/F02staff/F03dependenciasdone; contrato0.4.0 sin cambios.
+> 
+> Primaryclinical_ui: coordinadorvisible30s/VM/4pantallas/rutas/retención/recursos. Foundation: T1datosconteos/proyecciónrecientes/pruebasHTTPpreparadas. Reviewer: estático temprano y un initfinal tras congelación. Root: Git/QA/publicación main. Preparaciónexterna se incorpora ahora. Prioridadfrontend y commits convencionales porhitos; no pruebas repetidas tras cambios triviales.
+> 
+> Cuatrohomesútiles, conteosacotados100/50/8, borradoresRAM, lecturaindependiente/403porcelda y sondeosólovisibleforeground. No IA/cola priorizada/reportescompletos ni endpoints nuevos. QAcompartida pendiente320dp200/tablet/API31/idiomas/TalkBack se reúne al cierre general; API/DBreal y audio audible distinguidos de fixtures.
+
+## 2026-11-10 — DT-01-mobile: retirar del APK las funciones de personal → done
+- **Alcance:** la app queda solo del paciente (ADR 0008 de la API, "Ratificación"; ADR local 0002 sustituido). Se borró el código de F-01-staff-mobile, F-02-staff-mobile, F-03-mobile y UI-02-mobile (165 archivos, +1034 / −9514; commits `ce0cfdf`..`7877355`, uno por tarea) y se conservó cuenta, pre-registro, mis solicitudes, cinco idiomas y guía TTS.
+- **Comportamiento nuevo:** entrada sin bienvenida (selector de IPS o login del paciente); login con cuenta de personal → aviso R7 sin sesión; token restaurado de un principal no paciente → aviso R5, token borrado, IPS conservada. `PatientOnlyScopeTest` y `PatientOnlyNavigationTest` fijan el alcance.
+- **Revisión:** APROBADO por reviewer independiente (2026-11-09). Las suites que se colgaban por el sondeo de personal desaparecieron con el slice: 44 clases, 313 pruebas JVM, 0 fallos.
+- **QA manual (T12, humano, 2026-11-10):** emulador teléfono y tablet, `adb reverse` y API local. Los cinco casos OK (sin IPS, con IPS, regresión del paciente, login de personal R7, restauración de token de personal R5). Sin observaciones.
+- **Cierre:** `./init.sh` completo VERDE (FAIL 0 · WARN 0) en `chore/DT-01-mobile-close`. Pendientes conocidos: `tagline`, `ic_back` y `home_navigation` sin uso (aviso de lint, no error).
+- **Flujo de ramas:** desde hoy `feature/<id>`, `fix/<id>` o `chore/<id>` desde `develop` por PR; `main` solo por PR `develop → main` (`docs/conventions.md`, "Ramas y PRs").
