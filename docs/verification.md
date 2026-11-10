@@ -20,13 +20,13 @@
 La lista de comprobación de la demo completa está en `../asclepio-api/docs/verification.md`.
 
 
-## Acceso paciente/personal (F-01-staff-mobile)
+## App solo del paciente (DT-01-mobile)
 
-- Ejecutar `./gradlew lint testDebugUnitTest assembleDebug` y `./init.sh` completo. La regresión incluye F-01/F-02 existentes, HTTP real con MockWebServer, privacidad de disco/toString, restauración y generaciones intercaladas, guards por rol y formularios VM.
+- La app es solo del paciente (ADR 0008 de la API, "Ratificación"). `PatientOnlyScopeTest` fija las diez operaciones Retrofit permitidas y falla si una ruta de personal aparece en `src/main`; `PatientOnlyNavigationTest`, las rutas y los destinos de guía; `PatientOnlyResourcesTest`, los paquetes y recursos retirados; `PatientSessionLifecycleTest`, el rechazo de un `/me` no paciente al restaurar y las generaciones de sesión.
+- Ejecutar `./gradlew lint testDebugUnitTest assembleDebugAndroidTest` y `./init.sh` completo. La regresión incluye F-01/F-02/UI-01 existentes, HTTP real con MockWebServer, privacidad de disco/toString, restauración y generaciones intercaladas y formularios VM.
 - La fecha privada usa `rememberPrivateDatePickerState` y `PrivateDatePicker` dentro del Dialog; no usar `rememberDatePickerState` ni el DatePicker real fuera de esa frontera. La prueba estática verifica ese límite; la inspección de Bundle instrumentada se registra como evidencia aparte cuando se ejecute.
 - Mantener las pruebas Keystore instrumentadas (AES-256-GCM) separadas de los fixtures JVM. Una pasada del APK base no prueba por sí sola la UI de una APK posterior.
-- En teléfono/tablet comprobar bienvenida, paciente con/sin IPS, login staff sin selector de IPS ni registro público, cuatro hogares y destinos exactos, error local/429, restauración bloqueada ante red/5xx, confirmaciones de logout/cambio y Atrás sin contenido anterior. Verificar rotación/teclado y destrucción de borradores al cambiar generación.
-- Las funciones staff posteriores aparecen como pendientes; no se simulan listas clínicas ni se ejecutan endpoints de esos bloques desde F-01-staff-mobile.
+- En teléfono/tablet comprobar la entrada directa (selección de IPS sin IPS recordada, inicio de sesión con IPS), el aviso "Esta cuenta no es de paciente…" al iniciar sesión o restaurar con una cuenta de personal, restauración bloqueada ante red/5xx, confirmación de cierre de sesión y Atrás sin contenido anterior. Verificar rotación/teclado y destrucción de borradores al cambiar de generación.
 - Registrar para cada ejecución emulador/API, APK/commit, fixture contractual o servidor real y acciones efectivamente realizadas. No llamar integración real a un fixture; no afirmar TalkBack, rotación o persistencia del proceso sin haberlos ejercitado.
 
 ## Instrumentación Compose en Android 37 (UI-01-mobile)

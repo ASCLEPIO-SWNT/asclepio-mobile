@@ -13,7 +13,7 @@
 - [ ] `progress/current/` contiene solo el archivo de la feature activa (o nada).
 
 ## C3 — El código respeta la arquitectura
-- [ ] Los paquetes siguen `docs/architecture.md`: `core/{network,auth,ui,model,tenants}` y `feature/{account,staffaccount,patients,encounters,status,voice}`.
+- [ ] Los paquetes siguen `docs/architecture.md` (app solo del paciente): `core/{network,auth,ui,model,tenants}` y `feature/{account,patients,encounters,status,voice}`, sin paquetes ni rutas de personal (`PatientOnlyResourcesTest`, `PatientOnlyNavigationTest`).
 - [ ] Hay MVVM: los `@Composable` no llaman a Retrofit; los ViewModel exponen `StateFlow<UiState>`.
 - [ ] Una `feature/*` no importa de otra `feature/*`.
 - [ ] No hay dependencias nuevas sin justificación en el `design.md`.
@@ -42,10 +42,10 @@
 - [ ] No hay datos personales en `Logcat`.
 - [ ] El tráfico HTTP en claro está permitido solo en `debug` (`network_security_config` en el sourceSet de debug).
 - [ ] La app no envía horas legales (la hora de llegada la fija el servidor cuando recepción confirma).
-- [ ] Cada principal solo monta sus features autorizadas: PATIENT usa sus propios datos/APIs paciente/públicas; STAFF usa su rol verificado y guard previo al destino/VM (ADR local 0002).
-- [ ] El token no basta para abrir contenido: `/me` valida restauración/login; un STAFF no necesita IPS paciente y un PATIENT exige tenant recordado coincidente.
-- [ ] Logout/cambio/expiración/401 vigente invalidan generación y ámbito privado; Bearer es inmutable por operación y respuestas/401 antiguos no afectan otra sesión.
-- [ ] Persistencia mantiene únicamente token cifrado/expiración e IPS/sede públicas; identidad/rol y borradores privados no se guardan ni se serializan en navegación.
+- [ ] La app es solo del paciente: solo monta sus features y usa sus propios datos, las APIs del paciente y las públicas (`PatientOnlyScopeTest`), con guard previo al destino/VM.
+- [ ] El token no basta para abrir contenido: `/me` valida restauración/login y exige un paciente de la IPS recordada; un principal de otro tipo (incluido STAFF) nunca abre contenido, su token se borra y se muestra el aviso de cuenta no paciente.
+- [ ] Logout/expiración/401 vigente/nuevo login/otra IPS invalidan generación y ámbito privado; Bearer es inmutable por operación y respuestas/401 antiguos no afectan otra sesión.
+- [ ] Persistencia mantiene únicamente token cifrado/expiración e IPS/sede públicas; identidad y borradores privados no se guardan ni se serializan en navegación.
 - [ ] El alta de la cuenta muestra y registra el consentimiento de tratamiento de datos (cuando se defina PA-PAC-5).
 
 ## C8 — Contrato
