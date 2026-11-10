@@ -58,7 +58,6 @@ import co.asclepio.mobile.feature.patients.ui.ProfileViewModel
 import co.asclepio.mobile.feature.staffaccount.ui.*
 import co.asclepio.mobile.feature.reception.ui.*
 import co.asclepio.mobile.feature.staffencounters.ui.*
-import co.asclepio.mobile.feature.dashboards.ui.*
 import co.asclepio.mobile.core.ui.*
 import co.asclepio.mobile.core.encounters.EncounterCount
 import co.asclepio.mobile.feature.status.ui.StatusScreen
@@ -137,10 +136,6 @@ fun routeGuideDestination(route: Route, role: StaffRole? = null): GuideDestinati
     is Route.Staff -> when (route.destination) {
         StaffDestination.RECEPTION -> GuideDestination.StaffReception
         StaffDestination.ENCOUNTERS -> GuideDestination.StaffEncounters
-        StaffDestination.MEDICINE -> GuideDestination.MedicineDashboard
-        StaffDestination.ADMINISTRATION -> GuideDestination.AdministrationDashboard
-        StaffDestination.QUEUE -> GuideDestination.StaffQueue
-        StaffDestination.REPORTS -> GuideDestination.StaffReports
         else -> GuideDestination.StaffPending
     }
     Route.StaffRegistration -> GuideDestination.StaffRegistration
@@ -284,17 +279,6 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                                     encountersState, encounters::refresh, encounters::retrySites, encounters::selectSite, encounters::selectStatus,
                                     encounters::previousPage, encounters::nextPage,
                                     onOpen = { backStack.add(Route.StaffEncounterDetail(it)) }, onScroll = encounters::rememberScroll,
-                                )
-                            }) else if (route.destination in setOf(StaffDestination.MEDICINE, StaffDestination.ADMINISTRATION, StaffDestination.QUEUE, StaffDestination.REPORTS)) ({
-                                val overview = viewModel { DashboardOverviewViewModel(route.destination, principal.role, container.dashboardDataRepository, container.staffDataChanges) }
-                                val overviewState by overview.state.collectAsStateWithLifecycle()
-                                DashboardVisibility(currentRoute == route, overview::setActive)
-                                DashboardOverviewScreen(
-                                    overviewState, overview::refresh, overview::retryCount, overview::retryRecent, overview::retrySites, overview::retrySite,
-                                    onOpenEncounter = { backStack.add(Route.StaffEncounterDetail(it)) }, onEncounters = {
-                                        val list = Route.Staff(StaffDestination.ENCOUNTERS)
-                                        if (list in backStack) backStack.popTo(list) else backStack.add(list)
-                                    }, onScroll = overview::rememberScroll,
                                 )
                             }) else null
                             StaffWorkspaceScreen(

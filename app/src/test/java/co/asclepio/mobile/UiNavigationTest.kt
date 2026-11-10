@@ -32,10 +32,6 @@ class UiNavigationTest {
             val guide = when (it) {
                 StaffDestination.RECEPTION -> GuideDestination.StaffReception
                 StaffDestination.ENCOUNTERS -> GuideDestination.StaffEncounters
-                StaffDestination.MEDICINE -> GuideDestination.MedicineDashboard
-                StaffDestination.ADMINISTRATION -> GuideDestination.AdministrationDashboard
-                StaffDestination.QUEUE -> GuideDestination.StaffQueue
-                StaffDestination.REPORTS -> GuideDestination.StaffReports
                 else -> GuideDestination.StaffPending
             }
             assertEquals(guide, routeGuideDestination(Route.Staff(it)))

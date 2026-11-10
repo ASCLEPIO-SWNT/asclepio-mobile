@@ -19,10 +19,6 @@ enum class GuideDestination(@param:StringRes private val first: Int, @param:Stri
     StaffRegistration(R.string.guide_staff_registration_1, R.string.guide_staff_registration_2),
     StaffEncounters(R.string.guide_staff_encounters_1, R.string.guide_staff_encounters_2),
     StaffEncounterDetail(R.string.guide_staff_encounter_detail_1, R.string.guide_staff_encounter_detail_2),
-    MedicineDashboard(R.string.dash_guide_medicine, R.string.dash_guide_refresh),
-    AdministrationDashboard(R.string.dash_guide_admin, R.string.dash_guide_refresh),
-    StaffQueue(R.string.dash_guide_medicine, R.string.dash_guide_refresh),
-    StaffReports(R.string.dash_guide_admin, R.string.dash_guide_refresh),
     Status(R.string.guide_status_1, R.string.guide_status_2),
     SessionVerification(R.string.guide_verification_1, R.string.guide_verification_2),
     Preferences(R.string.guide_preferences_1, R.string.guide_preferences_2);
