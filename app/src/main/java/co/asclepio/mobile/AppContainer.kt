@@ -24,9 +24,6 @@ import co.asclepio.mobile.feature.staffaccount.data.StaffAccountRepository
 import okhttp3.OkHttpClient
 import java.time.Clock
 import co.asclepio.mobile.core.ui.UiPreferencesRepository
-import co.asclepio.mobile.core.encounters.*
-import co.asclepio.mobile.feature.reception.data.ReceptionApi
-import co.asclepio.mobile.feature.reception.data.ReceptionRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -67,9 +64,4 @@ class AppContainer(context: Context) {
     val accountRepository = AccountRepository(publicApi, authApi, meApi, sessionManager)
     val profileRepository = PatientProfileRepository(profileApi, sessionManager)
     val preRegistrationRepository = PreRegistrationRepository(preRegistrationsApi, tenantsApi, sessionManager)
-    val staffDataChanges = StaffDataChanges()
-    val staffSitesRepository = StaffSitesRepository(tenantsApi, sessionManager)
-    val encountersRepository = EncountersRepository(retrofit.create(EncountersApi::class.java), sessionManager, staffDataChanges)
-    val dashboardDataRepository = DashboardDataRepository(encountersRepository, staffSitesRepository)
-    val receptionRepository = ReceptionRepository(retrofit.create(ReceptionApi::class.java), sessionManager, staffDataChanges)
 }

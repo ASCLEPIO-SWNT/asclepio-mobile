@@ -28,14 +28,7 @@ class UiNavigationTest {
             Route.MyRequests to GuideDestination.MyRequests, Route.Status to GuideDestination.Status,
         )
         expected.forEach { (route, guide) -> assertEquals(guide, routeGuideDestination(route)) }
-        StaffDestination.entries.forEach {
-            val guide = when (it) {
-                StaffDestination.RECEPTION -> GuideDestination.StaffReception
-                StaffDestination.ENCOUNTERS -> GuideDestination.StaffEncounters
-                else -> GuideDestination.StaffPending
-            }
-            assertEquals(guide, routeGuideDestination(Route.Staff(it)))
-        }
+        StaffDestination.entries.forEach { assertEquals(GuideDestination.StaffPending, routeGuideDestination(Route.Staff(it))) }
     }
 
     @Test fun `R18 adding own requests keeps staff role restrictions and patient home semantics`() {
