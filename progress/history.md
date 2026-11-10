@@ -78,3 +78,11 @@ API/DBreal y matrizextendida API31/tablet/320dp200/5idiomas/TalkBack/teclado/mov
 > Primaryclinical_ui: coordinadorvisible30s/VM/4pantallas/rutas/retención/recursos. Foundation: T1datosconteos/proyecciónrecientes/pruebasHTTPpreparadas. Reviewer: estático temprano y un initfinal tras congelación. Root: Git/QA/publicación main. Preparaciónexterna se incorpora ahora. Prioridadfrontend y commits convencionales porhitos; no pruebas repetidas tras cambios triviales.
 > 
 > Cuatrohomesútiles, conteosacotados100/50/8, borradoresRAM, lecturaindependiente/403porcelda y sondeosólovisibleforeground. No IA/cola priorizada/reportescompletos ni endpoints nuevos. QAcompartida pendiente320dp200/tablet/API31/idiomas/TalkBack se reúne al cierre general; API/DBreal y audio audible distinguidos de fixtures.
+
+## 2026-11-10 — DT-01-mobile: retirar del APK las funciones de personal → done
+- **Alcance:** la app queda solo del paciente (ADR 0008 de la API, "Ratificación"; ADR local 0002 sustituido). Se borró el código de F-01-staff-mobile, F-02-staff-mobile, F-03-mobile y UI-02-mobile (165 archivos, +1034 / −9514; commits `ce0cfdf`..`7877355`, uno por tarea) y se conservó cuenta, pre-registro, mis solicitudes, cinco idiomas y guía TTS.
+- **Comportamiento nuevo:** entrada sin bienvenida (selector de IPS o login del paciente); login con cuenta de personal → aviso R7 sin sesión; token restaurado de un principal no paciente → aviso R5, token borrado, IPS conservada. `PatientOnlyScopeTest` y `PatientOnlyNavigationTest` fijan el alcance.
+- **Revisión:** APROBADO por reviewer independiente (2026-11-09). Las suites que se colgaban por el sondeo de personal desaparecieron con el slice: 44 clases, 313 pruebas JVM, 0 fallos.
+- **QA manual (T12, humano, 2026-11-10):** emulador teléfono y tablet, `adb reverse` y API local. Los cinco casos OK (sin IPS, con IPS, regresión del paciente, login de personal R7, restauración de token de personal R5). Sin observaciones.
+- **Cierre:** `./init.sh` completo VERDE (FAIL 0 · WARN 0) en `chore/DT-01-mobile-close`. Pendientes conocidos: `tagline`, `ic_back` y `home_navigation` sin uso (aviso de lint, no error).
+- **Flujo de ramas:** desde hoy `feature/<id>`, `fix/<id>` o `chore/<id>` desde `develop` por PR; `main` solo por PR `develop → main` (`docs/conventions.md`, "Ramas y PRs").
