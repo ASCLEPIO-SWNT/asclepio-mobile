@@ -113,7 +113,7 @@ Las clases `PreRegistration*Test` de `design.md` son las seis de `feature/encoun
 4. **`ErrorMessagesTest` R34 (F-01-mobile).** Fijaba el texto antiguo de `error_not_patient`; se devolvió al texto de la tabla de F-01-mobile (D5). Va en el commit de T9.
 5. **`authenticatedCall` eliminado.** Solo lo usaba `patientCall`; quitarle el `mode` lo dejaba sin propósito. `AuthHandle` ya no lleva `principal`.
 6. **`tagline` queda sin uso.** D8 manda conservarla, pero solo la usaba `WelcomeScreen`; lint la marca como `UnusedResources` (aviso, no error). No la borré porque R10 no la incluye; decide el leader. `ic_back` y `home_navigation` ya estaban sin uso antes del slice.
-7. **Prueba manual en emulador (T12) no realizada.** En esta sesión `adb` no está en el PATH y no se me permitió buscarlo en el SDK, así que no ejercité teléfono ni tablet. Queda pendiente para el humano: entrada sin IPS y con IPS sin bienvenida, login con cuenta de personal (aviso R7), restauración con token de personal (aviso R5 y "Cerrar"), en teléfono y tablet con `adb reverse tcp:3000 tcp:3000`. T12 se deja `[ ]` por esto.
+7. **Prueba manual en emulador (T12) no realizada.** En esta sesión `adb` no está en el PATH y no se me permitió buscarlo en el SDK, así que no ejercité teléfono ni tablet. Queda pendiente para el humano: entrada sin IPS y con IPS sin bienvenida, login con cuenta de personal (aviso R7), restauración con token de personal (aviso R5 y "Cerrar"), en teléfono y tablet con `adb reverse tcp:3000 tcp:3000`. T12 se deja `[ ]` por esto. **Resuelto el 2026-11-10:** el humano hizo la QA; ver "QA manual en emulador (T12)".
 8. `feature_list.json`, el ADR local 0002 y el cierre en `progress/history.md` son del leader.
 
 ## Salida de las pruebas
@@ -138,3 +138,19 @@ assembleDebugAndroidTest: OK
 FAIL: 0 · WARN: 0
 Estado: VERDE
 ```
+
+## QA manual en emulador (T12)
+
+Hecha por el humano el 2026-11-10 en emulador, teléfono y tablet, con `adb reverse tcp:3000 tcp:3000` y la API local. Resultado informado por chat:
+
+| # | Caso | Resultado |
+|---|---|---|
+| 1 | Sin IPS → selector de IPS, sin bienvenida ni "Personal" | OK |
+| 2 | Con IPS → login del paciente sin bienvenida | OK |
+| 3 | Regresión del paciente (alta, login, perfil, pre-registro, mis solicitudes) | OK |
+| 4 | Login con cuenta de personal → aviso R7, sin sesión | OK |
+| 5 | Restauración de token de personal (APK de `f732a10` con sesión de personal, luego el APK actual sin desinstalar) → aviso R5, sesión borrada, IPS conservada | OK |
+
+Observaciones: ninguna.
+
+`./init.sh` completo repetido el 2026-11-10 en `chore/DT-01-mobile-close`: FAIL 0 · WARN 0 · Estado VERDE (lint + testDebugUnitTest).
