@@ -152,6 +152,23 @@
       "status": "in_progress"
     },
     {
+      "id": "DT-01-mobile",
+      "global_id": "DT-01",
+      "name": "staff_removal",
+      "title": "Retirar del APK las funciones de personal",
+      "description": "La app móvil es solo del paciente (ADR 0008 de la API, ratificado el 2026-11-09). Retira acceso, recepción, captura clínica y dashboards de personal; conserva cuenta, pre-registro, mis solicitudes, identidad, cinco idiomas y guía TTS del paciente.",
+      "depends_on": [
+        "F-02-mobile",
+        "UI-01-mobile"
+      ],
+      "consumes_contract": "0.4.0",
+      "acceptance": [
+        "../asclepio-api/docs/adr/0008-app-movil-del-paciente.md (Ratificación); F-01.AC7, AC8; F-02.AC8, AC10 siguen cumplidos"
+      ],
+      "sdd": true,
+      "status": "pending"
+    },
+    {
       "id": "F-08-mobile",
       "global_id": "F-08",
       "name": "voice_dictation",
