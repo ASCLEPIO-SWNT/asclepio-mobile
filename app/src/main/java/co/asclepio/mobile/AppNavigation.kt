@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -22,6 +23,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -175,6 +177,10 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
         if (backStack.size > 1) TextButton(onClick = { backStack.removeAt(backStack.lastIndex) }) {
             Text(stringResource(R.string.navigate_back))
         }
+        if (session is SessionState.LoggedOut || session == SessionState.NoTenant) {
+            val notice by container.sessionManager.entryNotice.collectAsStateWithLifecycle()
+            notice?.let { EntryNotice(it, container.sessionManager::dismissEntryNotice) }
+        }
         Box(Modifier.weight(1f).fillMaxWidth()) {
             NavDisplay(
                 backStack = backStack,
@@ -312,6 +318,15 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                 },
             )
         }
+    }
+}
+
+/** Aviso de R5 encima de la pila de entrada; texto estático, sin datos del /me rechazado. */
+@Composable
+private fun EntryNotice(message: UiMessage, onClose: () -> Unit) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        UiNotice(message.text(), NoticeTone.Warning)
+        TextButton(onClick = onClose, modifier = Modifier.align(Alignment.End)) { Text(stringResource(R.string.close)) }
     }
 }
 

@@ -5,8 +5,10 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.lifecycle.viewModelScope
 import co.asclepio.mobile.MainDispatcherRule
 import co.asclepio.mobile.PatientTestEnv
+import co.asclepio.mobile.R
 import co.asclepio.mobile.core.model.Sex
 import co.asclepio.mobile.core.network.ApiResult
+import co.asclepio.mobile.core.ui.UiMessage
 import co.asclepio.mobile.feature.account.data.DocumentType
 import co.asclepio.mobile.feature.account.data.LoginPrefill
 import co.asclepio.mobile.feature.account.data.LoginResult
@@ -30,8 +32,9 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 /**
- * Ciclo de vida de la sesión del paciente (DT-01-mobile): generaciones, expiración, 401 y Bearer por operación (R11),
- * con Retrofit, DataStore y MockWebServer reales.
+ * Ciclo de vida de la sesión del paciente (DT-01-mobile): restauración de un /me no paciente (R5, R6), modelo de
+ * sesión solo paciente (R8) y generaciones, expiración, 401 y Bearer por operación (R11), con Retrofit, DataStore y
+ * MockWebServer reales.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class PatientSessionLifecycleTest {
@@ -341,6 +344,91 @@ class PatientSessionLifecycleTest {
         vm.viewModelScope.coroutineContext[Job]!!.children.toList().joinAll()
         assertEquals(SessionState.LoggedOut(account.tenant), account.sessionManager.state.value)
         assertEquals(account.tenant, account.store.tenant())
+    }
+
+    private val notPatient = UiMessage(R.string.error_not_patient)
+
+    /** Restaura un token guardado cuyo /me responde 200 con [body]; devuelve el número de peticiones de esa restauración. */
+    private suspend fun restoreWith(body: String, rememberTenant: Boolean = true): Int {
+        if (rememberTenant) env.store.saveTenant(env.tenant)
+        env.store.saveSession(SessionTestEnv.TOKEN, SessionTestEnv.EXPIRES)
+        val before = env.server.requestCount
+        env.enqueue(200, body)
+        env.manager.refresh()
+        return env.server.requestCount - before
+    }
+
+    private suspend fun assertRejected(entry: SessionState) {
+        assertEquals(entry, env.manager.state.value)
+        assertNull(env.manager.currentToken())
+        assertEquals(StoredSession.None, env.store.session())
+        assertFalse(env.manager.state.value is SessionState.Authenticated)
+        assertEquals(notPatient, env.manager.entryNotice.value)
+    }
+
+    @Test fun `R5 restaurar un token de personal con cualquiera de los cuatro roles lo borra conserva la IPS y avisa`() = runTest {
+        env = SessionTestEnv(tmp.root, backgroundScope)
+        for (role in listOf("RECEPTION", "NURSE", "PHYSICIAN", "ADMIN")) {
+            assertEquals(1, restoreWith(SessionTestEnv.staffMe(role)))
+            assertRejected(SessionState.LoggedOut(env.tenant))
+            assertEquals(env.tenant, env.store.tenant())
+            assertEquals("Bearer ${SessionTestEnv.TOKEN}", env.server.takeRequest().getHeader("Authorization"))
+            // Sin token no hay ninguna otra petición: ni un segundo /me ni datos privados.
+            env.manager.refresh()
+            assertEquals(StoredSession.None, env.store.session())
+        }
+        assertEquals(4, env.server.requestCount)
+    }
+
+    @Test fun `R5 restaurar otro kind un paciente incompleto u otra IPS lo borra y avisa en el inicio de sesion`() = runTest {
+        env = SessionTestEnv(tmp.root, backgroundScope)
+        val bodies = listOf(
+            """{"kind":"SERVICE","id":"x","tenantId":"${SessionTestEnv.TENANT}"}""",
+            """{"kind":"PATIENT","id":"account","tenantId":"${SessionTestEnv.TENANT}","consentVersion":"v1","identityVerified":false}""",
+            """{"kind":"PATIENT","id":"account","tenantId":"${SessionTestEnv.TENANT}","patientId":"patient","identityVerified":false}""",
+            SessionTestEnv.patientMe(tenantId = "other-tenant"),
+        )
+        for (body in bodies) {
+            assertEquals(1, restoreWith(body))
+            assertRejected(SessionState.LoggedOut(env.tenant))
+            assertEquals(env.tenant, env.store.tenant())
+        }
+        assertEquals(bodies.size, env.server.requestCount)
+    }
+
+    @Test fun `R5 sin IPS recordada un token de paciente o de personal se borra y el aviso se muestra en la seleccion de IPS`() = runTest {
+        env = SessionTestEnv(tmp.root, backgroundScope)
+        for (body in listOf(SessionTestEnv.patientMe(), SessionTestEnv.staffMe("ADMIN"))) {
+            assertEquals(1, restoreWith(body, rememberTenant = false))
+            assertRejected(SessionState.NoTenant)
+            assertNull(env.store.tenant())
+        }
+    }
+
+    @Test fun `R5 un paciente valido de la IPS recordada se restaura sin aviso`() = runTest {
+        env = SessionTestEnv(tmp.root, backgroundScope)
+        restoreWith(SessionTestEnv.patientMe())
+        assertPatientSession(env.manager, env.tenant)
+        assertNull(env.manager.entryNotice.value)
+    }
+
+    @Test fun `R6 iniciar sesion confirmar la IPS o cerrar el aviso dejan de mostrarlo`() = runTest {
+        env = SessionTestEnv(tmp.root, backgroundScope)
+        restoreWith(SessionTestEnv.staffMe("NURSE"))
+        assertEquals(notPatient, env.manager.entryNotice.value)
+        env.manager.beginLogin()
+        assertNull(env.manager.entryNotice.value)
+
+        restoreWith(SessionTestEnv.staffMe("NURSE"))
+        assertEquals(notPatient, env.manager.entryNotice.value)
+        env.manager.saveTenant(env.tenant)
+        assertNull(env.manager.entryNotice.value)
+
+        restoreWith(SessionTestEnv.staffMe("NURSE"))
+        assertEquals(notPatient, env.manager.entryNotice.value)
+        env.manager.dismissEntryNotice()
+        assertNull(env.manager.entryNotice.value)
+        assertEquals(SessionState.LoggedOut(env.tenant), env.manager.state.value)
     }
 
     @Test fun `R8 el modelo de sesion solo tiene principal paciente sin modo de acceso ni rol de personal`() {
