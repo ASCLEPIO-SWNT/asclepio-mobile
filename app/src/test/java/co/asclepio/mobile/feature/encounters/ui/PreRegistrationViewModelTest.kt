@@ -322,4 +322,54 @@ class PreRegistrationViewModelTest {
         assertEquals(JsonPrimitive("TYPED"), env.server.takeRequest().jsonBody()["complaintSource"])
         assertEquals(listOf("checkAvailability"), recognizer.calls)
     }
+
+    @Test fun `R3 dictar con permiso inicia una escucha con el idioma elegido`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer(OnDeviceAvailability.Available("es-US"))
+        val vm = opened(recognizer = recognizer)
+        vm.startDictation()
+        assertEquals(listOf("checkAvailability", "start:es-US"), recognizer.calls)
+        assertEquals(DictationUiState.Listening, vm.state.value.dictation)
+    }
+
+    @Test fun `R4 permiso denegado muestra aviso conserva el motivo y no escucha`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = opened(recognizer = recognizer)
+        vm.updateComplaint("Dolor de cabeza")
+        vm.onDictationPermissionDenied()
+        val s = vm.state.value
+        assertEquals(UiMessage(R.string.dictation_permission_denied), s.dictationMessage)
+        assertEquals("Dolor de cabeza", s.form.chiefComplaintText)
+        assertEquals(ComplaintSource.TYPED, s.form.complaintSource)
+        assertEquals(DictationUiState.Idle, s.dictation)
+        assertTrue(s.canSubmit)
+        assertTrue(recognizer.listens.isEmpty())
+        // Una nueva pulsación con permiso vuelve a escuchar y quita el aviso.
+        vm.startDictation()
+        assertEquals(1, recognizer.listens.size)
+        assertNull(vm.state.value.dictationMessage)
+    }
+
+    @Test fun `R5 durante la escucha no se inicia otra y no se puede enviar`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val dictating = opened(recognizer = recognizer)
+        dictating.updateComplaint("Dolor de cabeza")
+        assertTrue(dictating.state.value.canSubmit)
+        dictating.startDictation()
+        dictating.startDictation()
+        assertEquals(1, recognizer.listens.size)
+        assertFalse(dictating.state.value.canSubmit)
+        val before = env.server.requestCount
+        dictating.submit()
+        runCurrent()
+        assertEquals(before, env.server.requestCount)
+        assertFalse(dictating.state.value.submitting)
+    }
+
+    @Test fun `R13 iniciar el dictado detiene la guia antes de escuchar`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = opened(recognizer = recognizer, beforeListen = { recognizer.calls += "guide.stop" })
+        assertEquals(listOf("checkAvailability"), recognizer.calls)
+        vm.startDictation()
+        assertEquals(listOf("checkAvailability", "guide.stop", "start:es-CO"), recognizer.calls)
+    }
 }

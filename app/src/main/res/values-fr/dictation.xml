@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dictado del motivo en el dispositivo (F-08-mobile). El dictado reconoce solo español. -->
+<resources>
+    <string name="dictation_permission_denied">Sans l’autorisation du micro, la dictée est impossible. Vous pouvez continuer à écrire le motif.</string>
+</resources>

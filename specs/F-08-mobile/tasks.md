@@ -18,7 +18,7 @@ Sin migraciones. Orden estricto. En cada tarea el `implementer` escribe **primer
   - Archivo: `feature/encounters/ui/PreRegistrationViewModel.kt` (nuevo parámetro `recognizer: OnDeviceRecognizer = NoDictation` y `beforeListen: () -> Unit = {}`; campo `dictation` en `PreRegistrationUiState`).
   - Pruebas primero en `PreRegistrationViewModelTest.kt`: `R1 al abrir comprueba la disponibilidad sin iniciar escucha`, `R1 con espanol local disponible el dictado queda listo con ese idioma`, `R16 sin reconocimiento local el dictado no esta disponible y se puede enviar por texto`. Las pruebas existentes de F-02 siguen en verde sin cambios de firma.
 
-- [ ] **T5 ViewModel: iniciar, permiso y una sola escucha** (R3, R4, R5, R13)
+- [x] **T5 ViewModel: iniciar, permiso y una sola escucha** (R3, R4, R5, R13)
   - Archivo: `PreRegistrationViewModel.kt` (`startDictation`, `onDictationPermissionDenied`, `canSubmit`).
   - Pruebas primero: `R3 dictar con permiso inicia una escucha con el idioma elegido`, `R4 permiso denegado muestra aviso conserva el motivo y no escucha`, `R5 durante la escucha no se inicia otra y no se puede enviar`, `R13 iniciar el dictado detiene la guia antes de escuchar`.
 

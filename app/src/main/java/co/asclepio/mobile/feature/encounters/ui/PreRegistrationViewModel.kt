@@ -44,12 +44,17 @@ data class PreRegistrationUiState(
     val created: Boolean = false,
     /** Dictado en el dispositivo (F-08). Nunca contiene texto reconocido: ese texto solo pasa a [form]. */
     val dictation: DictationUiState = DictationUiState.Checking,
+    /** Aviso local del dictado (permiso, sin resultado, error); nunca bloquea el envío por texto (R4, R7). */
+    val dictationMessage: UiMessage? = null,
 ) {
     /** R11: longitud actual del motivo en unidades UTF-16 (`String.length`). */
     val complaintLength: Int get() = form.chiefComplaintText.length
 
-    /** R9, R24, R25. */
-    val canSubmit: Boolean get() = sites is SitesUiState.Loaded && !submitting && !submitBlocked && !created
+    /** R9, R24, R25; y R5 de F-08: no se envía mientras se escucha o se espera el resultado. */
+    val canSubmit: Boolean get() = sites is SitesUiState.Loaded && !submitting && !submitBlocked && !created && !dictationActive
+
+    private val dictationActive: Boolean
+        get() = dictation == DictationUiState.Listening || dictation == DictationUiState.Processing
 }
 
 /**
@@ -119,6 +124,23 @@ class PreRegistrationViewModel(
             }
         }
     }
+
+    /**
+     * "Dictar" con el permiso concedido (R3): solo desde `Idle` y con el formulario abierto; una sola escucha (R5).
+     * Detiene la guía antes de abrir el micrófono (R13).
+     */
+    fun startDictation() {
+        val s = _state.value
+        val tag = languageTag
+        if (s.dictation != DictationUiState.Idle || tag == null || s.submitting || s.created) return
+        beforeListen()
+        _state.update { it.copy(dictation = DictationUiState.Listening, dictationMessage = null) }
+        recognizer.start(tag, onFinal = {}, onError = {})
+    }
+
+    /** R4: permiso denegado al pulsar "Dictar"; el motivo, su origen y el envío por texto no cambian. */
+    fun onDictationPermissionDenied() =
+        _state.update { it.copy(dictationMessage = UiMessage(R.string.dictation_permission_denied)) }
 
     fun selectSite(siteId: String) = _state.update { s ->
         val sites = s.sites as? SitesUiState.Loaded ?: return@update s
