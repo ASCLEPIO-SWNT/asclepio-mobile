@@ -62,14 +62,13 @@ data class PreRegistrationUiState(
  * Formulario de pre-registro (R8–R15, R24, R25). La sede recordada solo se usa para preseleccionar; elegir otra no la
  * cambia (PA-M02-5). El motivo solo vive aquí, en memoria (R27).
  *
- * F-08 (D3): también es dueño del estado del dictado y del origen del motivo. [recognizer] es el reconocedor local
- * y [beforeListen] detiene la guía TTS antes de escuchar (D8).
+ * F-08 (D3): también es dueño del estado del dictado y del origen del motivo. [recognizer] es el reconocedor local.
+ * No conoce la guía TTS: la raíz la detiene antes de llamar a [startDictation] (D8).
  */
 class PreRegistrationViewModel(
     private val repository: PreRegistrationRepository,
     private val sessionManager: SessionManager,
     private val recognizer: OnDeviceRecognizer = NoDictation,
-    private val beforeListen: () -> Unit = {},
 ) : ViewModel() {
     private val _state = MutableStateFlow(PreRegistrationUiState())
     val state: StateFlow<PreRegistrationUiState> = _state.asStateFlow()
@@ -131,13 +130,12 @@ class PreRegistrationViewModel(
 
     /**
      * "Dictar" con el permiso concedido (R3): solo desde `Idle` y con el formulario abierto; una sola escucha (R5).
-     * Detiene la guía antes de abrir el micrófono (R13).
+     * La raíz detiene la guía vigente antes de llamar aquí (R13, D8).
      */
     fun startDictation() {
         val s = _state.value
         val tag = languageTag
         if (s.dictation != DictationUiState.Idle || tag == null || s.submitting || s.created) return
-        beforeListen()
         val generation = ++listenGeneration
         _state.update { it.copy(dictation = DictationUiState.Listening, dictationMessage = null) }
         recognizer.start(tag, onFinal = { onDictationResult(generation, it) }, onError = { onDictationError(generation, it) })

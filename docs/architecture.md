@@ -35,7 +35,8 @@ app/src/main/java/co/asclepio/mobile/
     │                # ViewModel, PreRegistrationForm + validación, statusText/isInProgress, PreRegistrationErrors)
     └── voice/       # dictado en el dispositivo (F-08): AndroidOnDeviceRecognizer (único que usa SpeechRecognizer,
                      # solo createOnDeviceSpeechRecognizer), SpanishOnDeviceSupport.kt (funciones puras: rama por SDK,
-                     # variante es, errores, permiso) y ui/DictationControls (botones, estados y solicitud de RECORD_AUDIO)
+                     # variante es, errores, permiso), DictationGuideExclusion.kt (startDictationStoppingGuide, D8) y
+                     # ui/DictationControls (botones, estados y solicitud de RECORD_AUDIO)
 ```
 Cada `feature/<f>/` contiene `data/` (API y repositorio), `ui/` (Composables y `<X>ViewModel`) y, si aplica, `model/`.
 
@@ -46,7 +47,7 @@ Cada `feature/<f>/` contiene `data/` (API y repositorio), `ui/` (Composables y `
 - `ui` (Composable) → `ViewModel` → repositorio → servicio Retrofit.
 - Los DTOs de sesión compartidos viven en `core/auth`, sin dependencias core→feature. `/me` solo se convierte en un paciente completo de la IPS recordada antes de exponer `Authenticated`; cualquier otro cuerpo no da principal.
 - El inicio (`feature/account`) recibe el estado del pre-registro (`feature/encounters`) como un slot `@Composable` que compone `AppNavigation` (D3 de F-02-mobile).
-- El pre-registro (`feature/encounters`) recibe los controles de dictado (`feature/voice`) como un slot `@Composable` que compone `AppNavigation`; ambas features solo comparten `core/voice` (F-08-mobile). El ViewModel del pre-registro es dueño del estado del dictado y del origen del motivo.
+- El pre-registro (`feature/encounters`) recibe los controles de dictado (`feature/voice`) como un slot `@Composable` que compone `AppNavigation`; ambas features solo comparten `core/voice` (F-08-mobile). El ViewModel del pre-registro es dueño del estado del dictado y del origen del motivo. No conoce la guía TTS: el callback de "Dictar" de `AppNavigation` detiene la guía vigente con `startDictationStoppingGuide` y se reconstruye en cada composición, porque la guía se recrea al rotar o cambiar de idioma y el ViewModel no (D8 de F-08).
 
 **Prohibidas**
 - `feature/A` → `feature/B`. Lo compartido va a `core/`. Solo `AppNavigation.kt` (paquete raíz) conoce varias features.

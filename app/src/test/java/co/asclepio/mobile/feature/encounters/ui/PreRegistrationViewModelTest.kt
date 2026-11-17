@@ -53,14 +53,13 @@ class PreRegistrationViewModelTest {
     private suspend fun TestScope.opened(
         tenants: String = PatientTestEnv.tenants(),
         recognizer: OnDeviceRecognizer? = null,
-        beforeListen: () -> Unit = {},
     ): PreRegistrationViewModel {
         env.login()
         env.enqueue(200, tenants)
         val vm = if (recognizer == null) {
             PreRegistrationViewModel(env.preRegistrationRepository, env.sessionManager)
         } else {
-            PreRegistrationViewModel(env.preRegistrationRepository, env.sessionManager, recognizer, beforeListen)
+            PreRegistrationViewModel(env.preRegistrationRepository, env.sessionManager, recognizer)
         }
         vm.state.first { it.sites !is SitesUiState.Loading }
         val recorded = env.server.takeRequest()
@@ -368,14 +367,6 @@ class PreRegistrationViewModelTest {
         runCurrent()
         assertEquals(before, env.server.requestCount)
         assertFalse(dictating.state.value.submitting)
-    }
-
-    @Test fun `R13 iniciar el dictado detiene la guia antes de escuchar`() = runTest {
-        val recognizer = FakeOnDeviceRecognizer()
-        val vm = opened(recognizer = recognizer, beforeListen = { recognizer.calls += "guide.stop" })
-        assertEquals(listOf("checkAvailability"), recognizer.calls)
-        vm.startDictation()
-        assertEquals(listOf("checkAvailability", "guide.stop", "start:es-CO"), recognizer.calls)
     }
 
     /** Formulario con "Dolor de cabeza" ya dictado (origen VOICE_ON_DEVICE). */

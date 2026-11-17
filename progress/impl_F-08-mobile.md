@@ -1,12 +1,12 @@
 # F-08-mobile — Informe del implementer
 
-Rama `feature/F-08-mobile`, base `0c3e510`. Contrato consumido 0.9.0 (`BuildConfig.CONSUMED_CONTRACT`), sin cambios de contrato. Registro por tarea y hallazgo abierto (D8 y la guía recreada) en `progress/current/F-08-mobile.md`.
+Rama `feature/F-08-mobile`, base `0c3e510`. Contrato consumido 0.9.0 (`BuildConfig.CONSUMED_CONTRACT`), sin cambios de contrato. Registro por tarea en `progress/current/F-08-mobile.md`. El hallazgo de D8 con la guía recreada se resolvió con la enmienda aprobada el 2026-11-17 (T15).
 
 ## Archivos tocados
 
-- Producción: `app/build.gradle.kts`, `app/src/main/AndroidManifest.xml`, `AppContainer.kt`, `AppNavigation.kt`, `core/voice/OnDeviceRecognizer.kt` (nuevo), `feature/encounters/data/PreRegistrationsApi.kt`, `feature/encounters/ui/{PreRegistrationForm,PreRegistrationScreen,PreRegistrationViewModel}.kt`, `feature/voice/{AndroidOnDeviceRecognizer,SpanishOnDeviceSupport}.kt` (nuevos), `feature/voice/ui/DictationControls.kt` (nuevo), `feature/voice/README.md`, `res/values{,-en,-pt,-fr,-de}/dictation.xml` (nuevos, 12 claves `dictation_*`).
-- Pruebas: `core/voice/{DictationTypesTest,FakeOnDeviceRecognizer}.kt` (nuevos), `feature/voice/{SpanishOnDeviceSupportTest,OnDeviceOnlyTest,DictationStringsTest}.kt` (nuevos), `feature/encounters/data/PreRegistrationsApiTest.kt`, `feature/encounters/ui/{PreRegistrationFormTest,PreRegistrationViewModelTest}.kt`.
-- Documentación: `docs/architecture.md`, `docs/verification.md`, `specs/F-08-mobile/tasks.md` (T1–T12 y T14 `[x]`), `progress/current/F-08-mobile.md`.
+- Producción: `app/build.gradle.kts`, `app/src/main/AndroidManifest.xml`, `AppContainer.kt`, `AppNavigation.kt`, `core/voice/OnDeviceRecognizer.kt` (nuevo), `feature/encounters/data/PreRegistrationsApi.kt`, `feature/encounters/ui/{PreRegistrationForm,PreRegistrationScreen,PreRegistrationViewModel}.kt`, `feature/voice/{AndroidOnDeviceRecognizer,SpanishOnDeviceSupport,DictationGuideExclusion}.kt` (nuevos), `feature/voice/ui/DictationControls.kt` (nuevo), `feature/voice/README.md`, `res/values{,-en,-pt,-fr,-de}/dictation.xml` (nuevos, 12 claves `dictation_*`).
+- Pruebas: `core/voice/{DictationTypesTest,FakeOnDeviceRecognizer}.kt` (nuevos), `feature/voice/{SpanishOnDeviceSupportTest,OnDeviceOnlyTest,DictationStringsTest,DictationGuideExclusionTest}.kt` (nuevos), `feature/encounters/data/PreRegistrationsApiTest.kt`, `feature/encounters/ui/{PreRegistrationFormTest,PreRegistrationViewModelTest}.kt`.
+- Documentación: `docs/architecture.md`, `docs/verification.md`, `specs/F-08-mobile/tasks.md` (T1–T12, T14 y T15 `[x]`), `progress/current/F-08-mobile.md`.
 
 ## Trazabilidad
 
@@ -24,7 +24,7 @@ Rama `feature/F-08-mobile`, base `0c3e510`. Contrato consumido 0.9.0 (`BuildConf
 | R10 | `PreRegistrationViewModelTest.kt` :: `R10 tras cancelar se ignoran resultados y errores tardios`; `R10 un resultado de una escucha anterior no se aplica a la nueva`; `R10 al limpiar el ViewModel se libera el reconocedor` |
 | R11 | `PreRegistrationViewModelTest.kt` :: `R11 cancelar por rotacion conserva motivo y origen y exige pulsar Dictar de nuevo` |
 | R12 | `core/voice/DictationTypesTest.kt` :: `R12 los estados y disponibilidades del dictado no contienen texto reconocido en toString`; `R12 NoDictation informa no disponible y no inicia escuchas` · `PreRegistrationViewModelTest.kt` :: `R12 el estado de la pantalla enmascara el motivo dictado en toString` · `OnDeviceOnlyTest.kt` :: `R12 los archivos del dictado no usan SavedStateHandle DataStore ni Log` |
-| R13 | `PreRegistrationViewModelTest.kt` :: `R13 iniciar el dictado detiene la guia antes de escuchar` (la cancelación cuando la guía habla está en la raíz: QA T13) |
+| R13 | `feature/voice/DictationGuideExclusionTest.kt` :: `R13 tras recrear la guia Dictar detiene la guia actual` (D8 enmendado, T15; la cancelación cuando la guía habla está en la raíz: QA T13) |
 | R14 | `feature/voice/DictationStringsTest.kt` :: `R14 los textos del dictado existen en los cinco idiomas`; `R14 DictationControls no tiene textos literales de UI` |
 | R16 | `PreRegistrationViewModelTest.kt` :: `R16 sin reconocimiento local el dictado no esta disponible y se puede enviar por texto` |
 
@@ -34,7 +34,8 @@ Nota: en `PreRegistrationViewModelTest`, `PreRegistrationFormTest` y `PreRegistr
 
 - `./init.sh` (completo): `FAIL: 0 · WARN: 0` · `Estado: VERDE` (incluye `gradlew lint testDebugUnitTest`).
 - `./gradlew lint testDebugUnitTest assembleDebugAndroidTest`: OK. 354 pruebas JVM, 48 clases, 0 fallos. Lint: 0 errores, 15 avisos preexistentes.
+- T15 (enmienda D8, 2026-11-17): `./gradlew testDebugUnitTest --tests 'DictationGuideExclusionTest*' --tests 'PreRegistrationViewModelTest*'` OK (1 + 35). `./init.sh` completo: `FAIL: 0 · WARN: 0` · `Estado: VERDE`; 354 pruebas JVM en 49 clases, 0 fallos (+1 `R13 tras recrear la guia Dictar detiene la guia actual`, −1 `R13 iniciar el dictado detiene la guia antes de escuchar`).
 
 ## QA manual (T13): pendiente del humano
 
-No ejecutada. Registrar aquí: emulador o dispositivo, versión de Android, APK/commit, API real o fixture y qué se ejercitó de verdad. Incluir el caso del hallazgo abierto: rotar o cambiar idioma → iniciar la guía → cerrar el panel → "Dictar".
+No ejecutada. Registrar aquí: emulador o dispositivo, versión de Android, APK/commit, API real o fixture y qué se ejercitó de verdad. Incluir el caso de D8 enmendado: rotar o cambiar idioma → iniciar la guía → cerrar el panel → "Dictar" (la guía se detiene).

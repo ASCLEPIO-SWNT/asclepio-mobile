@@ -57,6 +57,7 @@ import co.asclepio.mobile.feature.patients.ui.ProfileViewModel
 import co.asclepio.mobile.core.ui.*
 import co.asclepio.mobile.feature.status.ui.StatusScreen
 import co.asclepio.mobile.feature.status.ui.StatusViewModel
+import co.asclepio.mobile.feature.voice.startDictationStoppingGuide
 import co.asclepio.mobile.feature.voice.ui.DictationControls
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -290,7 +291,6 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                                     container.preRegistrationRepository,
                                     container.sessionManager,
                                     recognizer = container.newOnDeviceRecognizer(),
-                                    beforeListen = guide::stop,
                                 )
                             }
                             val state by vm.state.collectAsStateWithLifecycle()
@@ -319,7 +319,8 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                                         state = state.dictation,
                                         message = state.dictationMessage,
                                         enabled = !state.submitting && !state.created,
-                                        onStart = vm::startDictation,
+                                        // F-08 R13 (D8): se reconstruye en cada composición con la guía vigente.
+                                        onStart = { startDictationStoppingGuide(guide::stop, vm::startDictation) },
                                         onPermissionDenied = vm::onDictationPermissionDenied,
                                         onStop = vm::stopDictation,
                                         onCancel = vm::cancelDictation,
