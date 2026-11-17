@@ -30,7 +30,7 @@ Sin migraciones. Orden estricto. En cada tarea el `implementer` escribe **primer
   - Archivo: `PreRegistrationViewModel.kt` (`onCleared` → `release()`).
   - Pruebas primero: `R10 al limpiar el ViewModel se libera el reconocedor` (vía `ViewModelStore.clear()`), `R11 cancelar por rotacion conserva motivo y origen y exige pulsar Dictar de nuevo`, `R12 el estado de la pantalla enmascara el motivo dictado en toString`.
 
-- [ ] **T8 Funciones puras de feature/voice** (R1, R2, R7, R3)
+- [x] **T8 Funciones puras de feature/voice** (R1, R2, R7, R3)
   - Archivo: `feature/voice/SpanishOnDeviceSupport.kt` (`recognitionStrategy(sdkInt)`, `pickSpanishTag(installed)`, `mapRecognizerError(code)`, `dictationAction(hasPermission)`).
   - Pruebas primero en `feature/voice/SpanishOnDeviceSupportTest.kt`: `R1 API 31 y 32 usan solo isOnDeviceRecognitionAvailable`, `R1 API 33 o mas consulta checkRecognitionSupport`, `R1 prefiere es-CO luego es luego otra variante es`, `R1 sin variante es instalada no hay idioma`, `R7 los errores de idioma se traducen a LanguageUnavailable`, `R4 el error de permisos se traduce a Permission`, `R3 sin permiso la accion es solicitarlo y con permiso es escuchar`.
 
