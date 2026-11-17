@@ -56,6 +56,6 @@ Sin migraciones. Orden estricto. En cada tarea el `implementer` escribe **primer
   - Dispositivo con español local (API 33+ y, si lo hay, 31–32): dictado en modo avión, edición, envío con `VOICE_ON_DEVICE` (comprobar en la web de recepción o en la base local); borrar todo y escribir → `TYPED`; Detener y Cancelar; rotación y segundo plano durante la escucha; abrir la guía durante la escucha.
   - Registrar en `progress/impl_F-08-mobile.md` emulador/dispositivo, versión de Android, APK/commit, API real o fixture y qué se ejercitó de verdad; sin modelo local no se declara transcripción real.
 
-- [ ] **T14 Cierre: `./init.sh` en verde y trazabilidad** (R1–R14, R16)
+- [x] **T14 Cierre: `./init.sh` en verde y trazabilidad** (R1–R14, R16)
   - `./gradlew lint testDebugUnitTest assembleDebugAndroidTest` y `./init.sh` completo en verde.
   - Tabla `R<n>` → `archivo::prueba` en `progress/impl_F-08-mobile.md` (`grep -rnE '`R[0-9]+ ' app/src/test app/src/androidTest`); todos los `R<n>` vigentes tienen al menos una prueba.
