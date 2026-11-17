@@ -42,7 +42,7 @@ Sin migraciones. Orden estricto. En cada tarea el `implementer` escribe **primer
   - Archivos: `feature/voice/ui/DictationControls.kt` (botones, estado con `liveRegion`, nota "solo español", aviso de no disponible, solicitud de `RECORD_AUDIO` al pulsar con `dictationAction`); `res/values*/` claves `dictation_*` en los cinco idiomas.
   - Pruebas primero: `DictationStringsTest.kt` `R14 los textos del dictado existen en los cinco idiomas`; ampliar `OnDeviceOnlyTest` con `R3 RECORD_AUDIO solo se solicita desde DictationControls`. `PatientOnlyResourcesTest` sigue en verde (mismas claves en los cinco catálogos).
 
-- [ ] **T11 Composición en la raíz y pantalla** (R5, R10, R11, R13)
+- [x] **T11 Composición en la raíz y pantalla** (R5, R10, R11, R13)
   - Archivos: `AppContainer.kt` (fábrica `newOnDeviceRecognizer()` con el contexto de aplicación), `AppNavigation.kt` (VM con `recognizer` y `beforeListen = guide::stop`; slot `dictation`; `cancelDictation()` en `ON_STOP`, en `onDispose` de la entrada y cuando `guide.state` es `Speaking`), `feature/encounters/ui/PreRegistrationScreen.kt` (slot `dictation` en el panel del motivo).
   - Verificación: `PatientOnlyScopeTest`, `PatientOnlyNavigationTest`, `PatientOnlyResourcesTest` y `PreRegistrationViewModelTest` en verde; comportamiento de ciclo de vida y guía en T13.
 
