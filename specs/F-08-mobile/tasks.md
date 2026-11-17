@@ -2,7 +2,7 @@
 
 Sin migraciones. Orden estricto. En cada tarea el `implementer` escribe **primero la prueba** (nombre en backticks que empieza por `R<n> ` con espacio, nunca `:`), luego el código, y marca `[x]`. Las pruebas viven en `app/src/test/java/co/asclepio/mobile/...` y se ejecutan con `./gradlew testDebugUnitTest --tests '<Clase>*'`.
 
-- [ ] **T1 Contrato 0.9.0 y POST con dictado** (R9)
+- [x] **T1 Contrato 0.9.0 y POST con dictado** (R9)
   - Archivos: `app/build.gradle.kts` (`CONSUMED_CONTRACT` → `"0.9.0"`), comentarios de versión en `feature/encounters/data/PreRegistrationsApi.kt` y `feature/encounters/ui/PreRegistrationForm.kt`.
   - Prueba primero en `feature/encounters/data/PreRegistrationsApiTest.kt`: `R9 el POST con dictado lleva exactamente siteId chiefComplaintText y complaintSource VOICE_ON_DEVICE` (MockWebServer: cuerpo JSON con tres claves exactas, sin audio, idioma ni horas).
 

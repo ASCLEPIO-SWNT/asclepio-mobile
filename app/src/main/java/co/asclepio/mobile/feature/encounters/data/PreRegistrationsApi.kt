@@ -7,9 +7,10 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 
-// DTOs escritos a mano según el snapshot 0.4.0 de ../asclepio-api/openapi/asclepio-api.v1.json.
+// DTOs escritos a mano según el snapshot 0.9.0 de ../asclepio-api/openapi/asclepio-api.v1.json (sin cambios en
+// CreatePreRegistrationDto ni PatientPreRegistrationDto desde 0.4.0).
 
-/** Origen del motivo (D8). En F-02 siempre es [TYPED]; F-08 añadirá el dictado en el dispositivo. */
+/** Origen del motivo (D8 de F-02, D5 de F-08): [VOICE_ON_DEVICE] desde que el borrador acepta un dictado local. */
 @Serializable
 enum class ComplaintSource {
     @SerialName("TYPED")

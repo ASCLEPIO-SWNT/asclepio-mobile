@@ -7,7 +7,7 @@ import co.asclepio.mobile.feature.encounters.data.ComplaintSource
 import co.asclepio.mobile.feature.encounters.data.CreatePreRegistrationRequest
 import co.asclepio.mobile.feature.encounters.data.PatientPreRegistrationDto
 
-/** `maxLength` de `chiefComplaintText` en CreatePreRegistrationDto (contrato 0.4.0). */
+/** `maxLength` de `chiefComplaintText` en CreatePreRegistrationDto (contrato 0.9.0). */
 const val CHIEF_COMPLAINT_MAX = 2000
 
 enum class PreRegistrationField { Site, ChiefComplaint }

@@ -13,7 +13,7 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-// DTOs según el snapshot 0.4.0 del contrato; Retrofit real contra MockWebServer.
+// DTOs según el snapshot 0.9.0 del contrato; Retrofit real contra MockWebServer.
 class PreRegistrationsApiTest {
     @get:Rule val tmp = TemporaryFolder()
     private lateinit var env: PatientTestEnv
@@ -39,6 +39,27 @@ class PreRegistrationsApiTest {
                 "siteId" to JsonPrimitive(PatientTestEnv.SITE_SUR),
                 "chiefComplaintText" to JsonPrimitive("Dolor de cabeza"),
                 "complaintSource" to JsonPrimitive("TYPED"),
+            ),
+            recorded.jsonBody(),
+        )
+    }
+
+    @Test fun `R9 el POST con dictado lleva exactamente siteId chiefComplaintText y complaintSource VOICE_ON_DEVICE`() = runTest {
+        env.login()
+        env.enqueue(201, PatientTestEnv.preRegistration())
+        env.preRegistrationsApi.create(
+            CreatePreRegistrationRequest(PatientTestEnv.SITE_SUR, "Me duele el pecho desde anoche", ComplaintSource.VOICE_ON_DEVICE),
+            "Bearer ${PatientTestEnv.TOKEN}",
+        )
+        val recorded = env.server.takeRequest()
+        assertEquals("POST", recorded.method)
+        assertEquals("/api/v1/patient/pre-registrations", recorded.path)
+        // Exactamente tres claves: sin audio, idioma ni horas (F-08.AC2, RNF-10).
+        assertEquals(
+            mapOf(
+                "siteId" to JsonPrimitive(PatientTestEnv.SITE_SUR),
+                "chiefComplaintText" to JsonPrimitive("Me duele el pecho desde anoche"),
+                "complaintSource" to JsonPrimitive("VOICE_ON_DEVICE"),
             ),
             recorded.jsonBody(),
         )
