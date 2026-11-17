@@ -182,12 +182,12 @@
       "depends_on": [
         "F-02-mobile"
       ],
-      "consumes_contract": null,
+      "consumes_contract": "0.9.0",
       "acceptance": [
         "Ver ../asclepio-api/docs/product/features/F-08.md (F-08.AC1–AC5)"
       ],
       "sdd": true,
-      "status": "pending"
+      "status": "in_progress"
     }
   ]
 }

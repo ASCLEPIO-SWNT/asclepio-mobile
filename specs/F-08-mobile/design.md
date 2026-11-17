@@ -1,62 +1,108 @@
 # F-08-mobile — Diseño
 
-## Resumen y límites
+## Resumen
 
-Spec futura de dictado del motivo PATIENT, dentro del plan aprobado y sin cambios de servidor. Se conserva `PreRegistrationForm`/VM y su provenance ya modelada. `feature/voice` implementa el adaptador on-device; la raíz compone controles/resultado mediante una interfaz en core, sin import entre feature/encounters y feature/voice. La guía TTS UI-01 permanece estática y separada.
+El paciente puede dictar el motivo de su pre-registro en español con el reconocedor **local** de Android; el texto se añade al motivo, se puede editar y se envía con `complaintSource = VOICE_ON_DEVICE`. Si no hay reconocimiento local en español o se deniega el micrófono, el formulario sigue siendo solo de texto, como en F-02-mobile.
+
+Capas (según `docs/architecture.md`; la app es solo del paciente, ADR 0008):
+
+| Paquete | Qué se añade o cambia |
+|---|---|
+| `core/voice/` (nuevo) | Puerto mínimo `OnDeviceRecognizer`, los tipos `OnDeviceAvailability`, `DictationError`, `DictationUiState` y la implementación nula `NoDictation`. Sin dependencias Android. |
+| `feature/voice/` | `AndroidOnDeviceRecognizer` (adaptador de `SpeechRecognizer`), `SpanishOnDeviceSupport.kt` (funciones puras: rama por SDK, elección de idioma y traducción de códigos de error) y `ui/DictationControls.kt` (botones, estado y solicitud de `RECORD_AUDIO`). |
+| `feature/encounters/` | `PreRegistrationViewModel` gestiona el estado del dictado y el origen del motivo; `PreRegistrationForm.kt` añade dos funciones puras (`withTypedText`, `withDictation`); `PreRegistrationScreen` recibe un slot `dictation` y bloquea "Enviar" durante la escucha. |
+| Raíz | `AppContainer` crea el adaptador; `AppNavigation` compone `DictationControls` en el slot, cancela la escucha en `ON_STOP`, al salir de la entrada y cuando la guía habla, y pasa `guide::stop` al ViewModel. |
+
+`feature/encounters` y `feature/voice` solo dependen de `core/voice`; ninguna importa a la otra. Solo la raíz conoce las dos (mismo patrón que el slot de estado de F-02-mobile, D3).
+
+### Puerto (core/voice)
+
+```kotlin
+interface OnDeviceRecognizer {
+    fun checkAvailability(onResult: (OnDeviceAvailability) -> Unit)
+    fun start(languageTag: String, onFinal: (String) -> Unit, onError: (DictationError) -> Unit)
+    fun stop()      // stopListening: espera el resultado
+    fun cancel()    // cancel + destroy; no entrega más callbacks
+    fun release()   // igual que cancel; idempotente
+}
+sealed interface OnDeviceAvailability { data class Available(val languageTag: String) : OnDeviceAvailability; data object Unavailable : OnDeviceAvailability }
+enum class DictationError { LanguageUnavailable, Permission, NoMatch, Busy, Other }
+sealed interface DictationUiState { Checking, Unavailable, Idle, Listening, Processing }  // sin texto reconocido
+```
+
+El ViewModel se prueba en `testDebugUnitTest` con un `FakeOnDeviceRecognizer` en `src/test` que registra las llamadas y permite disparar `onFinal`/`onError`. No se usa Robolectric (el repo no lo usa).
+
+## Plataforma y detección (R1, R2, R16)
+
+Línea base del repo: `compileSdk 37`, `targetSdk 37` (Android 17), `minSdk 31` (ADR 0001).
+
+- **API 31–32:** solo existen `isOnDeviceRecognitionAvailable(context)` y `createOnDeviceSpeechRecognizer(context)`. Si el primero devuelve `true` se considera `Available("es-CO")`; el idioma no instalado se detecta al escuchar por `ERROR_LANGUAGE_NOT_SUPPORTED` o `ERROR_LANGUAGE_UNAVAILABLE` (API 31), que el ViewModel convierte en `Unavailable` (R7, R16).
+- **API 33+:** si `isOnDeviceRecognitionAvailable` es `true`, se crea el reconocedor local, se registra un listener y se llama a `checkRecognitionSupport(intent, mainExecutor, callback)`. Con `RecognitionSupport.installedOnDeviceLanguages` se elige el idioma con `pickSpanishTag`: `es-CO` si está; si no, `es`; si no, la primera variante `es-*` en el orden recibido; si no hay ninguna, `Unavailable`. `onError` del callback también es `Unavailable`. Solo cuentan los idiomas **instalados** (no `pending`, `supported` ni `online`).
+- La rama se decide con `recognitionStrategy(sdkInt)` (`ServiceOnly` para 31–32, `CheckSupport` para 33+), función pura probada en la JVM; el adaptador la llama con `Build.VERSION.SDK_INT`.
+- `createOnDeviceSpeechRecognizer` lanza `UnsupportedOperationException` si `isOnDeviceRecognitionAvailable` es `false`: el adaptador nunca lo llama sin esa comprobación y, además, captura la excepción como `Unavailable`. Se llama siempre en el hilo principal (los métodos del ViewModel se invocan desde la UI y el adaptador usa `context.mainExecutor`). `setRecognitionListener` se llama antes de `checkRecognitionSupport`/`startListening`, y `destroy()` al cancelar, liberar o terminar.
+- `startListening` recibe un `Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH)` con `EXTRA_LANGUAGE_MODEL = FREE_FORM`, `EXTRA_LANGUAGE = <tag>`, `EXTRA_PARTIAL_RESULTS = false` y `EXTRA_MAX_RESULTS = 1`. Ese intent nunca se lanza como actividad.
+- Se crea un reconocedor nuevo por escucha y se destruye al terminar: así cancelar o salir siempre libera el micrófono y no quedan callbacks colgados.
+- `AndroidManifest.xml` añade a `<queries>` el intent `android.speech.RecognitionService` (visibilidad de paquetes desde Android 11). `RECORD_AUDIO` ya está declarado.
 
 ## Decisiones
 
-| # | Decisión | Alternativa descartada | Motivo |
+| # | Decisión | Alternativa descartada | Por qué |
 |---|---|---|---|
-| D1 | Factory on-device API31+ y español fijo es-CO/es con comprobación runtime/fallback texto. | Factory genérica+preferOffline, otro idioma o ASR remoto. | Preferencia offline no es garantía; ADR0006 exige audio local. |
-| D2 | Solo resultado final vigente se añade al borrador; parciales no se guardan ni envían. | Sustituir automáticamente todo el motivo o enviar al terminar de hablar. | Conserva texto previo y revisión del usuario. |
-| D3 | Flag de provenance sticky por borrador al aceptar dictado. | Recalcular TYPED por edición o estimar porcentaje dictado. | El plan resuelve PA-F08-1: sigue VOICE_ON_DEVICE tras editar. |
-| D4 | Generación de escucha ligada a sesión/pantalla/draft, cancel/destroy en lifecycle y gate de permiso. | Reutilizar callbacks después de navegar o retomar micrófono automáticamente. | Impide insertar texto viejo o escuchar fuera de contexto. |
-| D5 | Coordinación común de modalidades: iniciar ASR detiene guía y viceversa. | TTS y micrófono simultáneos o narrar transcripción con la guía. | Evita reconocer la propia narración y exponer datos clínicos. |
+| D1 | Solo `createOnDeviceSpeechRecognizer`, con ramas por `SDK_INT` (31–32 frente a 33+) y fallback a texto. | `createSpeechRecognizer` + `EXTRA_PREFER_OFFLINE`, o `RecognizerIntent` en una actividad externa. | "Prefer offline" es una preferencia y la actividad externa puede usar la nube: el audio podría salir del teléfono (ADR 0006, ADR 0001). |
+| D2 | **No** llamar a `triggerModelDownload`; sin idioma instalado se cae a texto. | Pedir la descarga del modelo de español desde la app (API 33+). | El brief (F-08.AC1) pide ocultar o deshabilitar el dictado si no hay reconocimiento local, no instalarlo. Es más simple, no depende de la red ni de una UI del sistema y en API 31–32 no existe. El paciente puede instalar el idioma desde los ajustes del sistema y reabrir la pantalla. |
+| D3 | El ViewModel del pre-registro es dueño del estado del dictado y del origen; el puerto solo entrega texto. | Un `DictationController` o coordinador de modalidades aparte. | Menos piezas; el formulario y su origen ya viven en ese ViewModel (F-02-mobile) y así se prueban juntos con un fake. |
+| D4 | Un contador `listenGeneration` en el ViewModel: cada `start` lo incrementa y los callbacks solo se aplican si coinciden y el estado es `Listening`/`Processing`. | Confiar en que el adaptador nunca entregue callbacks tardíos. | Impide insertar un resultado viejo tras cancelar, rotar o reiniciar la escucha (R10, R11). |
+| D5 | Origen pegajoso con una sola regla de vuelta: `VOICE_ON_DEVICE` al aceptar un resultado; `TYPED` solo si una edición deja el motivo en blanco. | Calcular un porcentaje de texto dictado o volver a `TYPED` con cualquier edición. | Propuesta de PA-F08-1: coincide con el supuesto del brief y se prueba con casos simples. |
+| D6 | Sin resultados parciales: solo se pide y se usa el resultado final. | Mostrar parciales mientras se habla. | Menos estado en RAM y nada que limpiar (R12). |
+| D7 | Sin idioma de reconocimiento disponible, se **oculta** "Dictar" y se muestra un aviso. | Botón deshabilitado. | F-08.AC1 admite ambas; ocultar evita un control inútil para TalkBack y el aviso explica por qué. |
+| D8 | Guía y dictado se excluyen sin clase nueva: el ViewModel recibe `beforeListen: () -> Unit` (la raíz pasa `guide::stop`) y la raíz cancela el dictado cuando `guide.state` pasa a `Speaking`. | Un `AudioModeCoordinator` común. | Dos líneas en la raíz bastan; la guía solo narra recursos fijos de `GuideDestination` y no puede leer el motivo. |
+| D9 | La solicitud de `RECORD_AUDIO` vive en `DictationControls` (`rememberLauncherForActivityResult(RequestPermission)`) y la decisión es una función pura `dictationAction(hasPermission)`. | Pedir el permiso desde el ViewModel o al arrancar. | El permiso es de la UI; la función pura permite probar R3 en la JVM. Un resultado tardío tras salir no llega (el launcher se desregistra) y, si llega, el ViewModel solo arranca desde `Idle`. |
 
-## Capacidad Android, permiso e idioma
+## Flujo en el ViewModel
 
-- `minSdk31` se mantiene. Comprobar `SpeechRecognizer.isOnDeviceRecognitionAvailable`; crear **solo** con `createOnDeviceSpeechRecognizer`, registrar listener y operar en hilo principal. Declarar visibilidad `android.speech.RecognitionService` necesaria en `<queries>`, conservar RECORD_AUDIO ya declarado y pedirlo solo al pulsar Dictar.
-- Request de reconocimiento con lenguaje libre y `EXTRA_LANGUAGE` **es-CO**, alternativa **es** local. La UI puede estar en en/pt/fr/de y seguirá reconociendo únicamente español, con esa indicación traducida. No autodetección ni cambio a otro idioma, Activity genérica de reconocimiento o proveedor cloud. EXTRA_PREFER_OFFLINE, si se incluye, no sustituye a la factory local.
-- API33+ permite `checkRecognitionSupport` sobre el recognizer on-device; priorizar modelo español instalado/on-device, no lenguas solo online/pendientes. Sin soporte/modelo local se deja texto; no descarga automática. En API31–32 no existe esa consulta de soporte por intent: comprobar servicio local, solicitar español al reconocedor local y tratar errores de idioma/modelo como indisponibilidad runtime, sin afirmar que el booleano del servicio garantice idioma instalado. En ambos casos el canal sigue siendo exclusivamente on-device.
-- Si es-CO no está soportado pero es sí, usar esa alternativa local en una nueva escucha explícita o seleccionarla antes mediante soporte33+. No replay de audio ni bucles de reintento; si no existe español local, deshabilitar/ocultar dictado con explicación y dejar texto. Error de comprobación soporta fallback seguro, no recognizer genérico.
-- `RequestPermission` se solicita por acción. Al volver el resultado se comprueban pantalla/foreground/principal/generación; un grant tardío no inicia escucha después de navegar. Denegado/revocado/sin micro/servicio ocupado muestra error local y conserva el campo; no pedir permiso en bucle ni abrir ajustes automáticamente.
+1. `init`: estado `Checking`; `checkAvailability` → `Idle` (guardando el `languageTag`) o `Unavailable`.
+2. "Dictar" (con permiso): `startDictation()` solo desde `Idle` y si no se está enviando ni se ha creado; llama a `beforeListen()`, incrementa la generación, pasa a `Listening` y llama a `start`. Sin permiso: `onDictationPermissionDenied()` muestra el aviso y no llama a `start`.
+3. "Detener": `stop()` y estado `Processing`, a la espera de `onFinal`/`onError`. "Cancelar": `cancel()`, incrementa la generación y vuelve a `Idle`.
+4. `onFinal(text)` vigente: si `text.trim()` no está vacío, `form.withDictation(text.trim())` (añade con la regla de R6 y fija `VOICE_ON_DEVICE`); si está vacío, aviso "no se entendió". Vuelve a `Idle`.
+5. `onError(e)` vigente: `LanguageUnavailable` → `Unavailable` + aviso; `Permission` → aviso de R4; `NoMatch`, `Busy`, `Other` → aviso y `Idle`. El borrador no cambia.
+6. `updateComplaint(text)`: `form.withTypedText(text)`; si `text.isBlank()`, origen `TYPED`.
+7. `canSubmit` añade `dictation !is Listening && dictation !is Processing`. Tras el 201, el formulario nuevo vuelve a `TYPED` (ya ocurre en F-02).
+8. `onCleared()`: `recognizer.release()`. La raíz llama a `cancelDictation()` en `ON_STOP`, en el `onDispose` de la entrada (salir de la pantalla, rotación o cambio de idioma/tema, cambio de sesión por `key(navigationIdentity)`) y cuando la guía pasa a `Speaking`.
 
-## Interfaces y composición
+Traducción de errores (`mapRecognizerError`, pura): `ERROR_LANGUAGE_NOT_SUPPORTED`, `ERROR_LANGUAGE_UNAVAILABLE` → `LanguageUnavailable`; `ERROR_INSUFFICIENT_PERMISSIONS` → `Permission`; `ERROR_NO_MATCH`, `ERROR_SPEECH_TIMEOUT` → `NoMatch`; `ERROR_RECOGNIZER_BUSY` → `Busy`; cualquier otro → `Other`.
 
-- Interfaz `DictationController` en core con estados Checking/Unavailable/Idle/Listening/Processing/Error y operaciones `check`, `start`, `stop`, `cancel`, `release`; callbacks finales con token de escucha. El adaptador Android vive en `feature/voice`. Una implementación falsa JVM expone los mismos eventos, sin modelar disponibilidad física como éxito.
-- `AppContainer` inyecta factory/coordinador y la raíz agrega `voiceControls` como slot del formulario de preregistro y callback al VM de encounters. No se importa una feature desde otra. El formulario/VM es dueño del motivo/provenance; el controller solo entrega texto del resultado y no conoce APIs, ids de paciente ni crea preregistros.
-- `AudioModeCoordinator` común proporciona exclusión Guide/Dictation. Comenzar ASR llama stop de guía antes de startListening. Comenzar guía cancela/desecha una escucha activa antes de narrar sus recursos estáticos. Las dependencias se inyectan como interfaces/callbacks para evitar ciclo core/ui↔feature/voice.
+## UI y textos (R5, R14, R16)
 
-## Flujo de escucha y provenance
-
-1. Solo PATIENT verificado y formulario actual puede activar. Guardar `listenGeneration` y snapshot de sesión/draft. Tras capacidad/permiso válidos detener guía e iniciar una escucha; botón Dictar no crea otra mientras esté Listening/Processing.
-2. Detener usa `stopListening`, pasa a Processing y espera `onResults/onError` antes de una nueva escucha. Cancelar usa cancel/destroy e invalida generación inmediatamente; no acepta resultado posterior. No escuchar continuo ni autoreinicio. El envío del preregistro se bloquea durante Listening/Processing; se puede cancelar y seguir escribiendo.
-3. `onResults` acepta solo primer candidato final no vacío de la escucha vigente, una sola vez. Se añade al motivo previo con separación de espacio si hace falta, sin recortar ni sustituir texto escrito. Parciales, si se muestran como preview, no se incorporan al formulario ni cambian provenance; no se persisten. Un resultado mayor al límite mantiene el texto y el error2000 para que se edite, sin truncar ni enviar solo.
-4. Aceptar resultado pone `complaintSource=VOICE_ON_DEVICE`. Las ediciones posteriores, incluso reemplazar mucho o todo el texto, conservan ese valor durante **el mismo borrador**. Sin final aceptado se mantiene TYPED; error/cancelación/sin coincidencia no cambian el flag. Un formulario nuevo o reset tras201 vuelve a TYPED; ningún flag de un usuario anterior se filtra al siguiente.
-5. `toRequest` conserva siteId+chiefComplaintText.trim()+complaintSource del contrato. No se añade audio, idioma, sessionId, hora o actor. La API copia la fuente al confirmar; el móvil no modifica directamente una atención para propagarla.
-
-## Lifecycle, RAM y errores
-
-Al salir del formulario, background, cambio de sesión/draft o configuración: cancelar y destruir recognizer, aumentar generación y limpiar parciales/estado de escucha. Rotación/locale/tema retiene motivo/provenance ya aceptados en el VM de la sesión; no reanuda micrófono, requiere nueva pulsación. Si muere proceso se pierde borrador, sin guardarlo para simular continuidad. Callbacks de permisos/support/results/errors viejos se ignoran, incluido A→B→A; no se mezclan resultados entre dos escuchas consecutivas ni se modifica otro formulario.
-
-Errores de idioma/modelo/servicio, silencio/no coincidencia, busy y permiso son recursos locales de UI01; no detalle del motor con PHI en logs. Sin red recognizer remoto no existe como alternativa. Liberar recursos aunque falle init/start/stop y no ejecutar un comando antes de listener. No guardar audio, no MediaRecorder ni synthesizeToFile, no peticiones de bytes/multipart, no logs ni SavedStateHandle. Resultados y estados que los contienen enmascaran texto en toString. La guía recibe únicamente instrucciones fijas y jamás el motivo/transcripción.
-
-Controles Dictar, Detener, Cancelar y alternativa escrita con semántica accesible, foco, estado visible y explicaciones5idiomas. No solicitar RECORD_AUDIO para TTS; la app puede usar guía sin micrófono y escribir sin ninguno. Se conservan contador/validación2000, sede/errores y permisos F-02, con identidad/preferencias320dp/tablet/texto200 UI01.
+`DictationControls` muestra "Dictar" en `Idle`; "Escuchando…"/"Procesando…" con "Detener" y "Cancelar" en `Listening`/`Processing`; nada en `Checking`; el aviso de no disponible en `Unavailable`. Una nota fija indica que el dictado reconoce solo español, también con la interfaz en inglés, portugués, francés o alemán. Cada botón tiene texto visible (descripción accesible) y el estado se anuncia con una región `liveRegion`. Claves nuevas con prefijo `dictation_` en los cinco catálogos (`values`, `values-en`, `values-pt`, `values-fr`, `values-de`); `PatientOnlyResourcesTest` exige el mismo conjunto de claves en los cinco.
 
 ## Impacto en contrato
 
-**Sin impacto en contrato.** Consume **0.4.0→0.4.0**. Solo cambia el valor de `complaintSource` ya publicado en `CreatePreRegistrationDto` cuando corresponde; POST `/api/v1/patient/pre-registrations` mantiene exactamente tres campos. No endpoint de audio/modelos/ASR ni cambio de backend, móvil STAFF, web o legacy. F-02 sin dictado sigue enviando TYPED y su regresión permanece.
+**Sin impacto en contrato.** Consume **0.9.0** (antes la spec citaba 0.4.0; `BuildConfig.CONSUMED_CONTRACT` sigue en `"0.4.0"` y se actualiza a `"0.9.0"` en T1).
+
+Verificación contra `../asclepio-api/openapi/asclepio-api.v1.json` (`info.version = 0.9.0`):
+- `POST /api/v1/patient/pre-registrations` (`PatientPreRegistrationsController_create`, Bearer de paciente) sigue usando `CreatePreRegistrationDto` con `required: [siteId, chiefComplaintText, complaintSource]`; `siteId` string uuid; `chiefComplaintText` string `minLength 1`, `maxLength 2000`; `complaintSource` enum `TYPED | VOICE_ON_DEVICE`. Respuestas 201 `PatientPreRegistrationDto`, 429 con `Retry-After` y `default` `application/problem+json`, iguales a lo que ya consume F-02-mobile.
+- `PatientPreRegistrationDto` y `EncounterRefDto` coinciden con los DTOs escritos a mano en `feature/encounters/data/PreRegistrationsApi.kt`.
+- La API no tiene CHANGELOG del contrato. Según `../asclepio-api/docs/roadmap.md`, de 0.4.0 a 0.9.0 los cambios son de F-04-api (0.5.0), F-05-api (0.6.0), F-06-api (0.7.0), F-07-api (0.8.0) y DT-02-api (0.9.0): endpoints y esquemas del personal (sugerencia, decisión, cola, reportes). No tocan los endpoints del paciente ni el enum `complaintSource`. `GET /api/v1/patient/pre-registrations/{id}` existe desde F-02-api y la app no lo usa.
+- No se añaden endpoints, campos ni tipos regenerados (los DTOs del móvil son manuales). `PatientOnlyScopeTest` sigue fijando las diez operaciones del paciente.
 
 ## Impacto en datos
 
-**Sin migraciones ni persistencia adicional.** Audio procesado por servicio on-device sin archivo/subida; texto/provenance RAM del borrador y texto final únicamente en el POST existente cuando usuario lo envía. No datos privados en preferencias, backups, logs, navegación serializada o TTS. La app no calcula horas legales ni edita atenciones.
+**Sin impacto en datos.** Sin migraciones ni persistencia nueva en el dispositivo. El audio lo procesa el servicio local de Android y no se graba ni se sube. El texto reconocido y el origen viven solo en el `PreRegistrationUiState` del ViewModel; al enviar, la API recibe el texto y `complaintSource` en el POST existente y, al confirmar recepción, lo copia a la atención. La app no envía horas (RNF-10).
 
-## Fuentes y verificación
+## Riesgos y pruebas
 
-- Android publica la factory local desdeAPI31, `checkRecognitionSupport` desdeAPI33, lifecycle explícito y resultados; el código distingue ambas capacidades sin prometer disponibilidad de idioma a partir del servicio genérico. [SpeechRecognizer](https://developer.android.com/reference/android/speech/SpeechRecognizer). La preferencia offline puede ignorarse: [RecognizerIntent](https://developer.android.com/reference/android/speech/RecognizerIntent). El pipeline restringido aplica la decisión de ADR0006, no una garantía inferida de un recognizer de red.
-- JUnit `R<n> ` sobre controlador/política: servicio ausente, español instalado/no instalado/support no disponible, permiso grant/denegado/revocado/tardío, states y un start por acción; es-CO/es sin otros idiomas/ASR genérico. Double callbacks final/error y A→B→A se descartan por generación; stop espera resultado, cancel no lo acepta.
-- Provenance: solo escrito→TYPED; final aceptado→VOICE_ON_DEVICE; edición intensa/borrado/reemplazo sigue VOICE en ese draft; nuevo draft/201→TYPED; cancel/error/parcial sin aceptar no cambia; resultado mayor2000 valida sin truncar. MockWebServer en frontera verifica JSON exacto/enum y ausencia de audio, no repositorios simulados que oculten el POST.
-- Instrumentación API31/37: fallback sin servicio/modelo y permiso denegado; UI sigue permitiendo escritura/envío, controles accesibles y rotación/background/session cleanup. En dispositivo con modelo local, realizar dictado español, revisión/editado y prueba sin conectividad ASR para verificar funcionalidad local; no asumir voz/modelo instalados en emulador.
-- Separar evidencia: (a) lógica/JVM/adaptador falso, (b) permiso/fallback/lifecycle instrumentado, (c) transcripción real local, (d) POST fixture contractual, (e) API/DB real si hay configuración/cuentas. Si falta modelo local, registrar esa limitación y no declarar transcripción real. La guía audible TTS es otra prueba, no evidencia de ASR.
-- Al activar: regresiones F-01/F-02 y paciente/STAFF, cinco idiomas,320dp/texto200/tablet/TalkBack/teclado; lint/testDebugUnitTest/assembleDebug/connectedDebugAndroidTest/init y reviewerC1–C8, trazabilidad. Sin librería de ASR, permiso o dependencia nueva ajena a las APIs Android existentes.
+Riesgos:
+- Muchos teléfonos de pacientes no tienen reconocimiento local en español: el fallback a texto será frecuente (PA-F08-2). Los emuladores suelen no tenerlo; la transcripción real se prueba en un dispositivo con el idioma español instalado.
+- En API 31–32 no hay forma de saber el idioma antes de escuchar; se pide `es-CO` y un error de idioma desactiva el dictado para esa pantalla.
+- Si `checkRecognitionSupport` nunca responde, el estado se queda en `Checking` (sin "Dictar"), y el texto sigue funcionando. No se inventa un tiempo de espera.
+
+Pruebas JVM (`testDebugUnitTest`, nombres `R<n> ` con espacio, sin `:`):
+- `PreRegistrationViewModelTest` con `FakeOnDeviceRecognizer`: disponibilidad, permiso denegado, una sola escucha, bloqueo de envío, resultado aceptado y vacío, errores, detener, cancelar, generación, `onCleared`, `beforeListen`.
+- `PreRegistrationFormTest`: `withDictation` y `withTypedText` (separador, sin truncar, reglas de origen).
+- `PreRegistrationsApiTest` (Retrofit real con MockWebServer): JSON exacto con `VOICE_ON_DEVICE`.
+- `SpanishOnDeviceSupportTest`: `recognitionStrategy`, `pickSpanishTag`, `mapRecognizerError`, `dictationAction`.
+- `OnDeviceOnlyTest` (estático sobre `src/main`): `createOnDeviceSpeechRecognizer` y `RecognizerIntent` solo en `AndroidOnDeviceRecognizer.kt`; ninguna aparición de `createSpeechRecognizer(`, `startActivity`, `MediaRecorder`, `AudioRecord`, `synthesizeToFile` o `triggerModelDownload`; `RECORD_AUDIO` solo en `DictationControls.kt` y el manifiesto; sin `SavedStateHandle`, `Log.` ni DataStore en los archivos del dictado.
+- `DictationStringsTest`: claves `dictation_*` no vacías en los cinco idiomas.
+- Siguen en verde `PatientOnlyScopeTest`, `PatientOnlyNavigationTest`, `PatientOnlyResourcesTest`, `PatientOnlyDocsTest` y las pruebas de F-02.
+
+QA manual (tarea final): emulador de teléfono y de tablet y, si se dispone, un dispositivo físico con español local. Las pruebas manuales contra la API local usan `adb reverse tcp:3000 tcp:3000` y `API_BASE_URL=http://localhost:3000` (Android 17 / targetSdk 37 bloquea la red local, como `10.0.2.2`). Se registra por separado: (a) pruebas JVM con el fake, (b) fallback y permisos en emulador, (c) transcripción real en dispositivo con modelo local (en modo avión, para mostrar que es local), (d) POST contra la API local. Sin modelo local no se declara transcripción real; la guía TTS no es evidencia de reconocimiento.
