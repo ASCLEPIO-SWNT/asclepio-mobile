@@ -8,3 +8,4 @@
 ## Registro
 
 - **T1** (2026-11-17) `CONSUMED_CONTRACT` → `0.9.0`; comentarios de versión en `PreRegistrationsApi.kt`/`PreRegistrationForm.kt` (contrato verificado: `CreatePreRegistrationDto` igual). Prueba `R9 …VOICE_ON_DEVICE` en `PreRegistrationsApiTest`: pasa sin cambio de código porque el enum `VOICE_ON_DEVICE` ya existía desde F-02 (prueba de caracterización, no hubo rojo funcional). `PreRegistrationsApiTest` 6/6.
+- **T2** (2026-11-17) `core/voice/OnDeviceRecognizer.kt` (puerto, `OnDeviceAvailability`, `DictationError`, `DictationUiState` sin texto, `NoDictation`) y `FakeOnDeviceRecognizer` en `src/test`. Rojo: tipos inexistentes (compilación). `DictationTypesTest` 2/2. `DictationUiState.Idle` es `data object`: el `languageTag` lo guarda el ViewModel en un campo privado.

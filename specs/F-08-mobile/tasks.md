@@ -6,7 +6,7 @@ Sin migraciones. Orden estricto. En cada tarea el `implementer` escribe **primer
   - Archivos: `app/build.gradle.kts` (`CONSUMED_CONTRACT` → `"0.9.0"`), comentarios de versión en `feature/encounters/data/PreRegistrationsApi.kt` y `feature/encounters/ui/PreRegistrationForm.kt`.
   - Prueba primero en `feature/encounters/data/PreRegistrationsApiTest.kt`: `R9 el POST con dictado lleva exactamente siteId chiefComplaintText y complaintSource VOICE_ON_DEVICE` (MockWebServer: cuerpo JSON con tres claves exactas, sin audio, idioma ni horas).
 
-- [ ] **T2 Puerto core/voice y fake de pruebas** (R12)
+- [x] **T2 Puerto core/voice y fake de pruebas** (R12)
   - Archivos: `core/voice/OnDeviceRecognizer.kt` (interfaz, `OnDeviceAvailability`, `DictationError`, `DictationUiState`, `NoDictation`); `src/test/.../core/voice/FakeOnDeviceRecognizer.kt`.
   - Prueba primero en `core/voice/DictationTypesTest.kt`: `R12 los estados y disponibilidades del dictado no contienen texto reconocido en toString`; `R12 NoDictation informa no disponible y no inicia escuchas`.
 
