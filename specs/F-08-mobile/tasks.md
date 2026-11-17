@@ -34,7 +34,7 @@ Sin migraciones. Orden estricto. En cada tarea el `implementer` escribe **primer
   - Archivo: `feature/voice/SpanishOnDeviceSupport.kt` (`recognitionStrategy(sdkInt)`, `pickSpanishTag(installed)`, `mapRecognizerError(code)`, `dictationAction(hasPermission)`).
   - Pruebas primero en `feature/voice/SpanishOnDeviceSupportTest.kt`: `R1 API 31 y 32 usan solo isOnDeviceRecognitionAvailable`, `R1 API 33 o mas consulta checkRecognitionSupport`, `R1 prefiere es-CO luego es luego otra variante es`, `R1 sin variante es instalada no hay idioma`, `R7 los errores de idioma se traducen a LanguageUnavailable`, `R4 el error de permisos se traduce a Permission`, `R3 sin permiso la accion es solicitarlo y con permiso es escuchar`.
 
-- [ ] **T9 Adaptador Android y manifiesto** (R1, R2, R12)
+- [x] **T9 Adaptador Android y manifiesto** (R1, R2, R12)
   - Archivos: `feature/voice/AndroidOnDeviceRecognizer.kt` (comprueba disponibilidad antes de crear, hilo principal, listener antes de comandos, `destroy()` al terminar, un reconocedor por escucha, intent con `EXTRA_PARTIAL_RESULTS=false`, sin `triggerModelDownload`); `app/src/main/AndroidManifest.xml` (`<queries>` con `android.speech.RecognitionService`).
   - Prueba primero en `OnDeviceOnlyTest.kt` (estática sobre `src/main`): `R2 solo AndroidOnDeviceRecognizer crea el reconocedor local y usa RecognizerIntent`, `R2 ninguna fuente usa createSpeechRecognizer actividades de reconocimiento grabacion ni descarga de modelos`, `R12 los archivos del dictado no usan SavedStateHandle DataStore ni Log`.
 

@@ -3,7 +3,7 @@
 <resources>
     <string name="dictation_permission_denied">Sem permissão do microfone não é possível ditar. Você pode continuar escrevendo o motivo.</string>
     <string name="dictation_no_match">O ditado não foi entendido. Seu motivo não mudou; tente de novo ou escreva-o.</string>
-    <string name="dictation_busy">O reconhecimento de voz está ocupado. Tente de novo em um momento.</string>
+    <string name="dictation_busy">O reconhecimento de voz está ocupado. Tente de novo em alguns segundos.</string>
     <string name="dictation_error">Não foi possível concluir o ditado. Seu motivo não mudou.</string>
     <string name="dictation_cancelled">Ditado interrompido. Seu motivo não mudou; toque em Ditar para ouvir de novo.</string>
 </resources>
