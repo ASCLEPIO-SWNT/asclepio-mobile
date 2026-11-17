@@ -9,6 +9,7 @@ import co.asclepio.mobile.core.network.ApiResult
 import co.asclepio.mobile.core.network.rateLimitSeconds
 import co.asclepio.mobile.core.tenants.PublicSiteDto
 import co.asclepio.mobile.core.ui.UiMessage
+import co.asclepio.mobile.core.voice.DictationError
 import co.asclepio.mobile.core.voice.DictationUiState
 import co.asclepio.mobile.core.voice.NoDictation
 import co.asclepio.mobile.core.voice.OnDeviceAvailability
@@ -76,6 +77,9 @@ class PreRegistrationViewModel(
     /** Variante de español del reconocimiento local (R1); solo se conoce si está disponible. */
     private var languageTag: String? = null
 
+    /** D4: cada escucha tiene su número; los callbacks de una escucha anterior o cancelada se ignoran (R10, R11). */
+    private var listenGeneration = 0L
+
     init {
         loadSites()
         checkDictation()
@@ -134,8 +138,69 @@ class PreRegistrationViewModel(
         val tag = languageTag
         if (s.dictation != DictationUiState.Idle || tag == null || s.submitting || s.created) return
         beforeListen()
+        val generation = ++listenGeneration
         _state.update { it.copy(dictation = DictationUiState.Listening, dictationMessage = null) }
-        recognizer.start(tag, onFinal = {}, onError = {})
+        recognizer.start(tag, onFinal = { onDictationResult(generation, it) }, onError = { onDictationError(generation, it) })
+    }
+
+    /** "Detener" (R5): deja de escuchar y espera el resultado de lo ya dicho. */
+    fun stopDictation() {
+        if (_state.value.dictation != DictationUiState.Listening) return
+        recognizer.stop()
+        _state.update { it.copy(dictation = DictationUiState.Processing) }
+    }
+
+    /**
+     * "Cancelar", segundo plano, salida de la pantalla, rotación, cambio de sesión o la guía empieza a hablar
+     * (R10, R11, R13): libera el reconocedor y descarta lo que llegue después. El borrador no cambia.
+     */
+    fun cancelDictation() {
+        if (!isListening(listenGeneration)) return
+        listenGeneration++
+        recognizer.cancel()
+        _state.update { it.copy(dictation = DictationUiState.Idle, dictationMessage = UiMessage(R.string.dictation_cancelled)) }
+    }
+
+    private fun isListening(generation: Long): Boolean {
+        val dictation = _state.value.dictation
+        return generation == listenGeneration && (dictation == DictationUiState.Listening || dictation == DictationUiState.Processing)
+    }
+
+    /** R6, R8: añade el resultado aceptado una sola vez al final del motivo; no lo envía ni lo trunca. */
+    private fun onDictationResult(generation: Long, text: String) {
+        if (!isListening(generation)) return
+        listenGeneration++
+        val accepted = text.trim()
+        _state.update {
+            if (accepted.isEmpty()) {
+                it.copy(dictation = DictationUiState.Idle, dictationMessage = UiMessage(R.string.dictation_no_match))
+            } else {
+                it.copy(
+                    form = it.form.withDictation(accepted),
+                    fieldErrors = it.fieldErrors - PreRegistrationField.ChiefComplaint,
+                    dictation = DictationUiState.Idle,
+                    dictationMessage = null,
+                )
+            }
+        }
+    }
+
+    /** R4, R7, R16: el motivo y su origen no cambian; un error de idioma deja el dictado no disponible. */
+    private fun onDictationError(generation: Long, error: DictationError) {
+        if (!isListening(generation)) return
+        listenGeneration++
+        if (error == DictationError.LanguageUnavailable) {
+            languageTag = null
+            _state.update { it.copy(dictation = DictationUiState.Unavailable, dictationMessage = null) }
+            return
+        }
+        val message = when (error) {
+            DictationError.Permission -> R.string.dictation_permission_denied
+            DictationError.NoMatch -> R.string.dictation_no_match
+            DictationError.Busy -> R.string.dictation_busy
+            DictationError.LanguageUnavailable, DictationError.Other -> R.string.dictation_error
+        }
+        _state.update { it.copy(dictation = DictationUiState.Idle, dictationMessage = UiMessage(message)) }
     }
 
     /** R4: permiso denegado al pulsar "Dictar"; el motivo, su origen y el envío por texto no cambian. */
@@ -150,7 +215,7 @@ class PreRegistrationViewModel(
 
     fun updateComplaint(text: String) = _state.update { s ->
         if (s.submitting) return@update s
-        s.copy(form = s.form.copy(chiefComplaintText = text), fieldErrors = s.fieldErrors - PreRegistrationField.ChiefComplaint)
+        s.copy(form = s.form.withTypedText(text), fieldErrors = s.fieldErrors - PreRegistrationField.ChiefComplaint)
     }
 
     fun submit() {

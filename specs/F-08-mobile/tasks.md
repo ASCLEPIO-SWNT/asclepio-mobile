@@ -22,7 +22,7 @@ Sin migraciones. Orden estricto. En cada tarea el `implementer` escribe **primer
   - Archivo: `PreRegistrationViewModel.kt` (`startDictation`, `onDictationPermissionDenied`, `canSubmit`).
   - Pruebas primero: `R3 dictar con permiso inicia una escucha con el idioma elegido`, `R4 permiso denegado muestra aviso conserva el motivo y no escucha`, `R5 durante la escucha no se inicia otra y no se puede enviar`, `R13 iniciar el dictado detiene la guia antes de escuchar`.
 
-- [ ] **T6 ViewModel: resultados, errores, detener y cancelar** (R6, R7, R8, R10, R16)
+- [x] **T6 ViewModel: resultados, errores, detener y cancelar** (R6, R7, R8, R10, R16)
   - Archivo: `PreRegistrationViewModel.kt` (`stopDictation`, `cancelDictation`, generación de escucha, traducción a avisos).
   - Pruebas primero: `R6 el resultado final se anade una sola vez y no se envia`, `R7 resultado vacio o error conserva motivo y origen con aviso`, `R7 error de idioma deja el dictado no disponible`, `R4 error de permisos del reconocedor muestra el aviso de permiso`, `R5 detener pasa a procesando y espera el resultado`, `R10 tras cancelar se ignoran resultados y errores tardios`, `R10 un resultado de una escucha anterior no se aplica a la nueva`, `R8 tras el 201 el formulario nuevo vuelve a TYPED`.
 

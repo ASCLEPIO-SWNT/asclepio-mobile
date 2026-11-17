@@ -2,4 +2,8 @@
 <!-- Dictado del motivo en el dispositivo (F-08-mobile). El dictado reconoce solo español. -->
 <resources>
     <string name="dictation_permission_denied">Sans l’autorisation du micro, la dictée est impossible. Vous pouvez continuer à écrire le motif.</string>
+    <string name="dictation_no_match">La dictée n’a pas été comprise. Votre motif n’a pas changé ; réessayez ou écrivez-le.</string>
+    <string name="dictation_busy">La reconnaissance vocale est occupée. Réessayez dans un instant.</string>
+    <string name="dictation_error">La dictée n’a pas pu aboutir. Votre motif n’a pas changé.</string>
+    <string name="dictation_cancelled">Dictée arrêtée. Votre motif n’a pas changé ; touchez Dicter pour écouter à nouveau.</string>
 </resources>

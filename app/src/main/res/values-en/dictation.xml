@@ -2,4 +2,8 @@
 <!-- Dictado del motivo en el dispositivo (F-08-mobile). El dictado reconoce solo español. -->
 <resources>
     <string name="dictation_permission_denied">Without microphone permission you can’t dictate. You can keep typing the reason.</string>
+    <string name="dictation_no_match">The dictation wasn’t understood. Your reason didn’t change; try again or type it.</string>
+    <string name="dictation_busy">Speech recognition is busy. Try again in a moment.</string>
+    <string name="dictation_error">The dictation couldn’t be completed. Your reason didn’t change.</string>
+    <string name="dictation_cancelled">Dictation stopped. Your reason didn’t change; tap Dictate to listen again.</string>
 </resources>

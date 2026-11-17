@@ -2,4 +2,8 @@
 <!-- Dictado del motivo en el dispositivo (F-08-mobile). El dictado reconoce solo español. -->
 <resources>
     <string name="dictation_permission_denied">Ohne Mikrofonberechtigung ist kein Diktat möglich. Sie können den Grund weiter eintippen.</string>
+    <string name="dictation_no_match">Das Diktat wurde nicht verstanden. Ihr Grund hat sich nicht geändert; versuchen Sie es erneut oder tippen Sie ihn ein.</string>
+    <string name="dictation_busy">Die Spracherkennung ist belegt. Versuchen Sie es gleich noch einmal.</string>
+    <string name="dictation_error">Das Diktat konnte nicht abgeschlossen werden. Ihr Grund hat sich nicht geändert.</string>
+    <string name="dictation_cancelled">Diktat beendet. Ihr Grund hat sich nicht geändert; tippen Sie auf Diktieren, um erneut zuzuhören.</string>
 </resources>
