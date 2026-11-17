@@ -26,7 +26,7 @@ Sin migraciones. Orden estricto. En cada tarea el `implementer` escribe **primer
   - Archivo: `PreRegistrationViewModel.kt` (`stopDictation`, `cancelDictation`, generación de escucha, traducción a avisos).
   - Pruebas primero: `R6 el resultado final se anade una sola vez y no se envia`, `R7 resultado vacio o error conserva motivo y origen con aviso`, `R7 error de idioma deja el dictado no disponible`, `R4 error de permisos del reconocedor muestra el aviso de permiso`, `R5 detener pasa a procesando y espera el resultado`, `R10 tras cancelar se ignoran resultados y errores tardios`, `R10 un resultado de una escucha anterior no se aplica a la nueva`, `R8 tras el 201 el formulario nuevo vuelve a TYPED`.
 
-- [ ] **T7 ViewModel: liberación y memoria** (R10, R11, R12)
+- [x] **T7 ViewModel: liberación y memoria** (R10, R11, R12)
   - Archivo: `PreRegistrationViewModel.kt` (`onCleared` → `release()`).
   - Pruebas primero: `R10 al limpiar el ViewModel se libera el reconocedor` (vía `ViewModelStore.clear()`), `R11 cancelar por rotacion conserva motivo y origen y exige pulsar Dictar de nuevo`, `R12 el estado de la pantalla enmascara el motivo dictado en toString`.
 

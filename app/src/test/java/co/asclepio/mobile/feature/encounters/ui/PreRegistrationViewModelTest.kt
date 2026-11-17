@@ -1,6 +1,10 @@
 package co.asclepio.mobile.feature.encounters.ui
 
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStore
 import co.asclepio.mobile.MainDispatcherRule
 import co.asclepio.mobile.PatientTestEnv
 import co.asclepio.mobile.PatientTestEnv.Companion.jsonBody
@@ -522,5 +526,55 @@ class PreRegistrationViewModelTest {
         )
         assertEquals(PreRegistrationForm(), s.form)
         assertEquals(ComplaintSource.TYPED, s.form.complaintSource)
+    }
+
+    @Test fun `R10 al limpiar el ViewModel se libera el reconocedor`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val created = opened(recognizer = recognizer)
+        val store = ViewModelStore()
+        val factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T = created as T
+        }
+        val vm = ViewModelProvider(store, factory)[PreRegistrationViewModel::class.java]
+        vm.updateComplaint("Fiebre")
+        vm.startDictation()
+        val listen = recognizer.lastListen
+        store.clear()
+        assertEquals("release", recognizer.calls.last())
+        val after = vm.state.value
+        listen.onFinal("texto tardio")
+        assertEquals(after, vm.state.value)
+        assertEquals("Fiebre", vm.state.value.form.chiefComplaintText)
+    }
+
+    @Test fun `R11 cancelar por rotacion conserva motivo y origen y exige pulsar Dictar de nuevo`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = dictated(recognizer)
+        vm.updateComplaint("Dolor de cabeza intenso")
+        vm.startDictation()
+        // La raíz cancela en el onDispose de la entrada al rotar o cambiar idioma/tema; el VM sobrevive.
+        vm.cancelDictation()
+        val s = vm.state.value
+        assertEquals("Dolor de cabeza intenso", s.form.chiefComplaintText)
+        assertEquals(ComplaintSource.VOICE_ON_DEVICE, s.form.complaintSource)
+        assertEquals(DictationUiState.Idle, s.dictation)
+        assertEquals(2, recognizer.listens.size)
+        runCurrent()
+        assertEquals(2, recognizer.listens.size) // no vuelve a escuchar solo
+        vm.startDictation()
+        assertEquals(3, recognizer.listens.size)
+    }
+
+    @Test fun `R12 el estado de la pantalla enmascara el motivo dictado en toString`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = opened(recognizer = recognizer)
+        vm.startDictation()
+        recognizer.lastListen.onFinal("me duele el pecho")
+        assertEquals("me duele el pecho", vm.state.value.form.chiefComplaintText)
+        assertFalse(vm.state.value.toString().contains("duele"))
+        // Sin SavedStateHandle: el texto reconocido no puede acabar en el Bundle.
+        val parameters = PreRegistrationViewModel::class.java.constructors.flatMap { it.parameterTypes.toList() }
+        assertFalse(SavedStateHandle::class.java in parameters)
     }
 }

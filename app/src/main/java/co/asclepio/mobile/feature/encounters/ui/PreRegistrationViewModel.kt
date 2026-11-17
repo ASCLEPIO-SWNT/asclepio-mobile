@@ -258,4 +258,10 @@ class PreRegistrationViewModel(
     }
 
     fun onCreatedHandled() = _state.update { it.copy(created = false) }
+
+    /** R10: al destruir el formulario se libera el reconocedor y se descarta cualquier resultado posterior. */
+    override fun onCleared() {
+        listenGeneration++
+        recognizer.release()
+    }
 }
