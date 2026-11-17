@@ -38,7 +38,7 @@ Sin migraciones. Orden estricto. En cada tarea el `implementer` escribe **primer
   - Archivos: `feature/voice/AndroidOnDeviceRecognizer.kt` (comprueba disponibilidad antes de crear, hilo principal, listener antes de comandos, `destroy()` al terminar, un reconocedor por escucha, intent con `EXTRA_PARTIAL_RESULTS=false`, sin `triggerModelDownload`); `app/src/main/AndroidManifest.xml` (`<queries>` con `android.speech.RecognitionService`).
   - Prueba primero en `OnDeviceOnlyTest.kt` (estática sobre `src/main`): `R2 solo AndroidOnDeviceRecognizer crea el reconocedor local y usa RecognizerIntent`, `R2 ninguna fuente usa createSpeechRecognizer actividades de reconocimiento grabacion ni descarga de modelos`, `R12 los archivos del dictado no usan SavedStateHandle DataStore ni Log`.
 
-- [ ] **T10 Controles de dictado y textos** (R3, R4, R5, R14, R16)
+- [x] **T10 Controles de dictado y textos** (R3, R4, R5, R14, R16)
   - Archivos: `feature/voice/ui/DictationControls.kt` (botones, estado con `liveRegion`, nota "solo español", aviso de no disponible, solicitud de `RECORD_AUDIO` al pulsar con `dictationAction`); `res/values*/` claves `dictation_*` en los cinco idiomas.
   - Pruebas primero: `DictationStringsTest.kt` `R14 los textos del dictado existen en los cinco idiomas`; ampliar `OnDeviceOnlyTest` con `R3 RECORD_AUDIO solo se solicita desde DictationControls`. `PatientOnlyResourcesTest` sigue en verde (mismas claves en los cinco catálogos).
 

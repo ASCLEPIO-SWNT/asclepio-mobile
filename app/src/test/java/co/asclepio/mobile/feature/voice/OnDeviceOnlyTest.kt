@@ -55,4 +55,18 @@ class OnDeviceOnlyTest {
         val offenders = dictation.flatMap { (file, text) -> forbidden.filter { it.containsMatchIn(text) }.map { "$file -> ${it.pattern}" } }
         assertEquals(emptyList<String>(), offenders)
     }
+
+    @Test fun `R3 RECORD_AUDIO solo se solicita desde DictationControls`() {
+        val controls = "feature/voice/ui/DictationControls.kt"
+        assertEquals(setOf(controls), filesContaining("RECORD_AUDIO"))
+        val text = sources().getValue(controls)
+        for (required in listOf("ActivityResultContracts.RequestPermission()", "dictationAction(", "onClick")) {
+            assertTrue("$controls debe usar $required", text.contains(required))
+        }
+        // Nadie más pide permisos (tampoco al abrir la app o la pantalla).
+        val requesters = sources().filter { (_, t) -> t.contains("ActivityResultContracts.RequestPermission") || t.contains("requestPermissions(") }.keys
+        assertEquals(setOf(controls), requesters)
+        val manifest = File("src/main/AndroidManifest.xml").readText()
+        assertTrue(manifest.contains("""<uses-permission android:name="android.permission.RECORD_AUDIO" />"""))
+    }
 }

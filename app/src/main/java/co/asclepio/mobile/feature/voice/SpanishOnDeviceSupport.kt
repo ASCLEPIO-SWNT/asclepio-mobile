@@ -37,7 +37,7 @@ fun mapRecognizerError(code: Int): DictationError = when (code) {
     else -> DictationError.Other
 }
 
-/** Qué hace "Dictar" (R3, D9): pedir `RECORD_AUDIO` en ese momento o escuchar si ya está concedido. */
+/** Qué hace "Dictar" (R3, D9): pedir el permiso del micrófono en ese momento o escuchar si ya está concedido. */
 enum class DictationAction { RequestPermission, Listen }
 
 fun dictationAction(hasPermission: Boolean): DictationAction =
