@@ -52,3 +52,8 @@ Hasta decidir, T13 debe incluir el caso "rotar → iniciar guía → cerrar pane
 | R16 | `PreRegistrationViewModelTest.kt` :: `R16 sin reconocimiento local el dictado no esta disponible y se puede enviar por texto` |
 
 Nota: en `PreRegistrationViewModelTest`, `PreRegistrationFormTest` y `PreRegistrationsApiTest` conviven pruebas `R<n>` de F-02-mobile (p. ej. `R8 muestra las sedes…`, `R10 el POST lleva… TYPED`); la tabla solo lista las de F-08.
+
+## 2026-11-17 — Vuelta a spec_ready (leader, docs/specs.md §5)
+- T1–T12 y T14 implementados (`89eb1bf`..`53b17a6`), `./init.sh` completo VERDE; T13 (QA manual) pendiente; reviewer aún no lanzado.
+- **Contradicción D8 ↔ R13:** `beforeListen = guide::stop` queda ligado a la guía de la primera composición; tras rotar o cambiar idioma la guía se recrea y "Dictar" ya no la detiene (la guía puede seguir hablando mientras se escucha). La otra mitad de R13 (guía en `Speaking` cancela la escucha) sí se cumple.
+- Propuesta del leader: la raíz detiene la guía *actual* en el callback de "Dictar" antes de llamar al ViewModel y se elimina `beforeListen` del ViewModel; prueba de regresión `R13 tras recrear la guia Dictar detiene la guia actual`. Pendiente de aprobación humana.
