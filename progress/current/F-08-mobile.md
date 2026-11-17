@@ -57,3 +57,4 @@ Nota: en `PreRegistrationViewModelTest`, `PreRegistrationFormTest` y `PreRegistr
 - T1–T12 y T14 implementados (`89eb1bf`..`53b17a6`), `./init.sh` completo VERDE; T13 (QA manual) pendiente; reviewer aún no lanzado.
 - **Contradicción D8 ↔ R13:** `beforeListen = guide::stop` queda ligado a la guía de la primera composición; tras rotar o cambiar idioma la guía se recrea y "Dictar" ya no la detiene (la guía puede seguir hablando mientras se escucha). La otra mitad de R13 (guía en `Speaking` cancela la escucha) sí se cumple.
 - Propuesta del leader: la raíz detiene la guía *actual* en el callback de "Dictar" antes de llamar al ViewModel y se elimina `beforeListen` del ViewModel; prueba de regresión `R13 tras recrear la guia Dictar detiene la guia actual`. Pendiente de aprobación humana.
+- 2026-11-17: el humano aprobó en el chat la enmienda de D8 (la raíz detiene la guía actual al pulsar "Dictar"; sin `beforeListen`). spec_author añadió T15. Vuelve a `in_progress`.

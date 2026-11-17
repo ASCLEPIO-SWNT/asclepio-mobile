@@ -48,5 +48,6 @@ Glosario:
 - R12: se concreta qué almacenamientos quedan excluidos.
 - R14: se retira la mención a dictado de personal (la app es solo del paciente, ADR 0008) y las métricas de UI-01 no trazables a F-08.
 - R15 (evidencia separada de pruebas simuladas y en dispositivo): **retirado** porque describe el proceso de verificación, no un comportamiento del sistema comprobable con una prueba; pasa a `design.md` ("Riesgos y pruebas") y a la tarea de QA manual.
+- Enmienda de D8 (2026-11-17, aprobada por el humano en el chat): la raíz detiene la guía actual en el callback de "Dictar" antes de llamar al ViewModel y se elimina `beforeListen` del ViewModel, porque la guía se recrea al rotar o cambiar de idioma y el ViewModel sobrevive; se añade T15. R13 no cambia.
 - R16: nuevo, separa el fallback a texto (antes dentro de R1).
 - RNF: se retiran RNF-12 (roles de personal) y RNF-18 (secretos, sin relación) y se añade RNF-13 (teléfono y tablet).

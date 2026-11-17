@@ -9,9 +9,9 @@ Capas (según `docs/architecture.md`; la app es solo del paciente, ADR 0008):
 | Paquete | Qué se añade o cambia |
 |---|---|
 | `core/voice/` (nuevo) | Puerto mínimo `OnDeviceRecognizer`, los tipos `OnDeviceAvailability`, `DictationError`, `DictationUiState` y la implementación nula `NoDictation`. Sin dependencias Android. |
-| `feature/voice/` | `AndroidOnDeviceRecognizer` (adaptador de `SpeechRecognizer`), `SpanishOnDeviceSupport.kt` (funciones puras: rama por SDK, elección de idioma y traducción de códigos de error) y `ui/DictationControls.kt` (botones, estado y solicitud de `RECORD_AUDIO`). |
+| `feature/voice/` | `AndroidOnDeviceRecognizer` (adaptador de `SpeechRecognizer`), `SpanishOnDeviceSupport.kt` (funciones puras: rama por SDK, elección de idioma y traducción de códigos de error), `DictationGuideExclusion.kt` (función pura `startDictationStoppingGuide`, D8) y `ui/DictationControls.kt` (botones, estado y solicitud de `RECORD_AUDIO`). |
 | `feature/encounters/` | `PreRegistrationViewModel` gestiona el estado del dictado y el origen del motivo; `PreRegistrationForm.kt` añade dos funciones puras (`withTypedText`, `withDictation`); `PreRegistrationScreen` recibe un slot `dictation` y bloquea "Enviar" durante la escucha. |
-| Raíz | `AppContainer` crea el adaptador; `AppNavigation` compone `DictationControls` en el slot, cancela la escucha en `ON_STOP`, al salir de la entrada y cuando la guía habla, y pasa `guide::stop` al ViewModel. |
+| Raíz | `AppContainer` crea el adaptador; `AppNavigation` compone `DictationControls` en el slot, cancela la escucha en `ON_STOP`, al salir de la entrada y cuando la guía habla, y en el callback de "Dictar" detiene la guía actual antes de llamar al ViewModel (D8). |
 
 `feature/encounters` y `feature/voice` solo dependen de `core/voice`; ninguna importa a la otra. Solo la raíz conoce las dos (mismo patrón que el slot de estado de F-02-mobile, D3).
 
@@ -55,13 +55,13 @@ Línea base del repo: `compileSdk 37`, `targetSdk 37` (Android 17), `minSdk 31` 
 | D5 | Origen pegajoso con una sola regla de vuelta: `VOICE_ON_DEVICE` al aceptar un resultado; `TYPED` solo si una edición deja el motivo en blanco. | Calcular un porcentaje de texto dictado o volver a `TYPED` con cualquier edición. | Propuesta de PA-F08-1: coincide con el supuesto del brief y se prueba con casos simples. |
 | D6 | Sin resultados parciales: solo se pide y se usa el resultado final. | Mostrar parciales mientras se habla. | Menos estado en RAM y nada que limpiar (R12). |
 | D7 | Sin idioma de reconocimiento disponible, se **oculta** "Dictar" y se muestra un aviso. | Botón deshabilitado. | F-08.AC1 admite ambas; ocultar evita un control inútil para TalkBack y el aviso explica por qué. |
-| D8 | Guía y dictado se excluyen sin clase nueva: el ViewModel recibe `beforeListen: () -> Unit` (la raíz pasa `guide::stop`) y la raíz cancela el dictado cuando `guide.state` pasa a `Speaking`. | Un `AudioModeCoordinator` común. | Dos líneas en la raíz bastan; la guía solo narra recursos fijos de `GuideDestination` y no puede leer el motivo. |
+| D8 | Guía y dictado se excluyen sin clase nueva y sin que el ViewModel conozca la guía: la raíz (la composición que posee la guía) detiene la guía **actual** en el callback de "Dictar" antes de llamar a `vm.startDictation()`, mediante la función pura `startDictationStoppingGuide(stopGuide, startDictation)` de `feature/voice/` construida en cada composición con la guía vigente; y la raíz cancela el dictado cuando `guide.state` pasa a `Speaking`. El ViewModel **no** recibe `beforeListen`. *(Enmienda 2026-11-17.)* | Un `AudioModeCoordinator` común; pasar `beforeListen = guide::stop` al ViewModel (versión anterior de D8); guía de ámbito de aplicación en `AppContainer`. | La guía se recrea al rotar o cambiar de idioma y el ViewModel sobrevive: una referencia a la guía dentro del ViewModel queda ligada a la primera composición y "Dictar" dejaría de detener la guía vigente (contradice R13). El callback se reconstruye con cada composición, así que siempre ve la guía actual. La guía solo narra recursos fijos de `GuideDestination` y no puede leer el motivo. Mover la guía a `AppContainer` sale del alcance de F-08. |
 | D9 | La solicitud de `RECORD_AUDIO` vive en `DictationControls` (`rememberLauncherForActivityResult(RequestPermission)`) y la decisión es una función pura `dictationAction(hasPermission)`. | Pedir el permiso desde el ViewModel o al arrancar. | El permiso es de la UI; la función pura permite probar R3 en la JVM. Un resultado tardío tras salir no llega (el launcher se desregistra) y, si llega, el ViewModel solo arranca desde `Idle`. |
 
 ## Flujo en el ViewModel
 
 1. `init`: estado `Checking`; `checkAvailability` → `Idle` (guardando el `languageTag`) o `Unavailable`.
-2. "Dictar" (con permiso): `startDictation()` solo desde `Idle` y si no se está enviando ni se ha creado; llama a `beforeListen()`, incrementa la generación, pasa a `Listening` y llama a `start`. Sin permiso: `onDictationPermissionDenied()` muestra el aviso y no llama a `start`.
+2. "Dictar" (con permiso): la raíz detiene antes la guía actual (D8); `startDictation()` solo desde `Idle` y si no se está enviando ni se ha creado; incrementa la generación, pasa a `Listening` y llama a `start`. Sin permiso: `onDictationPermissionDenied()` muestra el aviso y no llama a `start`.
 3. "Detener": `stop()` y estado `Processing`, a la espera de `onFinal`/`onError`. "Cancelar": `cancel()`, incrementa la generación y vuelve a `Idle`.
 4. `onFinal(text)` vigente: si `text.trim()` no está vacío, `form.withDictation(text.trim())` (añade con la regla de R6 y fija `VOICE_ON_DEVICE`); si está vacío, aviso "no se entendió". Vuelve a `Idle`.
 5. `onError(e)` vigente: `LanguageUnavailable` → `Unavailable` + aviso; `Permission` → aviso de R4; `NoMatch`, `Busy`, `Other` → aviso y `Idle`. El borrador no cambia.
@@ -97,7 +97,8 @@ Riesgos:
 - Si `checkRecognitionSupport` nunca responde, el estado se queda en `Checking` (sin "Dictar"), y el texto sigue funcionando. No se inventa un tiempo de espera.
 
 Pruebas JVM (`testDebugUnitTest`, nombres `R<n> ` con espacio, sin `:`):
-- `PreRegistrationViewModelTest` con `FakeOnDeviceRecognizer`: disponibilidad, permiso denegado, una sola escucha, bloqueo de envío, resultado aceptado y vacío, errores, detener, cancelar, generación, `onCleared`, `beforeListen`.
+- `PreRegistrationViewModelTest` con `FakeOnDeviceRecognizer`: disponibilidad, permiso denegado, una sola escucha, bloqueo de envío, resultado aceptado y vacío, errores, detener, cancelar, generación, `onCleared`.
+- `DictationGuideExclusionTest`: `startDictationStoppingGuide` detiene la guía que recibe (la vigente tras recrearla) antes de iniciar la escucha, y no la de una composición anterior (R13, D8).
 - `PreRegistrationFormTest`: `withDictation` y `withTypedText` (separador, sin truncar, reglas de origen).
 - `PreRegistrationsApiTest` (Retrofit real con MockWebServer): JSON exacto con `VOICE_ON_DEVICE`.
 - `SpanishOnDeviceSupportTest`: `recognitionStrategy`, `pickSpanishTag`, `mapRecognizerError`, `dictationAction`.
