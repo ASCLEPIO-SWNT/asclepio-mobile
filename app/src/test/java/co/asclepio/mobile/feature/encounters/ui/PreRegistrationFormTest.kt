@@ -48,4 +48,56 @@ class PreRegistrationFormTest {
         assertFalse(text.contains("Dolor"))
         assertTrue(text.contains("chiefComplaintText=***"))
     }
+
+    @Test fun `R6 el dictado se anade al final separado por un espacio`() {
+        val form = PreRegistrationForm(siteId = "s-1", chiefComplaintText = "Dolor de cabeza").withDictation("desde ayer")
+        assertEquals("Dolor de cabeza desde ayer", form.chiefComplaintText)
+    }
+
+    @Test fun `R6 sin espacio extra si el motivo esta vacio o termina en espacio`() {
+        assertEquals("desde ayer", PreRegistrationForm().withDictation("desde ayer").chiefComplaintText)
+        assertEquals("Fiebre desde ayer", PreRegistrationForm(chiefComplaintText = "Fiebre ").withDictation("desde ayer").chiefComplaintText)
+        assertEquals("Fiebre\ndesde ayer", PreRegistrationForm(chiefComplaintText = "Fiebre\n").withDictation("desde ayer").chiefComplaintText)
+    }
+
+    @Test fun `R6 el dictado no trunca y un motivo de mas de 2000 da el error de longitud`() {
+        val form = PreRegistrationForm(siteId = "s-1", chiefComplaintText = "a".repeat(1995)).withDictation("bbbbbbbbbb")
+        assertEquals("a".repeat(1995) + " " + "bbbbbbbbbb", form.chiefComplaintText)
+        assertEquals(2006, form.chiefComplaintText.length)
+        assertEquals(
+            mapOf(PreRegistrationField.ChiefComplaint to UiMessage(R.string.error_max_length, listOf(2000))),
+            validatePreRegistration(form),
+        )
+    }
+
+    @Test fun `R8 aceptar dictado fija VOICE_ON_DEVICE`() {
+        val form = PreRegistrationForm(siteId = "s-1", chiefComplaintText = "Escrito").withDictation("dictado")
+        assertEquals(ComplaintSource.VOICE_ON_DEVICE, form.complaintSource)
+        assertEquals(ComplaintSource.VOICE_ON_DEVICE, form.toRequest().complaintSource)
+    }
+
+    @Test fun `R8 dictado con edicion se envia como VOICE_ON_DEVICE`() {
+        val form = PreRegistrationForm(siteId = "s-1").withDictation("me duele el pecho").withTypedText("Me duele mucho el pecho, empezó anoche")
+        assertEquals(ComplaintSource.VOICE_ON_DEVICE, form.complaintSource)
+        assertEquals(
+            CreatePreRegistrationRequest("s-1", "Me duele mucho el pecho, empezó anoche", ComplaintSource.VOICE_ON_DEVICE),
+            form.toRequest(),
+        )
+    }
+
+    @Test fun `R8 borrar todo el motivo vuelve a TYPED y lo escrito despues sigue TYPED`() {
+        val dictated = PreRegistrationForm(siteId = "s-1").withDictation("me duele el pecho")
+        val blank = dictated.withTypedText("  \n ")
+        assertEquals(ComplaintSource.TYPED, blank.complaintSource)
+        assertEquals(ComplaintSource.TYPED, dictated.withTypedText("").complaintSource)
+        val retyped = blank.withTypedText("Dolor de cabeza")
+        assertEquals(ComplaintSource.TYPED, retyped.complaintSource)
+        assertEquals("Dolor de cabeza", retyped.chiefComplaintText)
+    }
+
+    @Test fun `R8 sin dictado el origen es TYPED`() {
+        val form = PreRegistrationForm(siteId = "s-1").withTypedText("Fiebre").withTypedText("Fiebre alta")
+        assertEquals(ComplaintSource.TYPED, form.complaintSource)
+        assertEquals(ComplaintSource.TYPED, PreRegistrationForm().complaintSource)
+    }
 }

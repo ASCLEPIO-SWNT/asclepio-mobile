@@ -10,7 +10,7 @@ Sin migraciones. Orden estricto. En cada tarea el `implementer` escribe **primer
   - Archivos: `core/voice/OnDeviceRecognizer.kt` (interfaz, `OnDeviceAvailability`, `DictationError`, `DictationUiState`, `NoDictation`); `src/test/.../core/voice/FakeOnDeviceRecognizer.kt`.
   - Prueba primero en `core/voice/DictationTypesTest.kt`: `R12 los estados y disponibilidades del dictado no contienen texto reconocido en toString`; `R12 NoDictation informa no disponible y no inicia escuchas`.
 
-- [ ] **T3 Funciones puras del formulario** (R6, R8)
+- [x] **T3 Funciones puras del formulario** (R6, R8)
   - Archivo: `feature/encounters/ui/PreRegistrationForm.kt` (`withDictation(text)`, `withTypedText(text)`).
   - Pruebas primero en `PreRegistrationFormTest.kt`: `R6 el dictado se anade al final separado por un espacio`, `R6 sin espacio extra si el motivo esta vacio o termina en espacio`, `R6 el dictado no trunca y un motivo de mas de 2000 da el error de longitud`, `R8 aceptar dictado fija VOICE_ON_DEVICE`, `R8 dictado con edicion se envia como VOICE_ON_DEVICE`, `R8 borrar todo el motivo vuelve a TYPED y lo escrito despues sigue TYPED`, `R8 sin dictado el origen es TYPED`.
 
