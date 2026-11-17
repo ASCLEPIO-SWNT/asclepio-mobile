@@ -28,3 +28,4 @@ Implementado tal como dice D8 (sin arreglarlo por debajo). Opciones para decidir
 2. La raíz, además de D8, observa `state.dictation` y llama a `guide.stop()` de la instancia vigente al pasar a `Listening` (con un instante de solapamiento).
 3. Hacer la guía de ámbito de aplicación (`AppContainer`), fuera del alcance de F-08.
 Hasta decidir, T13 debe incluir el caso "rotar → iniciar guía → cerrar panel → Dictar".
+- **T12** (2026-11-17) `docs/architecture.md` (`core/voice/`, contenido de `feature/voice/`, slot `dictation`, permiso y `<queries>`), `docs/verification.md` (sección F-08: JVM con fake frente a dispositivo) y `feature/voice/README.md`. `PatientOnlyDocsTest` 3/3. `AGENTS.md` sigue diciendo "el dictado en el dispositivo (F-08) está pendiente": no está en T12; se actualiza al cerrar la feature.

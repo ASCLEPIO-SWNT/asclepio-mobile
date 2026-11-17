@@ -46,7 +46,7 @@ Sin migraciones. Orden estricto. En cada tarea el `implementer` escribe **primer
   - Archivos: `AppContainer.kt` (fábrica `newOnDeviceRecognizer()` con el contexto de aplicación), `AppNavigation.kt` (VM con `recognizer` y `beforeListen = guide::stop`; slot `dictation`; `cancelDictation()` en `ON_STOP`, en `onDispose` de la entrada y cuando `guide.state` es `Speaking`), `feature/encounters/ui/PreRegistrationScreen.kt` (slot `dictation` en el panel del motivo).
   - Verificación: `PatientOnlyScopeTest`, `PatientOnlyNavigationTest`, `PatientOnlyResourcesTest` y `PreRegistrationViewModelTest` en verde; comportamiento de ciclo de vida y guía en T13.
 
-- [ ] **T12 Documentación del repo** (R2, R12)
+- [x] **T12 Documentación del repo** (R2, R12)
   - Archivos: `docs/architecture.md` (`core/voice/` y contenido de `feature/voice/`), `docs/verification.md` (sección F-08: JVM con fake frente a dispositivo), `feature/voice/README.md`.
   - Verificación: `PatientOnlyDocsTest` en verde.
 

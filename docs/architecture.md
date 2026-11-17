@@ -1,6 +1,6 @@
 # Arquitectura — asclepio-mobile
 
-Kotlin + Jetpack Compose, **MVVM**, Retrofit + kotlinx.serialization y layouts adaptativos con `WindowSizeClass` (teléfono y tablet). Alcance: **una APK solo del paciente** (ADR 0008 de la API, sección "Ratificación", 2026-11-09): cuenta, sesión, "Mis datos", pre-registro con su estado, "Mis solicitudes", preferencias, cinco idiomas, guía TTS y, cuando llegue, el dictado en el dispositivo. El personal usa la web; el ADR local 0002 quedó sustituido y DT-01-mobile retiró del APK las funciones de personal.
+Kotlin + Jetpack Compose, **MVVM**, Retrofit + kotlinx.serialization y layouts adaptativos con `WindowSizeClass` (teléfono y tablet). Alcance: **una APK solo del paciente** (ADR 0008 de la API, sección "Ratificación", 2026-11-09): cuenta, sesión, "Mis datos", pre-registro con su estado, "Mis solicitudes", preferencias, cinco idiomas, guía TTS y el dictado del motivo en el dispositivo (F-08). El personal usa la web; el ADR local 0002 quedó sustituido y DT-01-mobile retiró del APK las funciones de personal.
 
 ## Paquetes
 ```
@@ -17,6 +17,8 @@ app/src/main/java/co/asclepio/mobile/
 │   │                # AuthHandle y patientCall (Bearer/generación inmutables; un 401 vigente cierra solo su generación)
 │   ├── tenants/     # TenantsApi (GET /api/v1/public/tenants) + PublicTenantDto/PublicSiteDto (F-01 y F-02)
 │   ├── model/       # Sex, FULL_NAME_MAX y la conversión del DatePicker (alta de F-01 y "Mis datos" de F-02)
+│   ├── voice/       # puerto OnDeviceRecognizer, OnDeviceAvailability, DictationError, DictationUiState (sin texto)
+│   │                # y NoDictation (F-08); sin dependencias Android
 │   └── ui/          # Theme, DateTime, UiMessage (@StringRes), WindowLayout (paneMode), MarkdownText,
 │                    # AccessScreens (verificación de sesión y acceso denegado), preferencias, guía TTS (guide/)
 │                    # y PrivateDatePicker (fecha en RAM, sin Savers internos)
@@ -31,7 +33,9 @@ app/src/main/java/co/asclepio/mobile/
     ├── encounters/  # pre-registro y su estado (F-02): data/ (PreRegistrationsApi, DTOs, ComplaintSource,
     │                # PreRegistrationRepository) y ui/ (PreRegistrationScreen/ViewModel, PreRegistrationStatusPane/
     │                # ViewModel, PreRegistrationForm + validación, statusText/isInProgress, PreRegistrationErrors)
-    └── voice/       # dictado en el dispositivo (F-08)
+    └── voice/       # dictado en el dispositivo (F-08): AndroidOnDeviceRecognizer (único que usa SpeechRecognizer,
+                     # solo createOnDeviceSpeechRecognizer), SpanishOnDeviceSupport.kt (funciones puras: rama por SDK,
+                     # variante es, errores, permiso) y ui/DictationControls (botones, estados y solicitud de RECORD_AUDIO)
 ```
 Cada `feature/<f>/` contiene `data/` (API y repositorio), `ui/` (Composables y `<X>ViewModel`) y, si aplica, `model/`.
 
@@ -42,6 +46,7 @@ Cada `feature/<f>/` contiene `data/` (API y repositorio), `ui/` (Composables y `
 - `ui` (Composable) → `ViewModel` → repositorio → servicio Retrofit.
 - Los DTOs de sesión compartidos viven en `core/auth`, sin dependencias core→feature. `/me` solo se convierte en un paciente completo de la IPS recordada antes de exponer `Authenticated`; cualquier otro cuerpo no da principal.
 - El inicio (`feature/account`) recibe el estado del pre-registro (`feature/encounters`) como un slot `@Composable` que compone `AppNavigation` (D3 de F-02-mobile).
+- El pre-registro (`feature/encounters`) recibe los controles de dictado (`feature/voice`) como un slot `@Composable` que compone `AppNavigation`; ambas features solo comparten `core/voice` (F-08-mobile). El ViewModel del pre-registro es dueño del estado del dictado y del origen del motivo.
 
 **Prohibidas**
 - `feature/A` → `feature/B`. Lo compartido va a `core/`. Solo `AppNavigation.kt` (paquete raíz) conoce varias features.
@@ -62,7 +67,7 @@ Logout, expiración, 401 vigente, un nuevo inicio de sesión o la confirmación 
 - `minSdk 31`, `compileSdk`/`targetSdk 37` (ver `docs/adr/0001-minsdk-31.md`). AGP 9 con Kotlin integrado y catálogo de versiones en `gradle/libs.versions.toml`.
 - `API_BASE_URL` se lee de `local.properties` hacia `BuildConfig` (por defecto `http://localhost:3000`, con `adb reverse tcp:3000 tcp:3000`: Android 17 / targetSdk 37 bloquea la red local, como `10.0.2.2`, sin `ACCESS_LOCAL_NETWORK`).
 - El tráfico en claro solo se permite en `debug` (`app/src/debug/AndroidManifest.xml` y `res/xml/network_security_config.xml`).
-- El permiso `RECORD_AUDIO` se declara en el manifiesto y se solicita en el momento de uso.
+- El permiso `RECORD_AUDIO` se declara en el manifiesto y se solicita solo al pulsar "Dictar" (`DictationControls`). `<queries>` declara `android.speech.RecognitionService`. El reconocedor se crea solo con `createOnDeviceSpeechRecognizer` tras `isOnDeviceRecognitionAvailable`; en API 33+ se exige una variante `es` en `installedOnDeviceLanguages`. No se descargan modelos (`triggerModelDownload`).
 
 ## Qué es "buen trabajo" aquí
 - El código está en el paquete correcto y sigue MVVM con `StateFlow<UiState>` (`Loading`, `Success` y `Error`).
