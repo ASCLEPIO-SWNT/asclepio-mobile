@@ -9,6 +9,10 @@ import co.asclepio.mobile.core.network.ApiResult
 import co.asclepio.mobile.core.network.rateLimitSeconds
 import co.asclepio.mobile.core.tenants.PublicSiteDto
 import co.asclepio.mobile.core.ui.UiMessage
+import co.asclepio.mobile.core.voice.DictationUiState
+import co.asclepio.mobile.core.voice.NoDictation
+import co.asclepio.mobile.core.voice.OnDeviceAvailability
+import co.asclepio.mobile.core.voice.OnDeviceRecognizer
 import co.asclepio.mobile.feature.encounters.data.PreRegistrationRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -38,6 +42,8 @@ data class PreRegistrationUiState(
     val showViewStatus: Boolean = false,
     /** R12: el POST respondió 201; la pantalla vuelve al inicio. */
     val created: Boolean = false,
+    /** Dictado en el dispositivo (F-08). Nunca contiene texto reconocido: ese texto solo pasa a [form]. */
+    val dictation: DictationUiState = DictationUiState.Checking,
 ) {
     /** R11: longitud actual del motivo en unidades UTF-16 (`String.length`). */
     val complaintLength: Int get() = form.chiefComplaintText.length
@@ -49,16 +55,35 @@ data class PreRegistrationUiState(
 /**
  * Formulario de pre-registro (R8–R15, R24, R25). La sede recordada solo se usa para preseleccionar; elegir otra no la
  * cambia (PA-M02-5). El motivo solo vive aquí, en memoria (R27).
+ *
+ * F-08 (D3): también es dueño del estado del dictado y del origen del motivo. [recognizer] es el reconocedor local
+ * y [beforeListen] detiene la guía TTS antes de escuchar (D8).
  */
 class PreRegistrationViewModel(
     private val repository: PreRegistrationRepository,
     private val sessionManager: SessionManager,
+    private val recognizer: OnDeviceRecognizer = NoDictation,
+    private val beforeListen: () -> Unit = {},
 ) : ViewModel() {
     private val _state = MutableStateFlow(PreRegistrationUiState())
     val state: StateFlow<PreRegistrationUiState> = _state.asStateFlow()
 
+    /** Variante de español del reconocimiento local (R1); solo se conoce si está disponible. */
+    private var languageTag: String? = null
+
     init {
         loadSites()
+        checkDictation()
+    }
+
+    /** R1, R16: sin abrir el micrófono ni pedir permisos. */
+    private fun checkDictation() = recognizer.checkAvailability { availability ->
+        val available = availability as? OnDeviceAvailability.Available
+        languageTag = available?.languageTag
+        _state.update {
+            if (it.dictation != DictationUiState.Checking) it
+            else it.copy(dictation = if (available != null) DictationUiState.Idle else DictationUiState.Unavailable)
+        }
     }
 
     fun retrySites() {

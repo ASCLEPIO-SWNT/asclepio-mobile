@@ -14,7 +14,7 @@ Sin migraciones. Orden estricto. En cada tarea el `implementer` escribe **primer
   - Archivo: `feature/encounters/ui/PreRegistrationForm.kt` (`withDictation(text)`, `withTypedText(text)`).
   - Pruebas primero en `PreRegistrationFormTest.kt`: `R6 el dictado se anade al final separado por un espacio`, `R6 sin espacio extra si el motivo esta vacio o termina en espacio`, `R6 el dictado no trunca y un motivo de mas de 2000 da el error de longitud`, `R8 aceptar dictado fija VOICE_ON_DEVICE`, `R8 dictado con edicion se envia como VOICE_ON_DEVICE`, `R8 borrar todo el motivo vuelve a TYPED y lo escrito despues sigue TYPED`, `R8 sin dictado el origen es TYPED`.
 
-- [ ] **T4 ViewModel: disponibilidad y fallback** (R1, R16)
+- [x] **T4 ViewModel: disponibilidad y fallback** (R1, R16)
   - Archivo: `feature/encounters/ui/PreRegistrationViewModel.kt` (nuevo parámetro `recognizer: OnDeviceRecognizer = NoDictation` y `beforeListen: () -> Unit = {}`; campo `dictation` en `PreRegistrationUiState`).
   - Pruebas primero en `PreRegistrationViewModelTest.kt`: `R1 al abrir comprueba la disponibilidad sin iniciar escucha`, `R1 con espanol local disponible el dictado queda listo con ese idioma`, `R16 sin reconocimiento local el dictado no esta disponible y se puede enviar por texto`. Las pruebas existentes de F-02 siguen en verde sin cambios de firma.
 

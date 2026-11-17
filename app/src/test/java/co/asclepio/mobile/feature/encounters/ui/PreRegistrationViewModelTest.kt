@@ -9,6 +9,10 @@ import co.asclepio.mobile.core.auth.SessionState
 import co.asclepio.mobile.core.tenants.PublicSiteDto
 import co.asclepio.mobile.core.ui.PaneMode
 import co.asclepio.mobile.core.ui.UiMessage
+import co.asclepio.mobile.core.voice.DictationUiState
+import co.asclepio.mobile.core.voice.FakeOnDeviceRecognizer
+import co.asclepio.mobile.core.voice.OnDeviceAvailability
+import co.asclepio.mobile.core.voice.OnDeviceRecognizer
 import co.asclepio.mobile.feature.encounters.data.ComplaintSource
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -41,10 +45,18 @@ class PreRegistrationViewModelTest {
     private val norte = PublicSiteDto(PatientTestEnv.SITE_NORTE, "Sede Norte")
     private val sur = PublicSiteDto(PatientTestEnv.SITE_SUR, "Sede Sur")
 
-    private suspend fun TestScope.opened(tenants: String = PatientTestEnv.tenants()): PreRegistrationViewModel {
+    private suspend fun TestScope.opened(
+        tenants: String = PatientTestEnv.tenants(),
+        recognizer: OnDeviceRecognizer? = null,
+        beforeListen: () -> Unit = {},
+    ): PreRegistrationViewModel {
         env.login()
         env.enqueue(200, tenants)
-        val vm = PreRegistrationViewModel(env.preRegistrationRepository, env.sessionManager)
+        val vm = if (recognizer == null) {
+            PreRegistrationViewModel(env.preRegistrationRepository, env.sessionManager)
+        } else {
+            PreRegistrationViewModel(env.preRegistrationRepository, env.sessionManager, recognizer, beforeListen)
+        }
         vm.state.first { it.sites !is SitesUiState.Loading }
         val recorded = env.server.takeRequest()
         assertEquals("/api/v1/public/tenants", recorded.path)
@@ -275,5 +287,39 @@ class PreRegistrationViewModelTest {
         assertEquals(PaneMode.Single, preRegistrationPaneMode(WindowWidthSizeClass.Compact))
         assertEquals(PaneMode.Dual, preRegistrationPaneMode(WindowWidthSizeClass.Medium))
         assertEquals(PaneMode.Dual, preRegistrationPaneMode(WindowWidthSizeClass.Expanded))
+    }
+
+    // F-08-mobile: dictado en el dispositivo con un reconocedor falso (sin Android ni micrófono).
+
+    @Test fun `R1 al abrir comprueba la disponibilidad sin iniciar escucha`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = opened(recognizer = recognizer)
+        assertEquals(listOf("checkAvailability"), recognizer.calls)
+        assertTrue(recognizer.listens.isEmpty())
+        assertEquals(DictationUiState.Idle, vm.state.value.dictation)
+        // Sin reconocedor (F-02) el dictado no está disponible.
+        assertEquals(DictationUiState.Unavailable, opened().state.value.dictation)
+    }
+
+    @Test fun `R1 con espanol local disponible el dictado queda listo con ese idioma`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer(availability = null)
+        val vm = opened(recognizer = recognizer)
+        assertEquals(DictationUiState.Checking, vm.state.value.dictation)
+        recognizer.answerAvailability(OnDeviceAvailability.Available("es-US"))
+        assertEquals(DictationUiState.Idle, vm.state.value.dictation)
+        assertTrue(recognizer.listens.isEmpty())
+    }
+
+    @Test fun `R16 sin reconocimiento local el dictado no esta disponible y se puede enviar por texto`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer(availability = OnDeviceAvailability.Unavailable)
+        val vm = opened(recognizer = recognizer)
+        assertEquals(DictationUiState.Unavailable, vm.state.value.dictation)
+        vm.updateComplaint("Dolor de cabeza")
+        assertTrue(vm.state.value.canSubmit)
+        env.enqueue(201, PatientTestEnv.preRegistration())
+        vm.submit()
+        vm.state.first { it.created }
+        assertEquals(JsonPrimitive("TYPED"), env.server.takeRequest().jsonBody()["complaintSource"])
+        assertEquals(listOf("checkAvailability"), recognizer.calls)
     }
 }
