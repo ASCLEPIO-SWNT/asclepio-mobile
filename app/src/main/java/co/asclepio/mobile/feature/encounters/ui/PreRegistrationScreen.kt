@@ -41,7 +41,10 @@ import co.asclepio.mobile.core.ui.text
 /** R29: dos paneles (sedes y motivo) en `Medium`/`Expanded`; una columna en `Compact` (D14). */
 fun preRegistrationPaneMode(widthSizeClass: WindowWidthSizeClass): PaneMode = paneMode(widthSizeClass)
 
-/** Nuevo pre-registro: sede de la lista y motivo escrito (R8–R15, R25, R29). */
+/**
+ * Nuevo pre-registro: sede de la lista y motivo escrito (R8–R15, R25, R29). [dictation] es el slot de los controles
+ * de dictado de F-08, que compone la raíz; "Enviar" se bloquea mientras se escucha (`canSubmit`, R5 de F-08).
+ */
 @Composable
 fun PreRegistrationScreen(
     state: PreRegistrationUiState,
@@ -53,10 +56,11 @@ fun PreRegistrationScreen(
     onViewStatus: () -> Unit,
     onCreated: () -> Unit,
     modifier: Modifier = Modifier,
+    dictation: @Composable () -> Unit = {},
 ) {
     if (state.created) LaunchedEffect(Unit) { onCreated() }
     val sites: @Composable (Modifier) -> Unit = { m -> SitesPane(state, onSelectSite, onRetrySites, m) }
-    val complaint: @Composable (Modifier) -> Unit = { m -> ComplaintPane(state, onComplaintChange, onSubmit, onViewStatus, m) }
+    val complaint: @Composable (Modifier) -> Unit = { m -> ComplaintPane(state, onComplaintChange, onSubmit, onViewStatus, dictation, m) }
     ScreenColumn(modifier, maxWidth = 1080.dp) {
         PageHeader(stringResource(R.string.preregistration_title))
         if (adaptivePaneMode(widthSizeClass) == PaneMode.Dual) {
@@ -107,6 +111,7 @@ private fun ComplaintPane(
     onChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onViewStatus: () -> Unit,
+    dictation: @Composable () -> Unit,
     modifier: Modifier,
 ) {
     val error = state.fieldErrors[PreRegistrationField.ChiefComplaint]
@@ -126,6 +131,7 @@ private fun ComplaintPane(
             minLines = 4,
             modifier = Modifier.fillMaxWidth().heightIn(min = 120.dp),
         )
+        dictation()
         state.message?.let { UiNotice(it.text(), NoticeTone.Error) }
         if (state.showViewStatus) {
             OutlinedButton(onClick = onViewStatus, modifier = Modifier.fillMaxWidth()) {

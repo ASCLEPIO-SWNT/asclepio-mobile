@@ -11,6 +11,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.saveable.LocalSaveableStateRegistry
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -56,6 +57,8 @@ import co.asclepio.mobile.feature.patients.ui.ProfileViewModel
 import co.asclepio.mobile.core.ui.*
 import co.asclepio.mobile.feature.status.ui.StatusScreen
 import co.asclepio.mobile.feature.status.ui.StatusViewModel
+import co.asclepio.mobile.feature.voice.startDictationStoppingGuide
+import co.asclepio.mobile.feature.voice.ui.DictationControls
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -283,8 +286,22 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                     }
                     entry<Route.PreRegistration> {
                         GuardedRoute(session, Route.PreRegistration, { backStack.resetTo(root) }) {
-                            val vm = viewModel { PreRegistrationViewModel(container.preRegistrationRepository, container.sessionManager) }
+                            val vm = viewModel {
+                                PreRegistrationViewModel(
+                                    container.preRegistrationRepository,
+                                    container.sessionManager,
+                                    recognizer = container.newOnDeviceRecognizer(),
+                                )
+                            }
                             val state by vm.state.collectAsStateWithLifecycle()
+                            // F-08 R10: segundo plano. R10/R11: salir de la pantalla, rotación, idioma/tema o cambio de
+                            // sesión (key(navigationIdentity)) desechan esta composición; el ViewModel conserva el borrador.
+                            LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.cancelDictation() }
+                            DisposableEffect(vm) { onDispose { vm.cancelDictation() } }
+                            // F-08 R13: si la guía empieza a hablar, se cancela la escucha vigente.
+                            LaunchedEffect(vm, guide) {
+                                guide.state.collect { if (it == SpeechGuideState.Speaking) vm.cancelDictation() }
+                            }
                             PreRegistrationScreen(
                                 state = state,
                                 widthSizeClass = widthSizeClass,
@@ -296,6 +313,18 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                                 onCreated = {
                                     vm.onCreatedHandled()
                                     backStack.popTo(Route.Home)
+                                },
+                                dictation = {
+                                    DictationControls(
+                                        state = state.dictation,
+                                        message = state.dictationMessage,
+                                        enabled = !state.submitting && !state.created,
+                                        // F-08 R13 (D8): se reconstruye en cada composición con la guía vigente.
+                                        onStart = { startDictationStoppingGuide(guide::stop, vm::startDictation) },
+                                        onPermissionDenied = vm::onDictationPermissionDenied,
+                                        onStop = vm::stopDictation,
+                                        onCancel = vm::cancelDictation,
+                                    )
                                 },
                             )
 

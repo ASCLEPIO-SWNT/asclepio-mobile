@@ -19,6 +19,8 @@ import co.asclepio.mobile.feature.encounters.data.PreRegistrationsApi
 import co.asclepio.mobile.feature.patients.data.PatientProfileApi
 import co.asclepio.mobile.feature.patients.data.PatientProfileRepository
 import co.asclepio.mobile.feature.status.data.HealthApi
+import co.asclepio.mobile.core.voice.OnDeviceRecognizer
+import co.asclepio.mobile.feature.voice.AndroidOnDeviceRecognizer
 import okhttp3.OkHttpClient
 import java.time.Clock
 import co.asclepio.mobile.core.ui.UiPreferencesRepository
@@ -28,6 +30,7 @@ import kotlinx.coroutines.SupervisorJob
 
 /** Inyección de dependencias manual (D4). */
 class AppContainer(context: Context) {
+    private val appContext: Context = context.applicationContext
     val clock: Clock = Clock.systemUTC()
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val uiDataStore = PreferenceDataStoreFactory.create {
@@ -60,4 +63,7 @@ class AppContainer(context: Context) {
     val accountRepository = AccountRepository(publicApi, authApi, meApi, sessionManager)
     val profileRepository = PatientProfileRepository(profileApi, sessionManager)
     val preRegistrationRepository = PreRegistrationRepository(preRegistrationsApi, tenantsApi, sessionManager)
+
+    /** F-08: un reconocedor local por formulario de pre-registro; el ViewModel lo libera en `onCleared`. */
+    fun newOnDeviceRecognizer(): OnDeviceRecognizer = AndroidOnDeviceRecognizer(appContext)
 }

@@ -7,6 +7,10 @@
 
     <queries>
         <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
+        <!-- F-08: visibilidad del servicio de reconocimiento local (createOnDeviceSpeechRecognizer). -->
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
     </queries>
 
     <application

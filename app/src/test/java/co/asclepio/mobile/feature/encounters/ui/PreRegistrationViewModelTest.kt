@@ -1,6 +1,10 @@
 package co.asclepio.mobile.feature.encounters.ui
 
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelStore
 import co.asclepio.mobile.MainDispatcherRule
 import co.asclepio.mobile.PatientTestEnv
 import co.asclepio.mobile.PatientTestEnv.Companion.jsonBody
@@ -9,6 +13,11 @@ import co.asclepio.mobile.core.auth.SessionState
 import co.asclepio.mobile.core.tenants.PublicSiteDto
 import co.asclepio.mobile.core.ui.PaneMode
 import co.asclepio.mobile.core.ui.UiMessage
+import co.asclepio.mobile.core.voice.DictationError
+import co.asclepio.mobile.core.voice.DictationUiState
+import co.asclepio.mobile.core.voice.FakeOnDeviceRecognizer
+import co.asclepio.mobile.core.voice.OnDeviceAvailability
+import co.asclepio.mobile.core.voice.OnDeviceRecognizer
 import co.asclepio.mobile.feature.encounters.data.ComplaintSource
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.first
@@ -41,10 +50,17 @@ class PreRegistrationViewModelTest {
     private val norte = PublicSiteDto(PatientTestEnv.SITE_NORTE, "Sede Norte")
     private val sur = PublicSiteDto(PatientTestEnv.SITE_SUR, "Sede Sur")
 
-    private suspend fun TestScope.opened(tenants: String = PatientTestEnv.tenants()): PreRegistrationViewModel {
+    private suspend fun TestScope.opened(
+        tenants: String = PatientTestEnv.tenants(),
+        recognizer: OnDeviceRecognizer? = null,
+    ): PreRegistrationViewModel {
         env.login()
         env.enqueue(200, tenants)
-        val vm = PreRegistrationViewModel(env.preRegistrationRepository, env.sessionManager)
+        val vm = if (recognizer == null) {
+            PreRegistrationViewModel(env.preRegistrationRepository, env.sessionManager)
+        } else {
+            PreRegistrationViewModel(env.preRegistrationRepository, env.sessionManager, recognizer)
+        }
         vm.state.first { it.sites !is SitesUiState.Loading }
         val recorded = env.server.takeRequest()
         assertEquals("/api/v1/public/tenants", recorded.path)
@@ -275,5 +291,281 @@ class PreRegistrationViewModelTest {
         assertEquals(PaneMode.Single, preRegistrationPaneMode(WindowWidthSizeClass.Compact))
         assertEquals(PaneMode.Dual, preRegistrationPaneMode(WindowWidthSizeClass.Medium))
         assertEquals(PaneMode.Dual, preRegistrationPaneMode(WindowWidthSizeClass.Expanded))
+    }
+
+    // F-08-mobile: dictado en el dispositivo con un reconocedor falso (sin Android ni micrófono).
+
+    @Test fun `R1 al abrir comprueba la disponibilidad sin iniciar escucha`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = opened(recognizer = recognizer)
+        assertEquals(listOf("checkAvailability"), recognizer.calls)
+        assertTrue(recognizer.listens.isEmpty())
+        assertEquals(DictationUiState.Idle, vm.state.value.dictation)
+        // Sin reconocedor (F-02) el dictado no está disponible.
+        assertEquals(DictationUiState.Unavailable, opened().state.value.dictation)
+    }
+
+    @Test fun `R1 con espanol local disponible el dictado queda listo con ese idioma`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer(availability = null)
+        val vm = opened(recognizer = recognizer)
+        assertEquals(DictationUiState.Checking, vm.state.value.dictation)
+        recognizer.answerAvailability(OnDeviceAvailability.Available("es-US"))
+        assertEquals(DictationUiState.Idle, vm.state.value.dictation)
+        assertTrue(recognizer.listens.isEmpty())
+    }
+
+    @Test fun `R16 sin reconocimiento local el dictado no esta disponible y se puede enviar por texto`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer(availability = OnDeviceAvailability.Unavailable)
+        val vm = opened(recognizer = recognizer)
+        assertEquals(DictationUiState.Unavailable, vm.state.value.dictation)
+        vm.updateComplaint("Dolor de cabeza")
+        assertTrue(vm.state.value.canSubmit)
+        env.enqueue(201, PatientTestEnv.preRegistration())
+        vm.submit()
+        vm.state.first { it.created }
+        assertEquals(JsonPrimitive("TYPED"), env.server.takeRequest().jsonBody()["complaintSource"])
+        assertEquals(listOf("checkAvailability"), recognizer.calls)
+    }
+
+    @Test fun `R3 dictar con permiso inicia una escucha con el idioma elegido`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer(OnDeviceAvailability.Available("es-US"))
+        val vm = opened(recognizer = recognizer)
+        vm.startDictation()
+        assertEquals(listOf("checkAvailability", "start:es-US"), recognizer.calls)
+        assertEquals(DictationUiState.Listening, vm.state.value.dictation)
+    }
+
+    @Test fun `R4 permiso denegado muestra aviso conserva el motivo y no escucha`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = opened(recognizer = recognizer)
+        vm.updateComplaint("Dolor de cabeza")
+        vm.onDictationPermissionDenied()
+        val s = vm.state.value
+        assertEquals(UiMessage(R.string.dictation_permission_denied), s.dictationMessage)
+        assertEquals("Dolor de cabeza", s.form.chiefComplaintText)
+        assertEquals(ComplaintSource.TYPED, s.form.complaintSource)
+        assertEquals(DictationUiState.Idle, s.dictation)
+        assertTrue(s.canSubmit)
+        assertTrue(recognizer.listens.isEmpty())
+        // Una nueva pulsación con permiso vuelve a escuchar y quita el aviso.
+        vm.startDictation()
+        assertEquals(1, recognizer.listens.size)
+        assertNull(vm.state.value.dictationMessage)
+    }
+
+    @Test fun `R5 durante la escucha no se inicia otra y no se puede enviar`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val dictating = opened(recognizer = recognizer)
+        dictating.updateComplaint("Dolor de cabeza")
+        assertTrue(dictating.state.value.canSubmit)
+        dictating.startDictation()
+        dictating.startDictation()
+        assertEquals(1, recognizer.listens.size)
+        assertFalse(dictating.state.value.canSubmit)
+        val before = env.server.requestCount
+        dictating.submit()
+        runCurrent()
+        assertEquals(before, env.server.requestCount)
+        assertFalse(dictating.state.value.submitting)
+    }
+
+    /** Formulario con "Dolor de cabeza" ya dictado (origen VOICE_ON_DEVICE). */
+    private suspend fun TestScope.dictated(recognizer: FakeOnDeviceRecognizer): PreRegistrationViewModel =
+        opened(recognizer = recognizer).apply {
+            startDictation()
+            recognizer.lastListen.onFinal("Dolor de cabeza")
+        }
+
+    @Test fun `R6 el resultado final se anade una sola vez y no se envia`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = opened(recognizer = recognizer)
+        vm.updateComplaint("Dolor")
+        vm.startDictation()
+        val listen = recognizer.lastListen
+        listen.onFinal("  de cabeza ")
+        listen.onFinal("de cabeza")
+        runCurrent()
+        val s = vm.state.value
+        assertEquals("Dolor de cabeza", s.form.chiefComplaintText)
+        assertEquals(ComplaintSource.VOICE_ON_DEVICE, s.form.complaintSource)
+        assertEquals(DictationUiState.Idle, s.dictation)
+        assertNull(s.dictationMessage)
+        assertFalse(s.created)
+        assertFalse(s.submitting)
+        assertEquals(1, env.server.requestCount) // solo las sedes: dictar no envía
+        vm.updateComplaint("Dolor de cabeza fuerte")
+        assertEquals("Dolor de cabeza fuerte", vm.state.value.form.chiefComplaintText)
+    }
+
+    @Test fun `R7 resultado vacio o error conserva motivo y origen con aviso`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = dictated(recognizer)
+        val form = vm.state.value.form
+        assertEquals(ComplaintSource.VOICE_ON_DEVICE, form.complaintSource)
+        val cases = listOf<Pair<(FakeOnDeviceRecognizer.Listen) -> Unit, Int>>(
+            { l: FakeOnDeviceRecognizer.Listen -> l.onFinal("   ") } to R.string.dictation_no_match,
+            { l: FakeOnDeviceRecognizer.Listen -> l.onError(DictationError.NoMatch) } to R.string.dictation_no_match,
+            { l: FakeOnDeviceRecognizer.Listen -> l.onError(DictationError.Busy) } to R.string.dictation_busy,
+            { l: FakeOnDeviceRecognizer.Listen -> l.onError(DictationError.Other) } to R.string.dictation_error,
+        )
+        for ((finish, message) in cases) {
+            vm.startDictation()
+            finish(recognizer.lastListen)
+            val s = vm.state.value
+            assertEquals(form, s.form)
+            assertEquals(UiMessage(message), s.dictationMessage)
+            assertEquals(DictationUiState.Idle, s.dictation)
+            assertTrue(s.canSubmit)
+        }
+    }
+
+    @Test fun `R7 error de idioma deja el dictado no disponible`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = opened(recognizer = recognizer)
+        vm.updateComplaint("Fiebre")
+        vm.startDictation()
+        recognizer.lastListen.onError(DictationError.LanguageUnavailable)
+        val s = vm.state.value
+        assertEquals(DictationUiState.Unavailable, s.dictation)
+        assertEquals("Fiebre", s.form.chiefComplaintText)
+        assertEquals(ComplaintSource.TYPED, s.form.complaintSource)
+        assertTrue(s.canSubmit)
+        vm.startDictation()
+        assertEquals(1, recognizer.listens.size)
+    }
+
+    @Test fun `R4 error de permisos del reconocedor muestra el aviso de permiso`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = dictated(recognizer)
+        val form = vm.state.value.form
+        vm.startDictation()
+        recognizer.lastListen.onError(DictationError.Permission)
+        val s = vm.state.value
+        assertEquals(UiMessage(R.string.dictation_permission_denied), s.dictationMessage)
+        assertEquals(form, s.form)
+        assertEquals(DictationUiState.Idle, s.dictation)
+        assertTrue(s.canSubmit)
+    }
+
+    @Test fun `R5 detener pasa a procesando y espera el resultado`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = opened(recognizer = recognizer)
+        vm.startDictation()
+        vm.stopDictation()
+        assertEquals("stop", recognizer.calls.last())
+        assertEquals(DictationUiState.Processing, vm.state.value.dictation)
+        assertFalse(vm.state.value.canSubmit)
+        vm.startDictation()
+        assertEquals(1, recognizer.listens.size)
+        recognizer.lastListen.onFinal("tos seca")
+        assertEquals("tos seca", vm.state.value.form.chiefComplaintText)
+        assertEquals(DictationUiState.Idle, vm.state.value.dictation)
+    }
+
+    @Test fun `R10 tras cancelar se ignoran resultados y errores tardios`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = opened(recognizer = recognizer)
+        vm.updateComplaint("Fiebre")
+        vm.startDictation()
+        val listen = recognizer.lastListen
+        vm.cancelDictation()
+        assertEquals("cancel", recognizer.calls.last())
+        val cancelled = vm.state.value
+        assertEquals(DictationUiState.Idle, cancelled.dictation)
+        assertEquals(UiMessage(R.string.dictation_cancelled), cancelled.dictationMessage)
+        listen.onFinal("texto tardio")
+        listen.onError(DictationError.LanguageUnavailable)
+        assertEquals(cancelled, vm.state.value)
+        assertEquals("Fiebre", vm.state.value.form.chiefComplaintText)
+        assertEquals(ComplaintSource.TYPED, vm.state.value.form.complaintSource)
+        // Sin escucha vigente, cancelar no hace nada.
+        val calls = recognizer.calls.size
+        vm.cancelDictation()
+        assertEquals(calls, recognizer.calls.size)
+    }
+
+    @Test fun `R10 un resultado de una escucha anterior no se aplica a la nueva`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = opened(recognizer = recognizer)
+        vm.startDictation()
+        val old = recognizer.lastListen
+        vm.cancelDictation()
+        vm.startDictation()
+        old.onFinal("viejo")
+        old.onError(DictationError.Other)
+        assertEquals(DictationUiState.Listening, vm.state.value.dictation)
+        assertEquals("", vm.state.value.form.chiefComplaintText)
+        recognizer.lastListen.onFinal("nuevo")
+        assertEquals("nuevo", vm.state.value.form.chiefComplaintText)
+    }
+
+    @Test fun `R8 tras el 201 el formulario nuevo vuelve a TYPED`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = dictated(recognizer)
+        vm.updateComplaint("Dolor de cabeza y mareo")
+        assertEquals(ComplaintSource.VOICE_ON_DEVICE, vm.state.value.form.complaintSource)
+        env.enqueue(201, PatientTestEnv.preRegistration())
+        vm.submit()
+        val s = vm.state.first { it.created }
+        assertEquals(
+            mapOf(
+                "siteId" to JsonPrimitive(PatientTestEnv.SITE_NORTE),
+                "chiefComplaintText" to JsonPrimitive("Dolor de cabeza y mareo"),
+                "complaintSource" to JsonPrimitive("VOICE_ON_DEVICE"),
+            ),
+            env.server.takeRequest().jsonBody(),
+        )
+        assertEquals(PreRegistrationForm(), s.form)
+        assertEquals(ComplaintSource.TYPED, s.form.complaintSource)
+    }
+
+    @Test fun `R10 al limpiar el ViewModel se libera el reconocedor`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val created = opened(recognizer = recognizer)
+        val store = ViewModelStore()
+        val factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T = created as T
+        }
+        val vm = ViewModelProvider(store, factory)[PreRegistrationViewModel::class.java]
+        vm.updateComplaint("Fiebre")
+        vm.startDictation()
+        val listen = recognizer.lastListen
+        store.clear()
+        assertEquals("release", recognizer.calls.last())
+        val after = vm.state.value
+        listen.onFinal("texto tardio")
+        assertEquals(after, vm.state.value)
+        assertEquals("Fiebre", vm.state.value.form.chiefComplaintText)
+    }
+
+    @Test fun `R11 cancelar por rotacion conserva motivo y origen y exige pulsar Dictar de nuevo`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = dictated(recognizer)
+        vm.updateComplaint("Dolor de cabeza intenso")
+        vm.startDictation()
+        // La raíz cancela en el onDispose de la entrada al rotar o cambiar idioma/tema; el VM sobrevive.
+        vm.cancelDictation()
+        val s = vm.state.value
+        assertEquals("Dolor de cabeza intenso", s.form.chiefComplaintText)
+        assertEquals(ComplaintSource.VOICE_ON_DEVICE, s.form.complaintSource)
+        assertEquals(DictationUiState.Idle, s.dictation)
+        assertEquals(2, recognizer.listens.size)
+        runCurrent()
+        assertEquals(2, recognizer.listens.size) // no vuelve a escuchar solo
+        vm.startDictation()
+        assertEquals(3, recognizer.listens.size)
+    }
+
+    @Test fun `R12 el estado de la pantalla enmascara el motivo dictado en toString`() = runTest {
+        val recognizer = FakeOnDeviceRecognizer()
+        val vm = opened(recognizer = recognizer)
+        vm.startDictation()
+        recognizer.lastListen.onFinal("me duele el pecho")
+        assertEquals("me duele el pecho", vm.state.value.form.chiefComplaintText)
+        assertFalse(vm.state.value.toString().contains("duele"))
+        // Sin SavedStateHandle: el texto reconocido no puede acabar en el Bundle.
+        val parameters = PreRegistrationViewModel::class.java.constructors.flatMap { it.parameterTypes.toList() }
+        assertFalse(SavedStateHandle::class.java in parameters)
     }
 }

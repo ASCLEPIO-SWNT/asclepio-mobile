@@ -43,3 +43,11 @@ Para comprobar la dependencia efectiva y compilar el APK de test:
 ```
 
 `dependencyInsight` debe resolver `espresso-core:3.7.0`; compilar el APK no sustituye ejecutar `connectedDebugAndroidTest` o el runner instalado en los dispositivos coordinados. No aplicar excepciones de reflexión ni modificar pruebas de producto para ocultar este error del harness.
+
+
+## Dictado en el dispositivo (F-08-mobile)
+
+Dos niveles de evidencia que **no se mezclan**:
+
+1. **JVM con un reconocedor falso** (`./gradlew testDebugUnitTest`): `FakeOnDeviceRecognizer` (`src/test/.../core/voice/`) sustituye al puerto `OnDeviceRecognizer`. Cubre la lógica del ViewModel (disponibilidad, permiso, una sola escucha, bloqueo de envío, resultado aceptado y vacío, errores, detener, cancelar, generación de escucha, `onCleared`), la exclusión guía/dictado con la guía recreada (`DictationGuideExclusionTest`: `startDictationStoppingGuide` detiene la guía vigente antes de escuchar, D8), las funciones puras de `feature/voice/SpanishOnDeviceSupport.kt`, el formulario (`withDictation`/`withTypedText`), el POST real con MockWebServer y las pruebas estáticas de `OnDeviceOnlyTest` (solo `createOnDeviceSpeechRecognizer`, sin grabación, actividades de reconocimiento ni descarga de modelos; `RECORD_AUDIO` solo en `DictationControls`). Estas pruebas **no** demuestran reconocimiento real.
+2. **Dispositivo o emulador** (QA manual, `progress/impl_F-08-mobile.md`): fallback sin reconocimiento local, permiso denegado, cinco idiomas con la nota "solo español", TalkBack, teléfono y tablet; y, solo en un dispositivo con el español local instalado, la transcripción real en modo avión (prueba de que es local), Detener/Cancelar, rotación, segundo plano y guía durante la escucha, "rotar → iniciar guía → cerrar panel → Dictar" (la guía se detiene), y el POST con `VOICE_ON_DEVICE` contra la API local (`adb reverse tcp:3000 tcp:3000`). Sin modelo local no se declara transcripción real; la guía TTS no es evidencia de reconocimiento.
