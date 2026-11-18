@@ -50,6 +50,17 @@ sealed interface PreRegistrationStatusUiState {
     }
 }
 
+/**
+ * F-10-mobile R1: si la tarjeta de fila sigue el stream. Con el último pre-registro en curso (`PENDING` o con una
+ * atención sin terminar, es decir `!canCreate`) sí; sin pre-registros o con el último terminado, no. `null` mientras
+ * carga o falla: se conserva el valor anterior para no cortar el stream en cada "Actualizar".
+ */
+fun PreRegistrationStatusUiState.followsQueue(): Boolean? = when (this) {
+    is PreRegistrationStatusUiState.Success -> !canCreate
+    PreRegistrationStatusUiState.Empty -> false
+    PreRegistrationStatusUiState.Loading, is PreRegistrationStatusUiState.Error -> null
+}
+
 /** Lo que el inicio muestra de un pre-registro (R17). Lanza si una hora no es ISO-8601. */
 fun toStatusUi(dto: PatientPreRegistrationDto): PreRegistrationStatusUiState.Success =
     PreRegistrationStatusUiState.Success(

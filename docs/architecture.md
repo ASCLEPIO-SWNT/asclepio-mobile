@@ -33,6 +33,8 @@ app/src/main/java/co/asclepio/mobile/
     ├── encounters/  # pre-registro y su estado (F-02): data/ (PreRegistrationsApi, DTOs, ComplaintSource,
     │                # PreRegistrationRepository) y ui/ (PreRegistrationScreen/ViewModel, PreRegistrationStatusPane/
     │                # ViewModel, PreRegistrationForm + validación, statusText/isInProgress, PreRegistrationErrors)
+    │                # y queue/ (F-10: QueuePositionDto, QueuePositionStream sobre okhttp-sse con el Bearer capturado
+    │                # por patientStream, QueuePositionViewModel con backoff 1→30 s); ui/QueuePositionCard
     └── voice/       # dictado en el dispositivo (F-08): AndroidOnDeviceRecognizer (único que usa SpeechRecognizer,
                      # solo createOnDeviceSpeechRecognizer), SpanishOnDeviceSupport.kt (funciones puras: rama por SDK,
                      # variante es, errores, permiso), DictationGuideExclusion.kt (startDictationStoppingGuide, D8) y

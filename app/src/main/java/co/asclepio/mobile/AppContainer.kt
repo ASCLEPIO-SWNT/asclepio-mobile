@@ -16,6 +16,7 @@ import co.asclepio.mobile.feature.account.data.PublicApi
 import co.asclepio.mobile.feature.account.data.TenantRepository
 import co.asclepio.mobile.feature.encounters.data.PreRegistrationRepository
 import co.asclepio.mobile.feature.encounters.data.PreRegistrationsApi
+import co.asclepio.mobile.feature.encounters.queue.QueuePositionStream
 import co.asclepio.mobile.feature.patients.data.PatientProfileApi
 import co.asclepio.mobile.feature.patients.data.PatientProfileRepository
 import co.asclepio.mobile.feature.status.data.HealthApi
@@ -63,6 +64,9 @@ class AppContainer(context: Context) {
     val accountRepository = AccountRepository(publicApi, authApi, meApi, sessionManager)
     val profileRepository = PatientProfileRepository(profileApi, sessionManager)
     val preRegistrationRepository = PreRegistrationRepository(preRegistrationsApi, tenantsApi, sessionManager)
+
+    /** F-10: stream SSE de la posición en la fila sobre el mismo OkHttp (sin logs, R10). */
+    val queuePositionStream = QueuePositionStream(okHttp, BuildConfig.API_BASE_URL, sessionManager)
 
     /** F-08: un reconocedor local por formulario de pre-registro; el ViewModel lo libera en `onCleared`. */
     fun newOnDeviceRecognizer(): OnDeviceRecognizer = AndroidOnDeviceRecognizer(appContext)
