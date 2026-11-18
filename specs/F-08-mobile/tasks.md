@@ -50,7 +50,7 @@ Sin migraciones. Orden estricto. En cada tarea el `implementer` escribe **primer
   - Archivos: `docs/architecture.md` (`core/voice/` y contenido de `feature/voice/`), `docs/verification.md` (sección F-08: JVM con fake frente a dispositivo), `feature/voice/README.md`.
   - Verificación: `PatientOnlyDocsTest` en verde.
 
-- [ ] **T13 QA manual en emulador y dispositivo** (R1–R14, R16)
+- [x] **T13 QA manual en emulador y dispositivo** (R1–R14, R16)
   - `adb reverse tcp:3000 tcp:3000` y `API_BASE_URL=http://localhost:3000` (Android 17 bloquea la red local), API local levantada.
   - Emulador de teléfono y de tablet (API 37): fallback sin reconocimiento local (aviso, sin "Dictar", envío por texto); permiso denegado y denegado de nuevo (aviso, sin bucle); cinco idiomas con la nota de "solo español"; TalkBack en los controles.
   - Dispositivo con español local (API 33+ y, si lo hay, 31–32): dictado en modo avión, edición, envío con `VOICE_ON_DEVICE` (comprobar en la web de recepción o en la base local); borrar todo y escribir → `TYPED`; Detener y Cancelar; rotación y segundo plano durante la escucha; abrir la guía durante la escucha.
