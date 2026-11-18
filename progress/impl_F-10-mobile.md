@@ -50,6 +50,6 @@ Rama `feature/F-10-mobile`. Contrato consumido: **0.10.0** (`CONSUMED_CONTRACT =
 | R11 | `QueuePositionCardTest::R11` ×2 (cinco catálogos y textos en español; `LiveRegionMode.Polite` sin literales); instrumentada `R3 R11` |
 
 ## Resultados
-- `./gradlew testDebugUnitTest`: **393 pruebas, 0 fallos** (49 nuevas en JVM: Stream 13, ViewModel 10, Card 12, Lifecycle 4… más las existentes).
+- `./gradlew testDebugUnitTest`: **393 pruebas, 0 fallos** (39 nuevas en JVM: Stream 13, ViewModel 10, Card 12, Lifecycle 4; el resto, existentes).
 - `./gradlew assembleDebugAndroidTest`: compila (`QueuePositionCardInstrumentedTest`, 5 pruebas, **no ejecutadas**: sin dispositivo).
 - `./init.sh` (completo): `FAIL: 0 · WARN: 0 · Estado: VERDE`, exit 0.
