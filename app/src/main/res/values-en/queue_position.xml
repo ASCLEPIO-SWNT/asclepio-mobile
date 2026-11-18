@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- F-10-mobile: tarjeta de fila (R3–R8, R11). -->
+<resources>
+    <string name="queue_title">Your place in line</string>
+    <string name="queue_phase_waiting_triage">Waiting for triage</string>
+    <string name="queue_phase_waiting_care">Waiting for the doctor</string>
+    <string name="queue_position">You are number %1$d</string>
+    <string name="queue_next">You are next</string>
+    <string name="queue_ahead_one">1 person ahead of you</string>
+    <string name="queue_ahead_many">%1$d people ahead of you</string>
+    <string name="queue_estimate_range">%1$d–%2$d min</string>
+    <string name="queue_estimate_may_change">It may change if more urgent cases arrive</string>
+    <string name="queue_estimate_insufficient">There is not enough data yet to estimate the time</string>
+    <string name="queue_called">You are being called: please go to the consulting room</string>
+    <string name="queue_done">Care finished</string>
+    <string name="queue_no_active">Go to reception to join the line</string>
+    <string name="queue_connecting">Connecting…</string>
+    <string name="queue_offline">No connection</string>
+    <string name="queue_offline_age">No connection · updated %1$d min ago</string>
+    <string name="queue_reconnecting">Reconnecting…</string>
+</resources>

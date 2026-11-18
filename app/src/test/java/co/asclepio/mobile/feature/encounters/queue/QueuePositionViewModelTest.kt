@@ -3,7 +3,6 @@ package co.asclepio.mobile.feature.encounters.queue
 import co.asclepio.mobile.MainDispatcherRule
 import co.asclepio.mobile.PatientTestEnv
 import co.asclepio.mobile.Route
-import co.asclepio.mobile.core.auth.MutableClock
 import co.asclepio.mobile.core.auth.SessionInvalidated
 import co.asclepio.mobile.core.auth.SessionState
 import co.asclepio.mobile.rootRoute
@@ -24,15 +23,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.time.Duration
-import java.time.Instant
 
 /** Bucle de reconexión del ViewModel con el reloj de corrutinas (tiempo virtual) y un origen falso del stream. */
 class QueuePositionViewModelTest {
     @get:Rule val main = MainDispatcherRule()
     @get:Rule val tmp = TemporaryFolder()
 
-    private val clock = MutableClock(Instant.parse("2026-10-27T15:00:00Z"))
+    private var elapsed = 5_000_000L
     private val waits = mutableListOf<Long>()
     private var opened = 0
 
@@ -52,7 +49,7 @@ class QueuePositionViewModelTest {
                     if (script.lastOrNull() is StreamEvent.Snapshot) awaitCancellation()
                 }
             },
-            clock = clock,
+            elapsedMs = { elapsed },
             wait = { waits += it; delay(it) },
         )
 
@@ -88,7 +85,7 @@ class QueuePositionViewModelTest {
         val job = follow(vm)
         runCurrent()
         job.cancel()
-        assertEquals(QueueUiState(first, clock.instant(), QueueConnection.RECONNECTING, ended = false), vm.state.value)
+        assertEquals(QueueUiState(first, elapsed, QueueConnection.RECONNECTING, ended = false), vm.state.value)
     }
 
     @Test fun `R8 la reconexion vuelve a LIVE con la instantanea nueva y su hora`() = runTest {
@@ -97,10 +94,10 @@ class QueuePositionViewModelTest {
         val vm = vm(listOf(StreamEvent.Snapshot(first), StreamEvent.Failed(null)), listOf(StreamEvent.Snapshot(second)))
         val job = follow(vm)
         runCurrent()
-        clock.now = clock.now.plus(Duration.ofMinutes(3))
+        elapsed += 3 * 60_000L
         advanceTimeBy(1_001)
         job.cancel()
-        assertEquals(QueueUiState(second, clock.instant(), QueueConnection.LIVE, ended = false), vm.state.value)
+        assertEquals(QueueUiState(second, elapsed, QueueConnection.LIVE, ended = false), vm.state.value)
     }
 
     @Test fun `R1 el estado inicial no tiene dato y esta conectando en vivo`() {
@@ -111,7 +108,7 @@ class QueuePositionViewModelTest {
         val done = dto(QueuePhase.DONE)
         val vm = vm(listOf(StreamEvent.Snapshot(dto(QueuePhase.CALLED)), StreamEvent.Snapshot(done), StreamEvent.Closed))
         vm.follow()
-        assertEquals(QueueUiState(done, clock.instant(), QueueConnection.LIVE, ended = true), vm.state.value)
+        assertEquals(QueueUiState(done, elapsed, QueueConnection.LIVE, ended = true), vm.state.value)
         vm.follow()
         assertEquals(1, opened)
         assertEquals(emptyList<Long>(), waits)
@@ -126,7 +123,7 @@ class QueuePositionViewModelTest {
     }
 
     @Test fun `R9 una sesion invalidada termina sin reconectar`() = runTest {
-        val vm = QueuePositionViewModel(source = { flow<StreamEvent> { throw SessionInvalidated() } }, clock = clock, wait = { waits += it })
+        val vm = QueuePositionViewModel(source = { flow<StreamEvent> { throw SessionInvalidated() } }, elapsedMs = { elapsed }, wait = { waits += it })
         vm.follow()
         assertTrue(vm.state.value.ended)
         assertEquals(emptyList<Long>(), waits)
@@ -140,7 +137,7 @@ class QueuePositionViewModelTest {
                     env.login()
                     env.server.enqueue(MockResponse().setResponseCode(401).setHeader("Content-Type", "application/problem+json").setBody(env.problem(401)))
                     val stream = QueuePositionStream(env.client, env.server.url("/").toString(), env.sessionManager)
-                    val vm = QueuePositionViewModel(stream::stream, clock, wait = { waits += it })
+                    val vm = QueuePositionViewModel(stream::stream, { elapsed }, wait = { waits += it })
                     vm.follow()
                     assertTrue(vm.state.value.ended)
                     assertEquals(emptyList<Long>(), waits)

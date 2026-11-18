@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- F-10-mobile: tarjeta de fila (R3–R8, R11). -->
+<resources>
+    <string name="queue_title">Tu lugar en la fila</string>
+    <string name="queue_phase_waiting_triage">Esperando triage</string>
+    <string name="queue_phase_waiting_care">Esperando al médico</string>
+    <string name="queue_position">Eres el %1$d.º</string>
+    <string name="queue_next">Eres el siguiente</string>
+    <string name="queue_ahead_one">1 persona delante</string>
+    <string name="queue_ahead_many">%1$d personas delante</string>
+    <string name="queue_estimate_range">%1$d–%2$d min</string>
+    <string name="queue_estimate_may_change">Puede cambiar si llegan casos más urgentes</string>
+    <string name="queue_estimate_insufficient">Aún no hay datos suficientes para estimar el tiempo</string>
+    <string name="queue_called">Te están llamando: acércate al consultorio</string>
+    <string name="queue_done">Atención finalizada</string>
+    <string name="queue_no_active">Acércate a recepción para entrar en la fila</string>
+    <string name="queue_connecting">Conectando…</string>
+    <string name="queue_offline">Sin conexión</string>
+    <string name="queue_offline_age">Sin conexión · actualizado hace %1$d min</string>
+    <string name="queue_reconnecting">Reconectando…</string>
+</resources>

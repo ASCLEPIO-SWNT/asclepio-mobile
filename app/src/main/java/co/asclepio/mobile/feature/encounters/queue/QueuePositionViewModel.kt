@@ -8,18 +8,17 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import java.time.Clock
-import java.time.Instant
 
 enum class QueueConnection { LIVE, RECONNECTING }
 
 /**
- * Tarjeta de fila (F-10-mobile). [last] es el último dato, solo en memoria (D4), con la hora local [receivedAt] en que
- * llegó. [ended] tras DONE o un 401/sesión invalidada: ya no se reconecta (R5, R9).
+ * Tarjeta de fila (F-10-mobile). [last] es el último dato, solo en memoria (D4), y [receivedAt] el instante local en que
+ * llegó, en milisegundos de un reloj monótono (solo sirve para su antigüedad: no es una hora legal, R22 de F-02).
+ * [ended] tras DONE o un 401/sesión invalidada: ya no se reconecta (R5, R9).
  */
 data class QueueUiState(
     val last: QueuePositionDto? = null,
-    val receivedAt: Instant? = null,
+    val receivedAt: Long? = null,
     val connection: QueueConnection = QueueConnection.LIVE,
     val ended: Boolean = false,
 )
@@ -31,7 +30,7 @@ data class QueueUiState(
  */
 class QueuePositionViewModel(
     private val source: () -> Flow<StreamEvent>,
-    private val clock: Clock,
+    private val elapsedMs: () -> Long,
     private val wait: suspend (Long) -> Unit = { delay(it) },
 ) : ViewModel() {
     private val _state = MutableStateFlow(QueueUiState())
@@ -47,7 +46,7 @@ class QueuePositionViewModel(
                         is StreamEvent.Snapshot -> {
                             backoff = INITIAL_BACKOFF_MS
                             val done = event.position.phase == QueuePhase.DONE
-                            _state.value = QueueUiState(event.position, clock.instant(), QueueConnection.LIVE, ended = done)
+                            _state.value = QueueUiState(event.position, elapsedMs(), QueueConnection.LIVE, ended = done)
                         }
                         is StreamEvent.Failed -> unauthorized = event.code == 401
                         StreamEvent.Closed -> Unit
