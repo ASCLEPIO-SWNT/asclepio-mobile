@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Dictado del motivo en el dispositivo (F-08-mobile). El dictado reconoce solo español. -->
+<resources>
+    <string name="dictation_start">Dictar</string>
+    <string name="dictation_stop">Detener</string>
+    <string name="dictation_cancel">Cancelar</string>
+    <string name="dictation_listening">Escuchando…</string>
+    <string name="dictation_processing">Procesando…</string>
+    <string name="dictation_spanish_only">El dictado reconoce solo español.</string>
+    <string name="dictation_unavailable">El dictado no está disponible en este teléfono. Puedes escribir el motivo.</string>
+    <string name="dictation_permission_denied">Sin permiso de micrófono no se puede dictar. Puedes seguir escribiendo el motivo.</string>
+    <string name="dictation_no_match">No se entendió lo dictado. Tu motivo no cambió; intenta de nuevo o escríbelo.</string>
+    <string name="dictation_busy">El reconocimiento de voz está ocupado. Intenta de nuevo en unos segundos.</string>
+    <string name="dictation_error">No se pudo completar el dictado. Tu motivo no cambió.</string>
+    <string name="dictation_cancelled">Dictado detenido. Tu motivo no cambió; pulsa Dictar para volver a escuchar.</string>
+</resources>

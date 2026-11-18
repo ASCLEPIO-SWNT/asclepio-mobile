@@ -7,14 +7,14 @@ import co.asclepio.mobile.feature.encounters.data.ComplaintSource
 import co.asclepio.mobile.feature.encounters.data.CreatePreRegistrationRequest
 import co.asclepio.mobile.feature.encounters.data.PatientPreRegistrationDto
 
-/** `maxLength` de `chiefComplaintText` en CreatePreRegistrationDto (contrato 0.4.0). */
+/** `maxLength` de `chiefComplaintText` en CreatePreRegistrationDto (contrato 0.9.0). */
 const val CHIEF_COMPLAINT_MAX = 2000
 
 enum class PreRegistrationField { Site, ChiefComplaint }
 
 /**
  * Formulario de pre-registro: sede y motivo. El motivo solo vive en memoria (R27, D13).
- * `complaintSource` es siempre [ComplaintSource.TYPED] en F-02 (D8); F-08 lo cambiará al dictar.
+ * `complaintSource` empieza en [ComplaintSource.TYPED]; el dictado lo cambia (ver [withDictation] y [withTypedText]).
  */
 data class PreRegistrationForm(
     val siteId: String? = null,
@@ -24,6 +24,23 @@ data class PreRegistrationForm(
     override fun toString(): String =
         "PreRegistrationForm(siteId=$siteId, chiefComplaintText=***, complaintSource=$complaintSource)"
 }
+
+/**
+ * R6 y R8 de F-08: añade un resultado de dictado aceptado al final del motivo (con un espacio si el texto previo no
+ * está vacío ni termina en espacio), sin truncarlo, y fija el origen [ComplaintSource.VOICE_ON_DEVICE].
+ */
+fun PreRegistrationForm.withDictation(text: String): PreRegistrationForm {
+    val previous = chiefComplaintText
+    val separator = if (previous.isEmpty() || previous.last().isWhitespace()) "" else " "
+    return copy(chiefComplaintText = previous + separator + text, complaintSource = ComplaintSource.VOICE_ON_DEVICE)
+}
+
+/**
+ * R8 de F-08 (PA-F08-1): una edición conserva el origen; solo vuelve a [ComplaintSource.TYPED] si deja el motivo
+ * vacío o en blanco.
+ */
+fun PreRegistrationForm.withTypedText(text: String): PreRegistrationForm =
+    copy(chiefComplaintText = text, complaintSource = if (text.isBlank()) ComplaintSource.TYPED else complaintSource)
 
 /** Validación local (D10, R11): sede obligatoria y motivo de 1 a 2 000 unidades UTF-16 tras quitar espacios. */
 fun validatePreRegistration(form: PreRegistrationForm): Map<PreRegistrationField, UiMessage> = buildMap {

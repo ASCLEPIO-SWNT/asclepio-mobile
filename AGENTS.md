@@ -1,6 +1,6 @@
 # AGENTS.md — mapa de asclepio-mobile
 
-App Android (Kotlin + Jetpack Compose) de Asclepio **solo del paciente** (ADR 0008 de la API, sección "Ratificación", 2026-11-09): cuenta con consentimiento, inicio y cierre de sesión, "Mis datos", pre-registro con su estado, "Mis solicitudes", cinco idiomas, preferencias visuales y guía TTS; el dictado en el dispositivo (F-08) está pendiente. El personal trabaja en la aplicación web; recepción confirma la llegada allí. Las funciones de personal se retiraron en DT-01-mobile. *La IA propone, el profesional decide.* Lee solo lo que necesites en cada momento.
+App Android (Kotlin + Jetpack Compose) de Asclepio **solo del paciente** (ADR 0008 de la API, sección "Ratificación", 2026-11-09): cuenta con consentimiento, inicio y cierre de sesión, "Mis datos", pre-registro con su estado, "Mis solicitudes", cinco idiomas, preferencias visuales y guía TTS y dictado del motivo en el dispositivo (F-08: solo reconocimiento local en español; si no hay, se escribe). El personal trabaja en la aplicación web; recepción confirma la llegada allí. Las funciones de personal se retiraron en DT-01-mobile. *La IA propone, el profesional decide.* Lee solo lo que necesites en cada momento.
 
 ## 1. Antes de empezar
 1. Ejecuta `./init.sh`. **Si falla, para** y reporta.

@@ -86,3 +86,13 @@ API/DBreal y matrizextendida API31/tablet/320dp200/5idiomas/TalkBack/teclado/mov
 - **QA manual (T12, humano, 2026-11-10):** emulador teléfono y tablet, `adb reverse` y API local. Los cinco casos OK (sin IPS, con IPS, regresión del paciente, login de personal R7, restauración de token de personal R5). Sin observaciones.
 - **Cierre:** `./init.sh` completo VERDE (FAIL 0 · WARN 0) en `chore/DT-01-mobile-close`. Pendientes conocidos: `tagline`, `ic_back` y `home_navigation` sin uso (aviso de lint, no error).
 - **Flujo de ramas:** desde hoy `feature/<id>`, `fix/<id>` o `chore/<id>` desde `develop` por PR; `main` solo por PR `develop → main` (`docs/conventions.md`, "Ramas y PRs").
+
+## 2026-11-17 — F-08-mobile: dictado del motivo en el dispositivo → done
+- **Spec:** reescrita tras ADR 0008/DT-01-mobile (contrato 0.9.0 sin cambios para F-08; R1–R14 y R16, R15 retirado). Aprobada por el humano en el chat el 2026-11-17 con PA-F08-1 (lo dictado y editado sigue `VOICE_ON_DEVICE`; vuelve a `TYPED` solo si el motivo queda en blanco) y PA-F08-2 (minSdk 31+, alternativa de texto sin reconocedor, idioma o permiso; sin descarga de modelos).
+- **Implementación:** T1–T12, T14 (`89eb1bf`..`53b17a6`) y T15 (`458c703`). Solo `createOnDeviceSpeechRecognizer`; `checkRecognitionSupport` en API 33+ e `isOnDeviceRecognitionAvailable` en 31–32. Puerto `core/voice/OnDeviceRecognizer`, adaptador y controles en `feature/voice/`.
+- **Enmienda D8 (aprobada en el chat el 2026-11-17):** `beforeListen` dejaba ligada la guía de la primera composición y, tras rotar, "Dictar" no la detenía (R13). Ahora la raíz detiene la guía actual al pulsar "Dictar" (`startDictationStoppingGuide`); se pasó por `spec_ready` y vuelta a `in_progress`.
+- **Revisión:** APROBADO por un reviewer independiente (`9ca6709`); 354 pruebas JVM, 0 fallos; lint 0 errores (15 avisos previos). Observaciones no bloqueantes: `DictationGuideExclusionTest` comprueba la guía anterior de forma trivial; la cancelación cuando la guía empieza a hablar no tiene prueba JVM; al salir de la pantalla se muestra `dictation_cancelled`.
+- **QA manual (T13, humano, 2026-11-17):**
+  - Tablet Lenovo TB350FU (Android 14): sin modelo local en español (Subtítulos instantáneos solo en inglés), la app oculta "Dictar", muestra el aviso y permite escribir el motivo (R16).
+  - Emulador Medium_Phone_API_37 (Android 17), con micrófono del host, español instalado, `adb reverse` y la API local: el humano informó "funciona correctamente". No reportó el detalle caso por caso.
+- **Cierre:** `./init.sh` completo VERDE. Pendientes conocidos: en dispositivos sin español en el reconocimiento local, como esa tablet Lenovo, no hay dictado (es el comportamiento esperado).

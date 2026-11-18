@@ -26,7 +26,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         // Versión del contrato consumido (feature_list.json → consumes_contract).
-        buildConfigField("String", "CONSUMED_CONTRACT", "\"0.4.0\"")
+        buildConfigField("String", "CONSUMED_CONTRACT", "\"0.9.0\"")
     }
 
     buildTypes {
