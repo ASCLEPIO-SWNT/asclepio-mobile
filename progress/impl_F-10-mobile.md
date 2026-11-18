@@ -17,7 +17,7 @@ Rama `feature/F-10-mobile`. Contrato consumido: **0.10.0** (`CONSUMED_CONTRACT =
 - `app/src/main/java/co/asclepio/mobile/feature/encounters/queue/QueuePositionStream.kt` — `callbackFlow` sobre `EventSources.createFactory`, `readTimeout` 45 s (latido 15 s), `Accept: text/event-stream`, sin logs.
 - `app/src/main/java/co/asclepio/mobile/feature/encounters/queue/QueuePositionViewModel.kt` — `QueueUiState`, `follow()` (bucle en la corrutina del llamador), backoff 1→30 s.
 - `app/src/main/java/co/asclepio/mobile/feature/encounters/ui/QueuePositionCard.kt` — `queueCardContent` + Composable.
-- `app/src/main/java/co/asclepio/mobile/feature/encounters/ui/PreRegistrationStatusViewModel.kt` — `followsQueue()`.
+- `app/src/main/java/co/asclepio/mobile/feature/encounters/ui/PreRegistrationStatusViewModel.kt` — `queueKey` (id del último pre-registro en curso; sustituye a `followsQueue()`).
 - `app/src/main/java/co/asclepio/mobile/AppContainer.kt`, `AppNavigation.kt` — `queuePositionStream`; VM y tarjeta en la entrada Home.
 - `app/src/main/res/values{,-en,-pt,-fr,-de}/queue_position.xml` — 17 textos `queue_*`.
 - Pruebas: `QueuePositionStreamTest`, `QueuePositionViewModelTest`, `QueuePositionCardTest`, `QueuePositionLifecycleTest`, `androidTest/QueuePositionCardInstrumentedTest`; `PatientTestEnv.client` pasa a público.
@@ -37,11 +37,11 @@ Rama `feature/F-10-mobile`. Contrato consumido: **0.10.0** (`CONSUMED_CONTRACT =
 ## Trazabilidad R<n> → prueba
 | R | Prueba |
 |---|---|
-| R1 | `QueuePositionStreamTest::R1 abre el stream del paciente con su Bearer y emite cada evento position como instantanea`; `::R1 ignora el latido ping y los eventos de otro tipo`; `QueuePositionViewModelTest::R1 el estado inicial no tiene dato y esta conectando en vivo`; `QueuePositionLifecycleTest::R1 el stream se sigue con un pre-registro en curso…`; `::R1 R2 follow solo se llama desde AppNavigation y siempre dentro de repeatOnLifecycle STARTED`; `::R1 R2 el stream solo se abre desde el ViewModel y la tarjeta solo se compone en la entrada Home` |
+| R1 | `QueuePositionStreamTest::R1 abre el stream del paciente con su Bearer y emite cada evento position como instantanea`; `::R1 ignora el latido ping y los eventos de otro tipo`; `QueuePositionViewModelTest::R1 el estado inicial no tiene dato y esta conectando en vivo`; `QueuePositionLifecycleTest::R1 el stream sigue al prerregistro en curso por su id y conserva el valor mientras carga o falla`; `QueuePositionViewModelTest::R1 tras DONE un prerregistro nuevo vuelve a abrir el stream`; `::R1 R2 follow solo se llama desde AppNavigation y siempre dentro de repeatOnLifecycle STARTED`; `::R1 R2 el stream solo se abre desde el ViewModel y la tarjeta solo se compone en la entrada Home` |
 | R2 | `QueuePositionStreamTest::R2 cancelar la recoleccion cancela la llamada y no deja conexiones abiertas`; `::R2 sin sesion autenticada no se abre ninguna conexion`; `QueuePositionViewModelTest::R2 cancelar follow detiene el bucle y no programa mas reintentos`; `QueuePositionLifecycleTest::R2 no hay trabajo en segundo plano para la fila` (+ las dos `R1 R2`) |
 | R3 | `QueuePositionCardTest::R3 en espera de triage con posicion mayor que 1…`; `::R3 en espera del medico con una persona delante usa el singular`; `QueuePositionCardInstrumentedTest::R3 R11 waiting card…` |
 | R4 | `QueuePositionCardTest::R4 con posicion 1 muestra Eres el siguiente…`; `QueuePositionCardInstrumentedTest::R4 R6 next patient without enough data` |
-| R5 | `QueuePositionCardTest::R5 en CALLED muestra Te estan llamando y en DONE Atencion finalizada`; `QueuePositionViewModelTest::R5 DONE termina sin reconectar…`; `QueuePositionStreamTest::R5 el cierre del servidor tras DONE…`; `QueuePositionCardInstrumentedTest::R5 called phase…` |
+| R5 | `QueuePositionCardTest::R5 en CALLED muestra Te estan llamando y en DONE Atencion finalizada`; `QueuePositionViewModelTest::R5 DONE termina sin reconectar…`; `::R5 tras DONE el mismo prerregistro no vuelve a abrir el stream`; `QueuePositionCardTest::R5 la tarjeta no muestra Atencion finalizada para un prerregistro nuevo en curso`; `QueuePositionStreamTest::R5 el cierre del servidor tras DONE…`; `QueuePositionCardInstrumentedTest::R5 called phase…` |
 | R6 | `QueuePositionCardTest::R6 con INSUFFICIENT_DATA muestra el aviso en lugar del rango`; instrumentada `R4 R6` |
 | R7 | `QueuePositionCardTest::R7 en NO_ACTIVE muestra Acercate a recepcion sin posicion`; instrumentada `R7 no active shows the reception hint` |
 | R8 | `QueuePositionViewModelTest::R8` ×4 (backoff 1…30 s, reinicio tras evento, RECONNECTING con `last`, vuelta a LIVE); `QueuePositionStreamTest::R8` ×3 (cortes, 403/5xx); `QueuePositionCardTest::R8` ×2; instrumentada `R8 reconnecting keeps the last data with its age` |
@@ -50,6 +50,12 @@ Rama `feature/F-10-mobile`. Contrato consumido: **0.10.0** (`CONSUMED_CONTRACT =
 | R11 | `QueuePositionCardTest::R11` ×2 (cinco catálogos y textos en español; `LiveRegionMode.Polite` sin literales); instrumentada `R3 R11` |
 
 ## Resultados
-- `./gradlew testDebugUnitTest`: **393 pruebas, 0 fallos** (39 nuevas en JVM: Stream 13, ViewModel 10, Card 12, Lifecycle 4; el resto, existentes).
+- `./gradlew testDebugUnitTest`: **396 pruebas, 0 fallos** (42 nuevas en JVM: Stream 13, ViewModel 12, Card 13, Lifecycle 4; el resto, existentes).
 - `./gradlew assembleDebugAndroidTest`: compila (`QueuePositionCardInstrumentedTest`, 5 pruebas, **no ejecutadas**: sin dispositivo).
 - `./init.sh` (completo): `FAIL: 0 · WARN: 0 · Estado: VERDE`, exit 0.
+
+## Corrección tras la revisión (2026-11-18, `progress/review_F-10-mobile.md`)
+- **Motivo 1 (R1/R5), bloqueante — corregido.** La tarjeta sigue al pre-registro en curso **por su id**: `PreRegistrationStatusViewModel.queueKey` (en memoria; se conserva durante `Loading`/`Error`), `QueuePositionViewModel.track(key)` (un id distinto reinicia `QueueUiState`, incluido `ended`; el mismo id lo conserva) y `QueueUiState.key`. `AppNavigation` hace `track(key)` y después `repeatOnLifecycle(STARTED) { follow() }` en `LaunchedEffect(queueVm, queueKey)`; la tarjeta se muestra con `showsQueueCard(queueKey, queue)`, de modo que un "Atención finalizada" anterior nunca aparece junto a un pre-registro nuevo. 401/`SessionInvalidated` siguen siendo terminales (cambian el `SessionGraph`).
+- Pruebas nuevas: `QueuePositionViewModelTest::R1 tras DONE un prerregistro nuevo vuelve a abrir el stream`, `::R5 tras DONE el mismo prerregistro no vuelve a abrir el stream`, `QueuePositionCardTest::R5 la tarjeta no muestra Atencion finalizada para un prerregistro nuevo en curso`, `QueuePositionLifecycleTest::R1 el stream sigue al prerregistro en curso por su id…` (sustituye a la prueba de `followsQueue`).
+- No se tocaron las observaciones no bloqueantes: `<plurals>` (`UiMessage` no admite plurales, el cambio no es trivial), el refresco del estado al cambiar la fase y `PatientOnlyScopeTest`. T6 sigue pendiente; añadir el caso "segunda atención tras DONE en la misma sesión".
+- `./init.sh` completo: `FAIL: 0 · WARN: 0 · Estado: VERDE`, exit 0. `assembleDebugAndroidTest` compila.
