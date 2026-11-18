@@ -59,7 +59,7 @@ class QueuePositionCardInstrumentedTest {
         compose.onNodeWithText("Aún no hay datos suficientes para estimar el tiempo", substring = true).assertIsDisplayed()
     }
 
-    @Test fun `R5 R7 called and no active phases`() {
+    @Test fun `R5 called phase asks the patient to go to the consulting room`() {
         show(state(QueuePhase.CALLED, null, null))
         compose.onNodeWithText("Te están llamando: acércate al consultorio", substring = true).assertIsDisplayed()
     }
