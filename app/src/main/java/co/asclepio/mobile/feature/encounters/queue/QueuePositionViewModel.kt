@@ -14,13 +14,14 @@ enum class QueueConnection { LIVE, RECONNECTING }
 /**
  * Tarjeta de fila (F-10-mobile). [last] es el último dato, solo en memoria (D4), y [receivedAt] el instante local en que
  * llegó, en milisegundos de un reloj monótono (solo sirve para su antigüedad: no es una hora legal, R22 de F-02).
- * [ended] tras DONE o un 401/sesión invalidada: ya no se reconecta (R5, R9).
+ * [ended] tras DONE o un 401/sesión invalidada: ya no se reconecta (R5, R9). [key] es el pre-registro que se sigue.
  */
 data class QueueUiState(
     val last: QueuePositionDto? = null,
     val receivedAt: Long? = null,
     val connection: QueueConnection = QueueConnection.LIVE,
     val ended: Boolean = false,
+    val key: String? = null,
 )
 
 /**
@@ -36,6 +37,14 @@ class QueuePositionViewModel(
     private val _state = MutableStateFlow(QueueUiState())
     val state: StateFlow<QueueUiState> = _state.asStateFlow()
 
+    /**
+     * Sigue el pre-registro [key]. Uno distinto (un pre-registro nuevo tras DONE en la misma sesión) empieza de cero y
+     * vuelve a abrir el stream (R1); el mismo conserva su estado, así que tras DONE no se reconecta (R5).
+     */
+    fun track(key: String) {
+        if (_state.value.key != key) _state.value = QueueUiState(key = key)
+    }
+
     suspend fun follow() {
         var backoff = INITIAL_BACKOFF_MS
         while (!_state.value.ended) {
@@ -46,7 +55,7 @@ class QueuePositionViewModel(
                         is StreamEvent.Snapshot -> {
                             backoff = INITIAL_BACKOFF_MS
                             val done = event.position.phase == QueuePhase.DONE
-                            _state.value = QueueUiState(event.position, elapsedMs(), QueueConnection.LIVE, ended = done)
+                            _state.update { QueueUiState(event.position, elapsedMs(), QueueConnection.LIVE, ended = done, key = it.key) }
                         }
                         is StreamEvent.Failed -> unauthorized = event.code == 401
                         StreamEvent.Closed -> Unit

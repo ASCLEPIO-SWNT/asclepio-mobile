@@ -1,8 +1,10 @@
 package co.asclepio.mobile
 
-import co.asclepio.mobile.core.ui.UiMessage
-import co.asclepio.mobile.feature.encounters.ui.PreRegistrationStatusUiState
-import co.asclepio.mobile.feature.encounters.ui.followsQueue
+import co.asclepio.mobile.feature.encounters.ui.PreRegistrationStatusViewModel
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runTest
+import org.junit.Rule
+import org.junit.rules.TemporaryFolder
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -12,18 +14,36 @@ import java.io.File
 
 /** F-10-mobile T5: el stream de la fila solo se recoge dentro de `repeatOnLifecycle(STARTED)` de la entrada Home. */
 class QueuePositionLifecycleTest {
+    @get:Rule val mainRule = MainDispatcherRule()
+    @get:Rule val tmp = TemporaryFolder()
     private val main = File("src/main/java/co/asclepio/mobile")
     private val navigation = File(main, "AppNavigation.kt").readText()
 
     private fun sources() = main.walkTopDown().filter { it.isFile && it.extension == "kt" }
 
-    @Test fun `R1 el stream se sigue con un pre-registro en curso y se conserva el ultimo valor mientras carga o falla`() {
-        assertEquals(true, PreRegistrationStatusUiState.Success("Sede", R.string.status_waiting_triage, "s", null, canCreate = false).followsQueue())
-        assertEquals(true, PreRegistrationStatusUiState.Success("Sede", R.string.status_pending, "s", "e", canCreate = false).followsQueue())
-        assertEquals(false, PreRegistrationStatusUiState.Success("Sede", R.string.status_closed, "s", null, canCreate = true).followsQueue())
-        assertEquals(false, PreRegistrationStatusUiState.Empty.followsQueue())
-        assertNull(PreRegistrationStatusUiState.Loading.followsQueue())
-        assertNull(PreRegistrationStatusUiState.Error(UiMessage(R.string.error_general), refreshEnabled = true).followsQueue())
+    @Test fun `R1 el stream sigue al prerregistro en curso por su id y conserva el valor mientras carga o falla`() = runTest {
+        val env = PatientTestEnv(tmp.newFolder())
+        try {
+            env.login()
+            env.enqueue(200, "[${PatientTestEnv.preRegistration("CONFIRMED", "WAITING_TRIAGE")}]")
+            val vm = PreRegistrationStatusViewModel(env.preRegistrationRepository)
+            assertEquals(PRE_ID, vm.queueKey.first { it != null })
+            env.enqueue(500, env.problem(500))
+            vm.refresh()
+            vm.state.first { it is co.asclepio.mobile.feature.encounters.ui.PreRegistrationStatusUiState.Error }
+            assertEquals(PRE_ID, vm.queueKey.value)
+            env.enqueue(200, "[${PatientTestEnv.preRegistration("CONFIRMED", "CLOSED")}]")
+            vm.refresh()
+            vm.queueKey.first { it == null }
+            env.enqueue(200, "[${PatientTestEnv.preRegistration("PENDING")}]")
+            vm.refresh()
+            assertEquals(PRE_ID, vm.queueKey.first { it != null })
+            env.enqueue(200, "[]")
+            vm.refresh()
+            assertNull(vm.queueKey.first { it == null })
+        } finally {
+            env.close()
+        }
     }
 
     @Test fun `R1 R2 follow solo se llama desde AppNavigation y siempre dentro de repeatOnLifecycle STARTED`() {
@@ -48,6 +68,10 @@ class QueuePositionLifecycleTest {
         assertTrue(home.contains("QueuePositionViewModel("))
         assertTrue(home.contains("QueuePositionCard("))
         assertFalse(navigation.substringAfter("entry<Route.MyRequests>").contains("QueuePosition"))
+    }
+
+    private companion object {
+        const val PRE_ID = "66666666-6666-6666-6666-666666666666"
     }
 
     @Test fun `R2 no hay trabajo en segundo plano para la fila`() {

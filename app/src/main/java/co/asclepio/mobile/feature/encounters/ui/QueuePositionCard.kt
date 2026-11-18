@@ -62,6 +62,14 @@ fun queueCardContent(state: QueueUiState, nowElapsedMs: Long): QueueCardContent?
     return QueueCardContent(lines, offline, reconnecting)
 }
 
+/**
+ * Si la entrada Home muestra la tarjeta. Con un pre-registro en curso ([queueKey]), solo si el estado es de ese
+ * pre-registro: nunca "Atención finalizada" de uno anterior junto a uno nuevo (R5). Sin pre-registro en curso, solo
+ * el final de la atención seguida (DONE).
+ */
+fun showsQueueCard(queueKey: String?, state: QueueUiState): Boolean =
+    if (queueKey != null) state.key == queueKey else state.ended
+
 private fun snapshotLines(s: QueuePositionDto): List<UiMessage> = when (s.phase) {
     QueuePhase.WAITING_TRIAGE, QueuePhase.WAITING_CARE -> buildList {
         add(UiMessage(if (s.phase == QueuePhase.WAITING_TRIAGE) R.string.queue_phase_waiting_triage else R.string.queue_phase_waiting_care))

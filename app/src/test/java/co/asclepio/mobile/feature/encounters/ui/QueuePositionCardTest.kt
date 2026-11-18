@@ -109,6 +109,15 @@ class QueuePositionCardTest {
         assertEquals(listOf(m(R.string.queue_connecting)), queueCardContent(QueueUiState(), received)!!.lines)
     }
 
+    @Test fun `R5 la tarjeta no muestra Atencion finalizada para un prerregistro nuevo en curso`() {
+        val ended = live(QueuePhase.DONE, ended = true).copy(key = "pre-1")
+        assertTrue(showsQueueCard("pre-1", ended))
+        assertFalse(showsQueueCard("pre-2", ended))
+        assertTrue(showsQueueCard(null, ended))
+        assertTrue(showsQueueCard("pre-2", QueueUiState(key = "pre-2")))
+        assertFalse(showsQueueCard(null, QueueUiState(key = "pre-2")))
+    }
+
     @Test fun `R9 terminado sin dato o con una fase desconocida no se muestra la tarjeta`() {
         assertNull(queueCardContent(QueueUiState(ended = true), received))
         assertNull(queueCardContent(live(QueuePhase.UNKNOWN), received))

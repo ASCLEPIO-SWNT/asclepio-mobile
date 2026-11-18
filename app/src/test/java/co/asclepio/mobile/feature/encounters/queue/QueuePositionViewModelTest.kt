@@ -114,6 +114,31 @@ class QueuePositionViewModelTest {
         assertEquals(emptyList<Long>(), waits)
     }
 
+    @Test fun `R1 tras DONE un prerregistro nuevo vuelve a abrir el stream`() = runTest {
+        val done = dto(QueuePhase.DONE)
+        val vm = vm(listOf(StreamEvent.Snapshot(done), StreamEvent.Closed), listOf(StreamEvent.Snapshot(dto(QueuePhase.NO_ACTIVE))))
+        vm.track("pre-1")
+        vm.follow()
+        assertTrue(vm.state.value.ended)
+        vm.track("pre-2")
+        assertEquals(QueueUiState(key = "pre-2"), vm.state.value)
+        val job = follow(vm)
+        runCurrent()
+        job.cancel()
+        assertEquals(2, opened)
+        assertEquals(QueueUiState(dto(QueuePhase.NO_ACTIVE), elapsed, QueueConnection.LIVE, ended = false, key = "pre-2"), vm.state.value)
+    }
+
+    @Test fun `R5 tras DONE el mismo prerregistro no vuelve a abrir el stream`() = runTest {
+        val vm = vm(listOf(StreamEvent.Snapshot(dto(QueuePhase.DONE)), StreamEvent.Closed))
+        vm.track("pre-1")
+        vm.follow()
+        vm.track("pre-1")
+        vm.follow()
+        assertTrue(vm.state.value.ended)
+        assertEquals(1, opened)
+    }
+
     @Test fun `R9 un 401 termina sin reconectar`() = runTest {
         val vm = vm(listOf(StreamEvent.Failed(401)))
         vm.follow()

@@ -17,15 +17,13 @@ import androidx.compose.runtime.saveable.LocalSaveableStateRegistry
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import android.os.SystemClock
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
 import co.asclepio.mobile.feature.encounters.queue.QueuePositionViewModel
 import co.asclepio.mobile.feature.encounters.ui.QueuePositionCard
-import co.asclepio.mobile.feature.encounters.ui.followsQueue
+import co.asclepio.mobile.feature.encounters.ui.showsQueueCard
 import androidx.compose.ui.platform.LocalConfiguration
 import co.asclepio.mobile.core.ui.guide.*
 import co.asclepio.mobile.feature.encounters.ui.MyRequestsScreen
@@ -263,13 +261,15 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                             // F-10 (D3): la tarjeta de fila va ligada a la entrada Home, como el estado del pre-registro.
                             val queueVm = viewModel { QueuePositionViewModel(container.queuePositionStream::stream, SystemClock::elapsedRealtime) }
                             val queue by queueVm.state.collectAsStateWithLifecycle()
-                            var followQueue by remember { mutableStateOf(false) }
-                            LaunchedEffect(status) { status.followsQueue()?.let { followQueue = it } }
+                            val queueKey by statusVm.queueKey.collectAsStateWithLifecycle()
                             val lifecycleOwner = LocalLifecycleOwner.current
-                            LaunchedEffect(queueVm, followQueue) {
+                            LaunchedEffect(queueVm, queueKey) {
+                                val key = queueKey ?: return@LaunchedEffect
+                                // R1: un pre-registro nuevo reinicia la tarjeta; el mismo tras DONE no reconecta (R5).
+                                queueVm.track(key)
                                 // R1, R2: el stream solo vive mientras la pantalla está al menos en STARTED; al bajar se
                                 // cancela la recolección y con ella la conexión. Sin servicio ni trabajo en segundo plano.
-                                if (followQueue) lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { queueVm.follow() }
+                                lifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { queueVm.follow() }
                             }
                             HomeScreen(
                                 state = state,
@@ -282,7 +282,7 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                                             onRefresh = statusVm::refresh,
                                             onNewPreRegistration = { backStack.add(Route.PreRegistration) },
                                         )
-                                        if (followQueue || queue.ended) QueuePositionCard(queue, SystemClock::elapsedRealtime)
+                                        if (showsQueueCard(queueKey, queue)) QueuePositionCard(queue, SystemClock::elapsedRealtime)
                                     }
                                 },
                                 onRequestLogout = vm::requestLogout,
