@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Entrevista de síntomas con IA (F-11-mobile). Las preguntas del asistente no son textos de la app: vienen
+     del validador o de las preguntas fijas, siempre en español (el brief deja otros idiomas fuera de alcance). -->
+<resources>
+    <string name="assistant_download_channel">Descarga del asistente</string>
+    <string name="assistant_download_notification">Descargando el asistente de síntomas</string>
+</resources>

@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Dictado en el dispositivo (F-08, ADR 0006). Se solicita en tiempo de uso; el audio nunca sale del teléfono. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- Descarga opcional del modelo del asistente (F-11-mobile R1): trabajo en primer plano dataSync con notificación.
+         POST_NOTIFICATIONS solo se pide al pulsar "Descargar" en Perfil (AssistantSettings). El modelo no va en el APK. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <queries>
         <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
@@ -25,6 +31,11 @@
         <service android:name="androidx.appcompat.app.AppLocalesMetadataHolderService" android:enabled="false" android:exported="false">
             <meta-data android:name="autoStoreLocales" android:value="true" />
         </service>
+        <!-- F-11-mobile: el servicio en primer plano de WorkManager declara el tipo dataSync (ModelDownloadWorker). -->
+        <service
+            android:name="androidx.work.impl.foreground.SystemForegroundService"
+            android:foregroundServiceType="dataSync"
+            tools:node="merge" />
         <activity
             android:name=".MainActivity"
             android:windowSoftInputMode="adjustResize"
