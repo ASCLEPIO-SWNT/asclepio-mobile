@@ -7,4 +7,4 @@
 - [x] T3 Prueba + `QueuePositionViewModel`: backoff 1, 2, 4… hasta 30 s y reinicio tras un evento; `RECONNECTING` conservando `last`; 401 → `ended` y navegación a login; `DONE` → sin reconexión. (R5, R8, R9)
 - [x] T4 Prueba de UI (Compose JVM o `androidTest`) + `QueuePositionCard`: estados R3–R7, rango y textos de insuficiencia, catálogo de localización y `liveRegion`. (R3, R4, R5, R6, R7, R11)
 - [x] T5 Integración en `AppNavigation` (`Status`) con `repeatOnLifecycle(STARTED)` + prueba de fuente de que no hay recolección fuera de ella. (R1, R2)
-- [ ] T6 QA manual con `adb reverse tcp:3000 tcp:3000`: prerregistro → confirmar en recepción → `triage.sh` de otro paciente más grave → la posición cambia sin refrescar. Con el modo avión → reconexión.
+- [x] T6 QA manual con `adb reverse tcp:3000 tcp:3000`: prerregistro → confirmar en recepción → `triage.sh` de otro paciente más grave → la posición cambia sin refrescar. Con el modo avión → reconexión.
