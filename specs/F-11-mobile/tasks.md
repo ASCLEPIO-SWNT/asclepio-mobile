@@ -5,7 +5,7 @@
 - [x] T1 Dependencias (`litertlm-android` con la versión exacta, `work-runtime-ktx`), `BuildConfig` del modelo y `CONSUMED_CONTRACT = 0.11.0`. `./gradlew lint` en verde.
 - [x] T2 Prueba + `RedFlagRules`: el fixture compartido al 100 % y el hash del fixture igual al de la API. (R11)
 - [x] T3 Prueba + `OutputValidator` y `FIXED_QUESTIONS`: JSON roto, campos extra, más de 140 caracteres, ningún "?" o dos, dimensión repetida y cada patrón prohibido. (R9, R10)
-- [ ] T4 (incluye las enmiendas del 2026-11-18: `done` con `ONSET` y `LOCATION` si hay dolor, `redFlagSuspected` aunque se rechace la pregunta, e ignorado en el turno 0) Prueba + `InterviewSession` con `FakeInterviewer`:
+- [x] T4 (incluye las enmiendas del 2026-11-18: `done` con `ONSET` y `LOCATION` si hay dolor, `redFlagSuspected` aunque se rechace la pregunta, e ignorado en el turno 0) Prueba + `InterviewSession` con `FakeInterviewer`:
   - las reglas se aplican antes de `next()`;
   - reintento → pregunta fija;
   - timeout de 20 s;
