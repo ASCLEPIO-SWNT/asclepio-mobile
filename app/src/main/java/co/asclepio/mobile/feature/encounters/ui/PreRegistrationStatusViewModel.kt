@@ -70,6 +70,14 @@ class PreRegistrationStatusViewModel(private val repository: PreRegistrationRepo
 
     private var job: Job? = null
 
+    /**
+     * F-10-mobile R1: id del último pre-registro mientras está en curso (`PENDING` o con una atención sin terminar); la
+     * tarjeta de fila sigue el stream para ese id. `null` sin pre-registros o con el último terminado. Mientras carga o
+     * falla se conserva el valor anterior para no cortar el stream en cada "Actualizar". Solo vive en memoria.
+     */
+    private val _queueKey = MutableStateFlow<String?>(null)
+    val queueKey: StateFlow<String?> = _queueKey.asStateFlow()
+
     init {
         viewModelScope.launch { repository.created.collect { _state.value = show(it) } }
         refresh()
@@ -81,7 +89,8 @@ class PreRegistrationStatusViewModel(private val repository: PreRegistrationRepo
         _state.value = PreRegistrationStatusUiState.Loading
         job = viewModelScope.launch {
             when (val result = repository.latest()) {
-                is ApiResult.Success -> _state.value = result.value?.let(::show) ?: PreRegistrationStatusUiState.Empty
+                is ApiResult.Success -> _state.value = result.value?.let(::show)
+                    ?: PreRegistrationStatusUiState.Empty.also { _queueKey.value = null }
                 is ApiResult.Failure -> {
                     val wait = result.error.rateLimitSeconds()
                     val error = PreRegistrationStatusUiState.Error(statusErrorMessage(result.error), refreshEnabled = wait == null)
@@ -95,8 +104,10 @@ class PreRegistrationStatusViewModel(private val repository: PreRegistrationRepo
         }
     }
 
-    private fun show(dto: PatientPreRegistrationDto): PreRegistrationStatusUiState =
-        runCatching { toStatusUi(dto) }.getOrElse {
+    private fun show(dto: PatientPreRegistrationDto): PreRegistrationStatusUiState {
+        _queueKey.value = dto.id.takeIf { isInProgress(dto) }
+        return runCatching { toStatusUi(dto) }.getOrElse {
             PreRegistrationStatusUiState.Error(UiMessage(R.string.error_general), refreshEnabled = true)
         }
+    }
 }

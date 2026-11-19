@@ -26,7 +26,7 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         // Versión del contrato consumido (feature_list.json → consumes_contract).
-        buildConfigField("String", "CONSUMED_CONTRACT", "\"0.9.0\"")
+        buildConfigField("String", "CONSUMED_CONTRACT", "\"0.10.0\"")
     }
 
     buildTypes {
@@ -63,6 +63,8 @@ dependencies {
     implementation(libs.retrofit.kotlinx.serialization)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
+    // F-10-mobile (specs/F-10-mobile/design.md, D1): SSE de la posición en la fila, misma versión que OkHttp.
+    implementation(libs.okhttp.sse)
 
     // F-01-mobile (specs/F-01-mobile/design.md, "Dependencias nuevas")
     implementation(libs.androidx.navigation3.runtime)
