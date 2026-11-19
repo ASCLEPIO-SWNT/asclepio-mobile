@@ -13,7 +13,7 @@
   - máximo 6 preguntas, fin con ≥3 dimensiones, "No sé" y "Terminar".
 
   (R9, R10, R11, R12, R14)
-- [ ] T5 Prueba + `ServerInterviewer` con `MockWebServer`: las tres respuestas, y 429/503/corte → fin con lo respondido. (R7)
+- [x] T5 Prueba + `ServerInterviewer` con `MockWebServer`: las tres respuestas, y 429/503/corte → fin con lo respondido. (R7)
 - [ ] T6 Prueba + `ModelStore` y `ModelDownloadWorker` (`MockWebServer` con `Range`): reanudación, SHA-256 correcto e incorrecto, espacio insuficiente y cancelación. (R1, R2, R3, R4, R5)
 - [ ] T7 Prueba + `DeviceCapability` (RAM, modelo y timeout de arranque inyectables) y selección del motor con el aviso del servidor visto una sola vez. (R6)
 - [ ] T8 `LiteRtInterviewer` con `ResponseFormat.json` y el prompt `interview-v1`. Prueba instrumentada de humo con el modelo real. Métricas de depuración. (R9, R18)

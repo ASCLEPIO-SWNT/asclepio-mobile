@@ -17,6 +17,8 @@ class PatientOnlyScopeTest {
         "POST api/v1/auth/patient/accounts", "POST api/v1/auth/patient/login", "GET api/v1/me",
         "GET api/v1/patient/profile", "PATCH api/v1/patient/profile",
         "POST api/v1/patient/pre-registrations", "GET api/v1/patient/pre-registrations",
+        // F-11-mobile (contrato 0.11.0): motor del servidor de la entrevista, solo del paciente.
+        "POST api/v1/patient/symptom-interview/next-question",
     )
 
     /** Rutas de personal del contrato (consumidas hasta 0.4.0 y presentes en 0.7.0), con cualquier método. */
