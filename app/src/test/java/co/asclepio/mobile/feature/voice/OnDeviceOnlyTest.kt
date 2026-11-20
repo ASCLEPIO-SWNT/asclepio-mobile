@@ -63,9 +63,13 @@ class OnDeviceOnlyTest {
         for (required in listOf("ActivityResultContracts.RequestPermission()", "dictationAction(", "onClick")) {
             assertTrue("$controls debe usar $required", text.contains(required))
         }
-        // Nadie más pide permisos (tampoco al abrir la app o la pantalla).
+        // Nadie más pide permisos (tampoco al abrir la app o la pantalla). F-11-mobile: AssistantSettings pide solo
+        // POST_NOTIFICATIONS al pulsar "Descargar" (notificación de progreso de la descarga del modelo).
+        val settings = "feature/interview/ui/AssistantSettings.kt"
         val requesters = sources().filter { (_, t) -> t.contains("ActivityResultContracts.RequestPermission") || t.contains("requestPermissions(") }.keys
-        assertEquals(setOf(controls), requesters)
+        assertEquals(setOf(controls, settings), requesters)
+        val requested = Regex("""Manifest\.permission\.(\w+)""").findAll(sources().getValue(settings)).map { it.groupValues[1] }.toSet()
+        assertEquals(setOf("POST_NOTIFICATIONS"), requested)
         val manifest = File("src/main/AndroidManifest.xml").readText()
         assertTrue(manifest.contains("""<uses-permission android:name="android.permission.RECORD_AUDIO" />"""))
     }

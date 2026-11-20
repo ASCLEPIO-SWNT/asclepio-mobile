@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import co.asclepio.mobile.R
 import co.asclepio.mobile.core.auth.SessionManager
+import co.asclepio.mobile.core.interview.SymptomInterviewDto
+import co.asclepio.mobile.core.interview.UrgentSubmission
 import co.asclepio.mobile.core.network.ApiError
 import co.asclepio.mobile.core.network.ApiResult
 import co.asclepio.mobile.core.network.rateLimitSeconds
@@ -47,6 +49,10 @@ data class PreRegistrationUiState(
     val dictation: DictationUiState = DictationUiState.Checking,
     /** Aviso local del dictado (permiso, sin resultado, error); nunca bloquea el envío por texto (R4, R7). */
     val dictationMessage: UiMessage? = null,
+    /** F-11-mobile: número de la entrevista en curso tras "Continuar" (cada intento es una entrevista nueva); `null` = formulario. */
+    val assistantAttempt: Long? = null,
+    /** F-11-mobile R12, R13: estado del envío inmediato por señal de alarma. */
+    val urgent: UrgentSubmission? = null,
 ) {
     /** R11: longitud actual del motivo en unidades UTF-16 (`String.length`). */
     val complaintLength: Int get() = form.chiefComplaintText.length
@@ -216,15 +222,48 @@ class PreRegistrationViewModel(
         s.copy(form = s.form.withTypedText(text), fieldErrors = s.fieldErrors - PreRegistrationField.ChiefComplaint)
     }
 
-    fun submit() {
+    /**
+     * "Continuar" (F-11-mobile R6): con el formulario válido abre la entrevista con el motivo; el envío llega después
+     * con [submitWithInterview], [submit] (omitir) o [sendUrgent] (alarma).
+     */
+    fun continueToAssistant() {
         val s = _state.value
-        if (!s.canSubmit) return
+        if (!s.canSubmit || s.assistantAttempt != null) return
         val errors = validatePreRegistration(s.form)
         if (errors.isNotEmpty()) {
             _state.value = s.copy(fieldErrors = errors, message = null)
             return
         }
-        val request = s.form.toRequest()
+        cancelDictation()
+        assistantAttempts++
+        _state.value = _state.value.copy(fieldErrors = emptyMap(), message = null, showViewStatus = false, assistantAttempt = assistantAttempts)
+    }
+
+    private var assistantAttempts = 0L
+
+    /** "Omitir asistente" (R6): vuelve al formulario y envía sin entrevista, como en 0.10.0. */
+    fun skipAssistant() {
+        _state.update { it.copy(assistantAttempt = null) }
+        submit()
+    }
+
+    /** Motivo validado que recibe la entrevista. */
+    val assistantComplaint: String get() = _state.value.form.chiefComplaintText.trim()
+
+    /** R14: envía el prerregistro con la entrevista del resumen (o sin ella si el motor falló sin turnos, R7). */
+    fun submitWithInterview(interview: SymptomInterviewDto?) = submit(interview)
+
+    fun submit() = submit(null)
+
+    private fun submit(interview: SymptomInterviewDto?) {
+        val s = _state.value
+        if (!s.canSubmit) return
+        val errors = validatePreRegistration(s.form)
+        if (errors.isNotEmpty()) {
+            _state.value = s.copy(fieldErrors = errors, message = null, assistantAttempt = null)
+            return
+        }
+        val request = s.form.toRequest().copy(interview = interview)
         _state.value = s.copy(submitting = true, fieldErrors = emptyMap(), message = null, showViewStatus = false)
         viewModelScope.launch {
             when (val result = repository.create(request)) {
@@ -246,6 +285,8 @@ class PreRegistrationViewModel(
                 showViewStatus = mapped.showViewStatus,
                 submitBlocked = wait != null,
                 form = if (mapped.siteUnavailable) it.form.copy(siteId = null) else it.form,
+                // Un error de un campo vuelve al formulario; el resto se muestra en el resumen de la entrevista.
+                assistantAttempt = if (mapped.siteUnavailable || mapped.fieldErrors.isNotEmpty()) null else it.assistantAttempt,
             )
         }
         if (mapped.siteUnavailable) loadSites()
@@ -256,6 +297,42 @@ class PreRegistrationViewModel(
     }
 
     fun onCreatedHandled() = _state.update { it.copy(created = false) }
+
+    /**
+     * F-11-mobile R12, R13: envía de inmediato el prerregistro con la entrevista de alarma y, si falla, reintenta con
+     * backoff (1, 2, 4… hasta 30 s, o el `Retry-After` de un 429) mientras quien llama siga activo: la pantalla de
+     * alarma lo lanza al mostrarse y lo cancela al salir. Un 4xx distinto de 408/429 no se reintenta.
+     */
+    suspend fun sendUrgent(interview: SymptomInterviewDto) {
+        val current = _state.value
+        if (current.urgent == UrgentSubmission.Sent || current.urgent is UrgentSubmission.Failed || current.created) return
+        val request = current.form.toRequest().copy(interview = interview)
+        var backoff = 1
+        while (true) {
+            _state.update { it.copy(urgent = UrgentSubmission.Sending, submitting = true) }
+            when (val result = repository.create(request)) {
+                is ApiResult.Success -> {
+                    _state.update { it.copy(urgent = UrgentSubmission.Sent, submitting = false, form = PreRegistrationForm()) }
+                    return
+                }
+                is ApiResult.Failure -> {
+                    val status = (result.error as? ApiError.Http)?.problem?.status
+                    if (status != null && status in 400..499 && status != 408 && status != 429) {
+                        _state.update { it.copy(urgent = UrgentSubmission.Failed(preRegistrationErrorMessage(result.error).message ?: UiMessage(R.string.error_general)), submitting = false) }
+                        return
+                    }
+                    val wait = result.error.rateLimitSeconds() ?: backoff
+                    _state.update { it.copy(urgent = UrgentSubmission.Retrying(wait), submitting = false) }
+                    delay(wait * 1_000L)
+                    backoff = (backoff * 2).coerceAtMost(URGENT_MAX_BACKOFF_SECONDS)
+                }
+            }
+        }
+    }
+
+    private companion object {
+        const val URGENT_MAX_BACKOFF_SECONDS = 30
+    }
 
     /** R10: al destruir el formulario se libera el reconocedor y se descarta cualquier resultado posterior. */
     override fun onCleared() {

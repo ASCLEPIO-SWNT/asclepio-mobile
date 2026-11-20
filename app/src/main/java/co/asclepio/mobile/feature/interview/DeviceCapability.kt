@@ -1,5 +1,6 @@
 package co.asclepio.mobile.feature.interview
 
+import co.asclepio.mobile.core.interview.SymptomInterviewer
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.withTimeoutOrNull
 
@@ -53,4 +54,9 @@ fun selectEngine(capable: Boolean, serverNoticeSeen: Boolean): EngineChoice = wh
     capable -> EngineChoice.LOCAL
     serverNoticeSeen -> EngineChoice.SERVER
     else -> EngineChoice.SERVER_NOTICE
+}
+
+/** Motor local que hay que arrancar antes de la primera pregunta ([LiteRtInterviewer]). */
+interface PreparableInterviewer : SymptomInterviewer {
+    suspend fun initialize()
 }

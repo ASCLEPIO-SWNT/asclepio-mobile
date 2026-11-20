@@ -1,5 +1,6 @@
 package co.asclepio.mobile.feature.encounters.ui
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -57,10 +58,17 @@ fun PreRegistrationScreen(
     onCreated: () -> Unit,
     modifier: Modifier = Modifier,
     dictation: @Composable () -> Unit = {},
+    @StringRes submitLabel: Int = R.string.preregistration_submit,
+    assistant: (@Composable () -> Unit)? = null,
 ) {
     if (state.created) LaunchedEffect(Unit) { onCreated() }
+    // F-11-mobile: tras "Continuar", la entrevista (slot de la raíz) ocupa la pantalla hasta el envío.
+    if (state.assistantAttempt != null && assistant != null) {
+        assistant()
+        return
+    }
     val sites: @Composable (Modifier) -> Unit = { m -> SitesPane(state, onSelectSite, onRetrySites, m) }
-    val complaint: @Composable (Modifier) -> Unit = { m -> ComplaintPane(state, onComplaintChange, onSubmit, onViewStatus, dictation, m) }
+    val complaint: @Composable (Modifier) -> Unit = { m -> ComplaintPane(state, onComplaintChange, onSubmit, onViewStatus, dictation, submitLabel, m) }
     ScreenColumn(modifier, maxWidth = 1080.dp) {
         PageHeader(stringResource(R.string.preregistration_title))
         if (adaptivePaneMode(widthSizeClass) == PaneMode.Dual) {
@@ -112,6 +120,7 @@ private fun ComplaintPane(
     onSubmit: () -> Unit,
     onViewStatus: () -> Unit,
     dictation: @Composable () -> Unit,
+    @StringRes submitLabel: Int,
     modifier: Modifier,
 ) {
     val error = state.fieldErrors[PreRegistrationField.ChiefComplaint]
@@ -140,7 +149,7 @@ private fun ComplaintPane(
         }
         AsclepioButton(onClick = onSubmit, enabled = state.canSubmit, modifier = Modifier.fillMaxWidth()) {
             if (state.submitting) CircularProgressIndicator(Modifier.padding(end = 8.dp))
-            Text(stringResource(R.string.preregistration_submit))
+            Text(stringResource(submitLabel))
         }
     }
 }

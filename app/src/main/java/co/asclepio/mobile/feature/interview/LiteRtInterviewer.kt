@@ -4,7 +4,6 @@ import co.asclepio.mobile.BuildConfig
 import co.asclepio.mobile.core.interview.InterviewEngine
 import co.asclepio.mobile.core.interview.NextStep
 import co.asclepio.mobile.core.interview.OutputValidator
-import co.asclepio.mobile.core.interview.SymptomInterviewer
 import co.asclepio.mobile.core.interview.Turn
 import com.google.ai.edge.litertlm.Backend
 import com.google.ai.edge.litertlm.Content
@@ -85,7 +84,7 @@ class LiteRtInterviewer(
     private val cacheDir: String,
     private val systemPrompt: String,
     private val clock: () -> Long = System::nanoTime,
-) : SymptomInterviewer {
+) : PreparableInterviewer {
     override val engine = InterviewEngine.ON_DEVICE
     override val modelId: String = BuildConfig.MODEL_ID
 
@@ -96,7 +95,7 @@ class LiteRtInterviewer(
      * Arranca el `Engine` fuera de la corrutina que espera: si [DeviceCapability] deja de esperar a los 20 s, el arranque
      * nativo termina en segundo plano y se libera en [close].
      */
-    suspend fun initialize() {
+    override suspend fun initialize() {
         val deferred = init ?: scope.async { createEngine() }.also { init = it }
         deferred.await()
     }

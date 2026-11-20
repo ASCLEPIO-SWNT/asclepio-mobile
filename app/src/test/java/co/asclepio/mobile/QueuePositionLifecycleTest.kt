@@ -80,9 +80,13 @@ class QueuePositionLifecycleTest {
             assertFalse(forbidden, queue.contains(forbidden))
         }
         val manifest = File("src/main/AndroidManifest.xml").readText()
-        // Solo el servicio de metadatos de idioma de AppCompat (UI-01); ningún servicio propio.
+        // Solo el servicio de metadatos de idioma de AppCompat (UI-01) y, desde F-11-mobile, el servicio en primer plano
+        // de WorkManager para descargar el modelo (dataSync); ningún servicio propio ni para la fila.
         val services = Regex("""<service\s+android:name="([^"]+)"""").findAll(manifest).map { it.groupValues[1] }.toList()
-        assertEquals(listOf("androidx.appcompat.app.AppLocalesMetadataHolderService"), services)
-        assertFalse(manifest.contains("FOREGROUND_SERVICE"))
+        assertEquals(listOf("androidx.appcompat.app.AppLocalesMetadataHolderService", "androidx.work.impl.foreground.SystemForegroundService"), services)
+        val fgsTypes = Regex("""android:foregroundServiceType="([^"]+)"""").findAll(manifest).map { it.groupValues[1] }.toList()
+        assertEquals(listOf("dataSync"), fgsTypes)
+        val fgsPermissions = Regex("""android\.permission\.(FOREGROUND_SERVICE\w*)""").findAll(manifest).map { it.groupValues[1] }.toSet()
+        assertEquals(setOf("FOREGROUND_SERVICE", "FOREGROUND_SERVICE_DATA_SYNC"), fgsPermissions)
     }
 }
