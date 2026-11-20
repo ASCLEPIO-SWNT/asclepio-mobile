@@ -19,5 +19,5 @@
 - [x] T8 `LiteRtInterviewer` con `ResponseFormat.json` y el prompt `interview-v1`. Prueba instrumentada de humo con el modelo real. Métricas de depuración. (R9, R18)
 - [x] T9 Prueba + UI: `InterviewScreen`, `RedFlagScreen` (envío inmediato y reintento con backoff), `InterviewSummary` y `AssistantSettings` en Perfil, con el catálogo de localización. (R5, R8, R12, R13, R14)
 - [x] T10 Prueba + integración en `PreRegistrationViewModel` (`interview` en la petición, `submitNow`). Ciclo de vida: `SavedStateHandle`, cancelación en `ON_STOP` y liberación del `Engine`. (R12, R14, R17)
-- [ ] T11 Pruebas de fuente: no hay red en el motor local y no hay logs con contenido (amplía `OnDeviceOnlyTest`/`PrivacyTest`). (R15, R16)
+- [x] T11 Pruebas de fuente: no hay red en el motor local y no hay logs con contenido (amplía `OnDeviceOnlyTest`/`PrivacyTest`). (R15, R16)
 - [ ] T12 `docs/eval/interview-cases.json` + `EvalInstrumentedTest`, y la corrida manual con un informe en `progress/`. (R19)
