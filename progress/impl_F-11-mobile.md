@@ -57,7 +57,7 @@
 | R19 | `EvalCasesTest::R19 …` (2); `androidTest EvalInstrumentedTest::R19 evaluacion manual de los 14 casos con el modelo real` (manual, pendiente) |
 
 ## Resultados
-- `./gradlew testDebugUnitTest`: **484 pruebas, 0 fallos** (antes de F-11 había 449; se ampliaron 3 pruebas existentes).
+- `./gradlew testDebugUnitTest`: **484 pruebas, 0 fallos**; además se ampliaron 3 pruebas existentes.
 - `./gradlew compileDebugAndroidTestKotlin`: OK (instrumentadas solo compiladas).
 - `./init.sh` (completo): `[OK] gradlew lint testDebugUnitTest` — `FAIL: 0 · WARN: 0 · Estado: VERDE`.
 - Lint: solo avisos previos (versiones nuevas, recursos sin usar); un error `ByteOrderMark` por caracteres Unicode literales en una regex se corrigió con escapes.
