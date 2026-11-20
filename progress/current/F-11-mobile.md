@@ -21,3 +21,4 @@
 8. **Pruebas estáticas ampliadas por F-11:** `PatientOnlyScopeTest` (+`POST next-question`), `OnDeviceOnlyTest` R3 (AssistantSettings solo pide `POST_NOTIFICATIONS`), `QueuePositionLifecycleTest` R2 (permite el `SystemForegroundService` de WorkManager con `dataSync`, la fila sigue sin servicio).
 9. **CHECKPOINTS C3** sigue listando `feature/{account,patients,encounters,status,voice}` (lo fija `PatientOnlyDocsTest`); falta añadir `interview` en C3 y en esa prueba (harness del leader). `docs/architecture.md` y `docs/verification.md` ya lo describen.
 10. **Riesgos a verificar en el equipo:** que `onMessage` de LiteRT-LM entregue fragmentos (no texto acumulado) y que GPU→CPU funcione; lo cubren `LiteRtSmokeInstrumentedTest` y `EvalInstrumentedTest` (no ejecutados).
+- **Decisión del humano (2026-11-19):** R17 enmendado: los turnos van solo en memoria, no en `SavedStateHandle`.

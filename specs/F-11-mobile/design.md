@@ -9,7 +9,7 @@
 | `core/interview/RedFlagRules.kt` | Puro: normaliza el texto y aplica los patrones. Se prueba con el fixture compartido. |
 | `core/interview/OutputValidator.kt` | Puro: parsea con kotlinx.serialization, comprueba la forma, el "?", la dimensión y los patrones prohibidos. Incluye `FIXED_QUESTIONS`. |
 | `core/interview/InterviewSession.kt` | Máquina de estados pura: reglas antes de cada paso, validación, reintento, pregunta fija, máximo 6 preguntas y fin con ≥3 dimensiones. Emite `InterviewUiState`. |
-| `feature/interview/LiteRtInterviewer.kt` | Adaptador: `Engine` (backend GPU con CPU de respaldo) + `Conversation` con `ResponseFormat.json(schema)` y prompt `interview-v1` en español, con timeout de 20 s. |
+| `feature/interview/LiteRtInterviewer.kt` | Adaptador: `Engine` (backend GPU con CPU de respaldo) + `Conversation` con `ResponseFormat.json(schema)` y prompt `interview-v2` en español, con timeout de 20 s. |
 | `feature/interview/ServerInterviewer.kt` | Adaptador Retrofit de `next-question`. |
 | `feature/interview/DeviceCapability.kt` | RAM, modelo verificado y medición del arranque del `Engine`. |
 | `feature/interview/model/ModelDownloadWorker.kt` + `ModelStore.kt` | `CoroutineWorker` en primer plano (`dataSync`) con OkHttp y `Range`, que calcula el SHA-256 mientras escribe y hace el rename atómico. |

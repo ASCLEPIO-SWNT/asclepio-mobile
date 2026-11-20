@@ -50,6 +50,7 @@ Glosario de la spec:
 - **R15** (Por estado) Mientras se use el motor local, la app no deberá hacer ninguna petición de red con el motivo ni con las respuestas hasta enviar el prerregistro. (→ F-11.AC4)
 - **R16** (Ubicuo) La app deberá excluir de los logs el motivo, las preguntas y las respuestas. (→ F-11.AC4) (RNF-05)
 - **R17** (Por evento) Cuando la pantalla de la entrevista pase a `ON_STOP`, la app deberá cancelar la generación en curso y conservar los turnos en `SavedStateHandle`. Al volver, deberá regenerar la pregunta actual. Al salir de la entrevista, deberá liberar el `Engine`. (→ F-11.AC4)
+  - Enmienda (humano, 2026-11-19): los turnos se conservan **solo en la memoria del `InterviewViewModel`**, no en `SavedStateHandle`, por C7 y `PrivacyTest`: no se serializan datos clínicos en el estado de navegación. Sobreviven a la rotación y a `ON_STOP`, pero no a la muerte del proceso; en ese caso el paciente repite la entrevista.
 - **R18** (Ubicuo) La app deberá registrar, solo en las compilaciones de depuración, el TTFT y la duración de cada generación local, para la evaluación de D11. (→ F-11.AC8)
 
 ### Evaluación
