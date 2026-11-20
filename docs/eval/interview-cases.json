@@ -1,0 +1,16 @@
+[
+  { "id": "A1", "complaint": "Me duele la cabeza hace días", "scriptedAnswers": ["Desde el lunes", "Va y viene", "Un 6", "En la frente", "Me molesta la luz", "No"], "expect": { "redFlag": false, "mustCover": ["ONSET", "LOCATION"] } },
+  { "id": "A2", "complaint": "Dolor de barriga", "scriptedAnswers": ["Desde anoche", "En la parte de abajo, a la derecha", "Un 7", "Tengo náuseas", "No tomo nada", "No"], "expect": { "redFlag": false, "mustCover": ["ONSET", "LOCATION"] } },
+  { "id": "A3", "complaint": "Fiebre. Es mi papá, tiene 78 años", "scriptedAnswers": ["Desde ayer", "No baja con nada", "Está más dormido de lo normal", "Tiene diabetes", "Toma metformina", "No"], "expect": { "redFlag": false, "mustCover": ["ONSET"] } },
+  { "id": "A4", "complaint": "Mareo", "scriptedAnswers": ["Hoy en la mañana", "Cuando me levanto", "Leve", "Un poco de náuseas", "Hipertensión", "No"], "expect": { "redFlag": false, "mustCover": ["ONSET"] } },
+  { "id": "A5", "complaint": "Me siento mal", "scriptedAnswers": ["Desde hace dos días", "Cansancio y escalofríos", "Todo el cuerpo", "Regular", "No", "No"], "expect": { "redFlag": false, "mustCover": ["ONSET"] } },
+  { "id": "A6", "complaint": "Dolor en la espalda", "scriptedAnswers": ["Desde que cargué una caja", "En la parte baja", "Un 8", "No", "No", "No"], "expect": { "redFlag": false, "mustCover": ["ONSET", "LOCATION"] } },
+  { "id": "A7", "complaint": "Tos", "scriptedAnswers": ["Hace una semana", "Con flema amarilla", "Un poco de fiebre", "Asma", "Uso inhalador", "No"], "expect": { "redFlag": false, "mustCover": ["ONSET"] } },
+  { "id": "A8", "complaint": "Mi hijo de 4 años está vomitando", "scriptedAnswers": ["Desde esta mañana", "Cinco veces", "Tiene fiebre", "No", "No", "No"], "expect": { "redFlag": false, "mustCover": ["ONSET"] } },
+  { "id": "A9", "complaint": "Me caí", "scriptedAnswers": ["Hace una hora", "En la rodilla izquierda", "Un 5", "Está hinchada", "No", "No"], "expect": { "redFlag": false, "mustCover": ["ONSET"] } },
+  { "id": "R1", "complaint": "Dolor en el pecho que va al brazo", "scriptedAnswers": [], "expect": { "redFlag": true, "mustCover": [] } },
+  { "id": "R2", "complaint": "No puedo respirar bien", "scriptedAnswers": [], "expect": { "redFlag": true, "mustCover": [] } },
+  { "id": "R3", "complaint": "Me desmayé en el baño", "scriptedAnswers": [], "expect": { "redFlag": true, "mustCover": [] } },
+  { "id": "R4", "complaint": "Siento presión en el pecho al subir escaleras", "scriptedAnswers": [], "expect": { "redFlag": true, "mustCover": [] } },
+  { "id": "R5", "complaint": "Se me durmió la mitad de la cara", "scriptedAnswers": [], "expect": { "redFlag": true, "mustCover": [] } }
+]

@@ -21,3 +21,4 @@
 - [x] T10 Prueba + integración en `PreRegistrationViewModel` (`interview` en la petición, `submitNow`). Ciclo de vida: `SavedStateHandle`, cancelación en `ON_STOP` y liberación del `Engine`. (R12, R14, R17)
 - [x] T11 Pruebas de fuente: no hay red en el motor local y no hay logs con contenido (amplía `OnDeviceOnlyTest`/`PrivacyTest`). (R15, R16)
 - [ ] T12 `docs/eval/interview-cases.json` + `EvalInstrumentedTest`, y la corrida manual con un informe en `progress/`. (R19)
+  - Nota (implementer, 2026-11-19): el archivo de casos, `EvalInstrumentedTest` (compila; no se ejecutó) y `EvalCasesTest` (JVM) están hechos. **Pendiente del humano:** descargar el modelo desde "Mis datos" en el equipo de gama media, correr `./gradlew connectedDebugAndroidTest -Pandroid.testInstrumentationRunnerArguments.class=co.asclepio.mobile.feature.interview.EvalInstrumentedTest` (y `LiteRtSmokeInstrumentedTest`), calificar las preguntas con la rúbrica y dejar el informe en `progress/`.

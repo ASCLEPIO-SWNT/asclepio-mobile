@@ -54,6 +54,9 @@ android {
         compose = true
         buildConfig = true
     }
+
+    // F-11-mobile R19: la evaluación manual (EvalInstrumentedTest) lee los casos de docs/eval/ (solo en el APK de prueba).
+    sourceSets["androidTest"].assets.srcDir("../docs/eval")
 }
 
 dependencies {
