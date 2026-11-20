@@ -33,6 +33,13 @@ import co.asclepio.mobile.core.ui.UiMessage
 import co.asclepio.mobile.core.ui.UiNotice
 import co.asclepio.mobile.core.ui.text
 
+/**
+ * R12, R13: en la pantalla de alarma no se puede salir (gesto atrás ni "Volver") hasta que el envío urgente termine:
+ * enviado, o un error definitivo que no se reintenta. Así no se descarta el prerregistro de alarma por accidente.
+ */
+fun redFlagBlocksBack(state: InterviewUiState, urgent: UrgentSubmission?): Boolean =
+    state is InterviewUiState.RedFlag && urgent != UrgentSubmission.Sent && urgent !is UrgentSubmission.Failed
+
 /** Texto del estado del envío de alarma (catálogo cerrado; nunca contenido del paciente). */
 @StringRes
 fun urgentStatusText(status: UrgentSubmission): Int = when (status) {

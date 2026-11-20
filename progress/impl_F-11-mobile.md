@@ -47,8 +47,8 @@
 | R9 | `OutputValidatorTest::R9 …` (5); `InterviewSessionTest::R9 …` (3); `LiteRtInterviewerTest::R9 …` (3); `androidTest LiteRtSmokeInstrumentedTest::R9 …` (manual) |
 | R10 | `OutputValidatorTest::R10 …` (3); `InterviewSessionTest::R10 …` (2); `InterviewViewModelTest::R8 …` (pregunta prohibida del servidor → fija) |
 | R11 | `RedFlagRulesTest::R11 …` (7, fixture al 100 % y SHA-256); `InterviewSessionTest::R11 …` (2) |
-| R12 | `InterviewSessionTest::R12 …` (3); `OutputValidatorTest::R12 …` (2); `InterviewViewModelTest::R12 …` (3); `PreRegistrationInterviewTest::R12 la alarma envia de inmediato…`; `InterviewUiTest::R12 la pantalla de alarma…` |
-| R13 | `PreRegistrationInterviewTest::R13 …` (3); `InterviewUiTest::R13 la raiz lanza el envio de alarma ligado a la pantalla y R17…` |
+| R12 | `InterviewSessionTest::R12 …` (3); `OutputValidatorTest::R12 …` (2); `InterviewViewModelTest::R12 …` (3); `PreRegistrationInterviewTest::R12 la alarma envia de inmediato…`; `InterviewUiTest::R12 la pantalla de alarma…`, `::R12 la raiz intercepta el gesto atras y oculta Volver con la alarma pendiente sin cancelar el envio` |
+| R13 | `PreRegistrationInterviewTest::R13 …` (3); `InterviewUiTest::R13 en la alarma atras y Volver quedan bloqueados mientras el envio esta pendiente o reintentando`; `InterviewUiTest::R13 la raiz lanza el envio de alarma ligado a la pantalla y R17…` |
 | R14 | `InterviewSessionTest::R14 …` (4); `OutputValidatorTest::R14 …`; `InterviewViewModelTest::R14 …`; `PreRegistrationInterviewTest::R14 confirmar el resumen envia … interview segun el contrato`; `InterviewUiTest::R14 …` |
 | R15 | `InterviewPrivacyTest::R15 …` (2); `InterviewViewModelTest::R6 con equipo capaz usa el motor local y no llama al servidor` |
 | R16 | `InterviewPrivacyTest::R16 …` (2); `PrivacyTest::R33` (sin `Log` en todo `src/main`) |
@@ -57,11 +57,23 @@
 | R19 | `EvalCasesTest::R19 …` (2); `androidTest EvalInstrumentedTest::R19 evaluacion manual de los 14 casos con el modelo real` (manual, pendiente) |
 
 ## Resultados
-- `./gradlew testDebugUnitTest`: **484 pruebas, 0 fallos**; además se ampliaron 3 pruebas existentes.
+- `./gradlew testDebugUnitTest`: **486 pruebas, 0 fallos**; además se ampliaron 3 pruebas existentes.
 - `./gradlew compileDebugAndroidTestKotlin`: OK (instrumentadas solo compiladas).
-- `./init.sh` (completo, tras cerrar la desviación 9): `[OK] gradlew lint testDebugUnitTest` — `FAIL: 0 · WARN: 0 · Estado: VERDE`, 484 pruebas.
+- `./init.sh` (completo, tras cerrar la desviación 9): `[OK] gradlew lint testDebugUnitTest` — `FAIL: 0 · WARN: 0 · Estado: VERDE`, 486 pruebas.
 - Lint: solo avisos previos (versiones nuevas, recursos sin usar); un error `ByteOrderMark` por caracteres Unicode literales en una regex se corrigió con escapes.
 
 ## Pendiente del humano
 - QA en un teléfono con ≥6 GB: descarga por Wi-Fi, reanudación, cancelar/borrar; entrevista local en modo avión; aviso del servidor una vez; alarma con envío inmediato; rotación y segundo plano durante una generación.
 - `LiteRtSmokeInstrumentedTest` y `EvalInstrumentedTest` con el modelo real; informe y rúbrica en `progress/` (T12).
+
+## Corrección tras la revisión (motivo 1 de `progress/review_F-11-mobile.md`, R12/R13)
+- **Problema:** en la pantalla de alarma, el gesto atrás y el "Volver" superior sacaban la entrada `PreRegistration` de la pila antes de enviar el prerregistro urgente, y eso lo cancelaba y descartaba.
+- **Cambio:** `redFlagBlocksBack(state, urgent)` (`feature/interview/ui/InterviewScreen.kt`) es `true` en `RedFlag` mientras el envío no esté `Sent` ni `Failed`. Mientras es `true`:
+  - `InterviewSection` registra `BackHandler(enabled = locked) {}`;
+  - publica el bloqueo a `SessionGraph`, que oculta "Volver" e ignora el `onBack` de `NavDisplay`.
+- **Envío:** `sendUrgent` sigue ligado a la pantalla de alarma y reintenta mientras esta se muestre. Tras `Sent`, o tras un error definitivo sin reintento, se sale con normalidad.
+- **Pruebas (escritas primero):**
+  - `InterviewUiTest::R13 en la alarma atras y Volver quedan bloqueados mientras el envio esta pendiente o reintentando`;
+  - `InterviewUiTest::R12 la raiz intercepta el gesto atras y oculta Volver con la alarma pendiente sin cancelar el envio`.
+- **Resultado:** `./init.sh` completo en VERDE, 486 pruebas.
+- **Fuera de este cambio:** el motivo 2 (`history.md`) lo atiende el leader al cerrar.

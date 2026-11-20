@@ -1,5 +1,6 @@
 package co.asclepio.mobile
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,6 +19,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import android.os.SystemClock
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.repeatOnLifecycle
@@ -68,6 +71,7 @@ import co.asclepio.mobile.feature.interview.ui.InterviewScreen
 import co.asclepio.mobile.feature.interview.ui.InterviewUiState
 import co.asclepio.mobile.feature.interview.ui.InterviewViewModel
 import co.asclepio.mobile.feature.interview.ui.SummaryDecision
+import co.asclepio.mobile.feature.interview.ui.redFlagBlocksBack
 import co.asclepio.mobile.feature.patients.ui.ProfileScreen
 import co.asclepio.mobile.feature.patients.ui.ProfileViewModel
 import co.asclepio.mobile.core.ui.*
@@ -187,13 +191,15 @@ fun AppNavigation(container: AppContainer, widthSizeClass: WindowWidthSizeClass,
 private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSizeClass, session: SessionState, root: Route, guide: SpeechGuideController, preferencesOpen: Boolean) {
     val backStack = rememberNavBackStack(root)
     val currentRoute = backStack.lastOrNull() as? Route ?: root
+    var backLocked by remember { mutableStateOf(false) }
     val locale = LocalConfiguration.current.locales[0].toLanguageTag()
     LaunchedEffect(currentRoute, locale, preferencesOpen, navigationIdentity(session)) {
         // Route names contain no private data; the session identity resets the guide between generations.
         guide.update(if (preferencesOpen) GuideDestination.Preferences else routeGuideDestination(currentRoute), locale, navigationIdentity(session) + "|" + currentRoute.toString())
     }
     Column(Modifier.fillMaxSize()) {
-        if (backStack.size > 1) TextButton(onClick = { backStack.removeAt(backStack.lastIndex) }) {
+        // F-11-mobile R12, R13: la alarma con el envío pendiente bloquea la salida (ver InterviewSection).
+        if (backStack.size > 1 && !backLocked) TextButton(onClick = { backStack.removeAt(backStack.lastIndex) }) {
             Text(stringResource(R.string.navigate_back))
         }
         if (session is SessionState.LoggedOut || session == SessionState.NoTenant) {
@@ -203,7 +209,7 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
         Box(Modifier.weight(1f).fillMaxWidth()) {
             NavDisplay(
                 backStack = backStack,
-                onBack = { if (backStack.size > 1) backStack.removeAt(backStack.lastIndex) },
+                onBack = { if (backStack.size > 1 && !backLocked) backStack.removeAt(backStack.lastIndex) },
                 entryDecorators = listOf(
                     rememberSaveableStateHolderNavEntryDecorator(),
                     rememberViewModelStoreNavEntryDecorator(),
@@ -350,7 +356,7 @@ private fun SessionGraph(container: AppContainer, widthSizeClass: WindowWidthSiz
                                 onSubmit = vm::continueToAssistant,
                                 submitLabel = R.string.preregistration_continue,
                                 assistant = state.assistantAttempt?.let { attempt ->
-                                    { InterviewSection(container, vm, state, attempt, guide) { vm.onCreatedHandled(); backStack.popTo(Route.Home) } }
+                                    { InterviewSection(container, vm, state, attempt, guide, { backLocked = it }) { vm.onCreatedHandled(); backStack.popTo(Route.Home) } }
                                 },
                                 onRetrySites = vm::retrySites,
                                 onViewStatus = { backStack.popTo(Route.Home) },
@@ -406,6 +412,7 @@ private fun InterviewSection(
     form: PreRegistrationUiState,
     attempt: Long,
     guide: SpeechGuideController,
+    onBackLock: (Boolean) -> Unit,
     onDone: () -> Unit,
 ) {
     val vm = viewModel(key = "interview-$attempt") {
@@ -422,6 +429,14 @@ private fun InterviewSection(
         // R12, R13: envío inmediato; al salir de la pantalla de alarma se cancela el reintento.
         is InterviewUiState.RedFlag -> LaunchedEffect(s.interview) { preRegistration.sendUrgent(s.interview) }
         else -> Unit
+    }
+    // R12, R13: mientras el envío de alarma esté pendiente o reintentando, ni el gesto atrás ni "Volver" salen de la
+    // pantalla (salir cancelaría el envío y descartaría el ViewModel con la entrevista de alarma).
+    val locked = redFlagBlocksBack(state, form.urgent)
+    BackHandler(enabled = locked) {}
+    DisposableEffect(locked) {
+        onBackLock(locked)
+        onDispose { onBackLock(false) }
     }
     val asking = state as? InterviewUiState.Asking
     InterviewScreen(

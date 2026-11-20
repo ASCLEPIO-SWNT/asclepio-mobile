@@ -1,6 +1,7 @@
 package co.asclepio.mobile.feature.interview.ui
 
 import co.asclepio.mobile.R
+import co.asclepio.mobile.core.interview.UrgentSubmission
 import co.asclepio.mobile.feature.interview.model.ModelDownloadState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -70,5 +71,32 @@ class InterviewUiTest {
         assertTrue(navigation.contains("preRegistration.submitWithInterview(decision.interview)"))
         assertTrue(navigation.contains("summaryMessage = form.message"))
         assertEquals("Revisa tus respuestas", strings("values").getValue("summary_title"))
+    }
+
+    private val redFlag = InterviewUiState.RedFlag(
+        co.asclepio.mobile.core.interview.SymptomInterviewDto(
+            co.asclepio.mobile.core.interview.InterviewEngine.ON_DEVICE, "m", emptyList(),
+            listOf(co.asclepio.mobile.core.interview.RedFlag.CHEST_PAIN), co.asclepio.mobile.core.interview.EndedBy.RED_FLAG,
+        ),
+    )
+
+    @Test fun `R13 en la alarma atras y Volver quedan bloqueados mientras el envio esta pendiente o reintentando`() {
+        assertTrue(redFlagBlocksBack(redFlag, null))
+        assertTrue(redFlagBlocksBack(redFlag, UrgentSubmission.Sending))
+        assertTrue(redFlagBlocksBack(redFlag, UrgentSubmission.Retrying(4)))
+        // Tras enviarse (o un error definitivo sin reintento) se puede salir con normalidad.
+        assertFalse(redFlagBlocksBack(redFlag, UrgentSubmission.Sent))
+        assertFalse(redFlagBlocksBack(redFlag, UrgentSubmission.Failed(co.asclepio.mobile.core.ui.UiMessage(R.string.error_general))))
+        // Fuera de la alarma no se bloquea nada.
+        assertFalse(redFlagBlocksBack(InterviewUiState.Preparing, UrgentSubmission.Sending))
+        assertFalse(redFlagBlocksBack(InterviewUiState.Asking("¿Cuándo?", 1), null))
+    }
+
+    @Test fun `R12 la raiz intercepta el gesto atras y oculta Volver con la alarma pendiente sin cancelar el envio`() {
+        assertTrue(navigation.contains("BackHandler(enabled = locked) {}"))
+        assertTrue(navigation.contains("if (backStack.size > 1 && !backLocked)"))
+        assertTrue(navigation.contains("onBack = { if (backStack.size > 1 && !backLocked) backStack.removeAt(backStack.lastIndex) }"))
+        // El envío sigue ligado a la pantalla de alarma (no a la pulsación de atrás).
+        assertTrue(navigation.contains("is InterviewUiState.RedFlag -> LaunchedEffect(s.interview) { preRegistration.sendUrgent(s.interview) }"))
     }
 }
