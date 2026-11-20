@@ -22,3 +22,5 @@
 9. **CHECKPOINTS C3** sigue listando `feature/{account,patients,encounters,status,voice}` (lo fija `PatientOnlyDocsTest`); falta añadir `interview` en C3 y en esa prueba (harness del leader). `docs/architecture.md` y `docs/verification.md` ya lo describen.
 10. **Riesgos a verificar en el equipo:** que `onMessage` de LiteRT-LM entregue fragmentos (no texto acumulado) y que GPU→CPU funcione; lo cubren `LiteRtSmokeInstrumentedTest` y `EvalInstrumentedTest` (no ejecutados).
 - **Decisión del humano (2026-11-19):** R17 enmendado: los turnos van solo en memoria, no en `SavedStateHandle`.
+- **Revisión:** RECHAZADA una vez (desde la pantalla de alarma se podía salir con el gesto atrás o "Volver" y se descartaba el envío urgente); corregida en 04d0596 y APROBADA (2026-11-19, 486 pruebas, `init.sh` VERDE).
+- **Pendiente para `done`:** la QA en el dispositivo y T12 (`EvalInstrumentedTest` con el modelo real), ambas del humano.
