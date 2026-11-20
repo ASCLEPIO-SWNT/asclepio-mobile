@@ -38,7 +38,7 @@ class PatientOnlyDocsTest {
         val text = lines("CHECKPOINTS.md").joinToString("\n")
         val c3 = text.substringAfter("## C3").substringBefore("## C4")
         val c7 = text.substringAfter("## C7").substringBefore("## C8")
-        assertTrue(c3.contains("feature/{account,patients,encounters,status,voice}"))
+        assertTrue(c3.contains("feature/{account,patients,encounters,status,voice,interview}"))
         for (retired in listOf("staffaccount", "staffencounters", "reception", "triage", "dashboards", "core/encounters")) {
             assertTrue("C3 menciona $retired", !c3.contains(retired))
         }

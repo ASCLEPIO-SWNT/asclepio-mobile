@@ -3,7 +3,7 @@
 - **Rama:** `feature/F-11-mobile` (commits `7597f3f` … ver `git log db401c9..HEAD`). Sin push.
 - **Contrato consumido:** 0.11.0 (`BuildConfig.CONSUMED_CONTRACT`). Sin cambios en `../asclepio-api/`.
 - **Tareas:** T1–T11 `[x]`. T12 `[ ]`: `docs/eval/interview-cases.json`, `EvalInstrumentedTest` y `EvalCasesTest` hechos; la corrida con el modelo real queda para el humano (nota en `tasks.md`).
-- **Decisiones y desviaciones:** en `progress/current/F-11-mobile.md` (la principal: R17 conserva los turnos en el ViewModel, no en `SavedStateHandle`, por C7/PrivacyTest R32; requiere decisión del humano).
+- **Decisiones y desviaciones:** en `progress/current/F-11-mobile.md`. R17: el humano decidió conservar los turnos solo en la memoria del ViewModel (spec enmendada en `317edfa`, con `interview-v2` en design/tasks). Desviación 9 cerrada: C3 de `CHECKPOINTS.md` y `PatientOnlyDocsTest` listan `feature/{account,patients,encounters,status,voice,interview}`.
 
 ## Dependencias y build
 - `com.google.ai.edge.litertlm:litertlm-android:0.19.1` (Google Maven; API verificada en el AAR: `EngineConfig`, `Backend.GPU/CPU`, `ConversationConfig(enableResponseFormat)`, `Conversation.sendMessageAsync(..., responseFormat = ResponseFormat.json(schema))`, `cancelProcess()`).
@@ -30,8 +30,8 @@
 **Pruebas**
 - Nuevas: `core/interview/{RedFlagRulesTest,OutputValidatorTest,InterviewSessionTest,FakeInterviewer}.kt`, `feature/interview/{DeviceCapabilityTest,LiteRtInterviewerTest,InterviewPrivacyTest,EvalCasesTest}.kt`, `feature/interview/data/ServerInterviewerTest.kt`, `feature/interview/model/ModelDownloadTest.kt`, `feature/interview/ui/{InterviewViewModelTest,InterviewUiTest}.kt`, `feature/encounters/ui/PreRegistrationInterviewTest.kt`, `test/resources/red-flag-cases.json` (SHA-256 `2d75bdbd…e6b7`).
 - Instrumentadas (compilan; no ejecutadas): `feature/interview/LiteRtSmokeInstrumentedTest.kt`, `feature/interview/EvalInstrumentedTest.kt`.
-- Ampliadas: `PatientOnlyScopeTest` (+next-question), `OnDeviceOnlyTest` R3, `QueuePositionLifecycleTest` R2, `PatientTestEnv` (`retrofit` público).
-- Docs: `docs/architecture.md`, `docs/verification.md`, `docs/eval/interview-cases.json`.
+- Ampliadas: `PatientOnlyDocsTest` (C3 con `interview`), `PatientOnlyScopeTest` (+next-question), `OnDeviceOnlyTest` R3, `QueuePositionLifecycleTest` R2, `PatientTestEnv` (`retrofit` público).
+- Docs: `CHECKPOINTS.md` (C3), `docs/architecture.md`, `docs/verification.md`, `docs/eval/interview-cases.json`.
 
 ## Trazabilidad R<n> → prueba (`app/src/test` salvo indicación)
 | R | Pruebas |
@@ -59,10 +59,9 @@
 ## Resultados
 - `./gradlew testDebugUnitTest`: **484 pruebas, 0 fallos**; además se ampliaron 3 pruebas existentes.
 - `./gradlew compileDebugAndroidTestKotlin`: OK (instrumentadas solo compiladas).
-- `./init.sh` (completo): `[OK] gradlew lint testDebugUnitTest` — `FAIL: 0 · WARN: 0 · Estado: VERDE`.
+- `./init.sh` (completo, tras cerrar la desviación 9): `[OK] gradlew lint testDebugUnitTest` — `FAIL: 0 · WARN: 0 · Estado: VERDE`, 484 pruebas.
 - Lint: solo avisos previos (versiones nuevas, recursos sin usar); un error `ByteOrderMark` por caracteres Unicode literales en una regex se corrigió con escapes.
 
 ## Pendiente del humano
 - QA en un teléfono con ≥6 GB: descarga por Wi-Fi, reanudación, cancelar/borrar; entrevista local en modo avión; aviso del servidor una vez; alarma con envío inmediato; rotación y segundo plano durante una generación.
 - `LiteRtSmokeInstrumentedTest` y `EvalInstrumentedTest` con el modelo real; informe y rúbrica en `progress/` (T12).
-- Decidir R17 (`SavedStateHandle` frente a C7) y actualizar C3 de `CHECKPOINTS.md` + `PatientOnlyDocsTest` con `feature/interview`.
