@@ -42,7 +42,7 @@ class RedFlagRulesTest {
     }
 
     @Test fun `R11 la normalizacion quita tildes mayusculas y espacios repetidos`() {
-        assertEquals("dolor toracico fuerte", RedFlagRules.normalize("  DOLOR   Torácico fuerte "))
+        assertEquals("dolor toracico fuerte", RedFlagRules.normalize("  DOLOR   Torácico\u00A0fuerte "))
         assertEquals("hacerme dano", RedFlagRules.normalize("Hacerme daño"))
     }
 

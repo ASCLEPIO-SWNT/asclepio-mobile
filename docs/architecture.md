@@ -17,6 +17,9 @@ app/src/main/java/co/asclepio/mobile/
 │   │                # AuthHandle y patientCall (Bearer/generación inmutables; un 401 vigente cierra solo su generación)
 │   ├── tenants/     # TenantsApi (GET /api/v1/public/tenants) + PublicTenantDto/PublicSiteDto (F-01 y F-02)
 │   ├── model/       # Sex, FULL_NAME_MAX y la conversión del DatePicker (alta de F-01 y "Mis datos" de F-02)
+│   ├── interview/   # F-11: modelos y DTO de la entrevista (SymptomInterviewDto, Turn…), puerto SymptomInterviewer,
+│   │                # RedFlagRules y OutputValidator (port literal de interview.rules.ts, fixture compartido),
+│   │                # InterviewSession (máquina de estados pura) y UrgentSubmission; sin dependencias Android
 │   ├── voice/       # puerto OnDeviceRecognizer, OnDeviceAvailability, DictationError, DictationUiState (sin texto)
 │   │                # y NoDictation (F-08); sin dependencias Android
 │   └── ui/          # Theme, DateTime, UiMessage (@StringRes), WindowLayout (paneMode), MarkdownText,
@@ -35,6 +38,11 @@ app/src/main/java/co/asclepio/mobile/
     │                # ViewModel, PreRegistrationForm + validación, statusText/isInProgress, PreRegistrationErrors)
     │                # y queue/ (F-10: QueuePositionDto, QueuePositionStream sobre okhttp-sse con el Bearer capturado
     │                # por patientStream, QueuePositionViewModel con backoff 1→30 s); ui/QueuePositionCard
+    ├── interview/   # entrevista de síntomas (F-11): LiteRtInterviewer (LiteRT-LM, ResponseFormat.json, prompt
+    │                # assets/prompts/interview-v2.md), DeviceCapability; data/ (SymptomInterviewApi next-question,
+    │                # ServerInterviewer, ServerNoticeStore en el DataStore asclepio_interview); model/ (ModelStore en
+    │                # filesDir/models, ModelDownloader con Range y SHA-256, ModelDownloadWorker dataSync, repositorio);
+    │                # ui/ (InterviewViewModel, InterviewScreen, RedFlagScreen, InterviewSummary, AssistantSettings)
     └── voice/       # dictado en el dispositivo (F-08): AndroidOnDeviceRecognizer (único que usa SpeechRecognizer,
                      # solo createOnDeviceSpeechRecognizer), SpanishOnDeviceSupport.kt (funciones puras: rama por SDK,
                      # variante es, errores, permiso), DictationGuideExclusion.kt (startDictationStoppingGuide, D8) y
@@ -50,6 +58,11 @@ Cada `feature/<f>/` contiene `data/` (API y repositorio), `ui/` (Composables y `
 - Los DTOs de sesión compartidos viven en `core/auth`, sin dependencias core→feature. `/me` solo se convierte en un paciente completo de la IPS recordada antes de exponer `Authenticated`; cualquier otro cuerpo no da principal.
 - El inicio (`feature/account`) recibe el estado del pre-registro (`feature/encounters`) como un slot `@Composable` que compone `AppNavigation` (D3 de F-02-mobile).
 - El pre-registro (`feature/encounters`) recibe los controles de dictado (`feature/voice`) como un slot `@Composable` que compone `AppNavigation`; ambas features solo comparten `core/voice` (F-08-mobile). El ViewModel del pre-registro es dueño del estado del dictado y del origen del motivo. No conoce la guía TTS: el callback de "Dictar" de `AppNavigation` detiene la guía vigente con `startDictationStoppingGuide` y se reconstruye en cada composición, porque la guía se recrea al rotar o cambiar de idioma y el ViewModel no (D8 de F-08).
+
+- La entrevista (`feature/interview`) se compone dentro de la entrada `PreRegistration` como slot `assistant` y "Mis datos"
+  recibe la sección del asistente como slot; solo `AppNavigation` une ambas features. El prerregistro solo comparte con la
+  entrevista `core/interview` (SymptomInterviewDto, UrgentSubmission). Las reglas de seguridad viven en `InterviewSession`,
+  no en los motores (D4 de F-11-mobile).
 
 **Prohibidas**
 - `feature/A` → `feature/B`. Lo compartido va a `core/`. Solo `AppNavigation.kt` (paquete raíz) conoce varias features.

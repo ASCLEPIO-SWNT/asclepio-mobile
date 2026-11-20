@@ -13,7 +13,7 @@ object RedFlagRules {
     private val MARKS = Regex("""\p{M}+""")
 
     /** Los espacios de `\s` de JavaScript (java.util.regex `\s` solo cubre ASCII). */
-    private val SPACES = Regex("""[\s   -     　﻿]+""")
+    private val SPACES = Regex("[\\s\u00A0\u1680\u2000-\u200A\u2028\u2029\u202F\u205F\u3000\uFEFF]+")
 
     /** Minúsculas, sin tildes (NFD sin marcas) y con los espacios colapsados. */
     fun normalize(text: String): String =
