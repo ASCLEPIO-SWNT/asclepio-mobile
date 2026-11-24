@@ -58,6 +58,8 @@ fun ProfileScreen(
     onRetry: () -> Unit,
     onDatePickerChange: (PrivateDatePickerDraft) -> Unit = {},
     modifier: Modifier = Modifier,
+    /** F-11-mobile R5: sección del asistente de síntomas, que compone la raíz. */
+    assistant: @Composable () -> Unit = {},
 ) {
     ScreenColumn(modifier) {
         PageHeader(stringResource(R.string.profile_title))
@@ -69,6 +71,7 @@ fun ProfileScreen(
             }
             is ProfileUiState.Success -> ProfileContent(state, onFormChange, onSave, onDatePickerChange)
         }
+        assistant()
         }
 }
 

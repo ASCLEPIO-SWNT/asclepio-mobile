@@ -188,6 +188,39 @@
       ],
       "sdd": true,
       "status": "done"
+    },
+    {
+      "id": "F-10-mobile",
+      "global_id": "F-10",
+      "name": "queue_position_live",
+      "title": "Posición en la fila y espera, en vivo",
+      "description": "Tarjeta en la pantalla de estado con cliente SSE (okhttp-sse), reconexión con backoff y último dato conocido.",
+      "depends_on": [
+        "F-02-mobile"
+      ],
+      "consumes_contract": "0.10.0",
+      "acceptance": [
+        "Ver ../asclepio-api/docs/product/features/F-10.md (F-10.AC1, AC3–AC6)"
+      ],
+      "sdd": true,
+      "status": "done"
+    },
+    {
+      "id": "F-11-mobile",
+      "global_id": "F-11",
+      "name": "on_device_symptom_interview",
+      "title": "Entrevista de síntomas con IA en el teléfono",
+      "description": "LiteRT-LM + Gemma 4 E2B-it descargado por Wi-Fi; reglas de alarma y validador deterministas; fallback al servidor; envío inmediato ante señal de alarma.",
+      "depends_on": [
+        "F-08-mobile",
+        "F-10-mobile"
+      ],
+      "consumes_contract": "0.11.0",
+      "acceptance": [
+        "Ver ../asclepio-api/docs/product/features/F-11.md (F-11.AC1–AC5, AC8)"
+      ],
+      "sdd": true,
+      "status": "in_progress"
     }
   ]
 }

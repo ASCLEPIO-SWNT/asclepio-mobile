@@ -26,7 +26,17 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "API_BASE_URL", "\"$apiBaseUrl\"")
         // Versión del contrato consumido (feature_list.json → consumes_contract).
-        buildConfigField("String", "CONSUMED_CONTRACT", "\"0.9.0\"")
+        buildConfigField("String", "CONSUMED_CONTRACT", "\"0.11.0\"")
+        // F-11-mobile (D2): Gemma 4 E2B-it de litert-community en HF, fijado a una revisión y a su SHA-256 LFS.
+        // El modelo no va en el APK: se descarga opcionalmente por Wi-Fi (ModelDownloadWorker).
+        buildConfigField(
+            "String",
+            "MODEL_URL",
+            "\"https://huggingface.co/litert-community/gemma-4-E2B-it-litert-lm/resolve/2d74ac41a33d7da82f39f7d5720a04c68514a103/gemma-4-E2B-it.litertlm\"",
+        )
+        buildConfigField("long", "MODEL_BYTES", "2588147712L")
+        buildConfigField("String", "MODEL_SHA256", "\"181938105e0eefd105961417e8da75903eacda102c4fce9ce90f50b97139a63c\"")
+        buildConfigField("String", "MODEL_ID", "\"gemma-4-E2B-it.litertlm@2d74ac4\"")
     }
 
     buildTypes {
@@ -44,6 +54,9 @@ android {
         compose = true
         buildConfig = true
     }
+
+    // F-11-mobile R19: la evaluación manual (EvalInstrumentedTest) lee los casos de docs/eval/ (solo en el APK de prueba).
+    sourceSets["androidTest"].assets.srcDir("../docs/eval")
 }
 
 dependencies {
@@ -63,6 +76,12 @@ dependencies {
     implementation(libs.retrofit.kotlinx.serialization)
     implementation(libs.okhttp)
     implementation(libs.kotlinx.serialization.json)
+    // F-10-mobile (specs/F-10-mobile/design.md, D1): SSE de la posición en la fila, misma versión que OkHttp.
+    implementation(libs.okhttp.sse)
+
+    // F-11-mobile (specs/F-11-mobile/design.md, D1 y D3): motor local y descarga del modelo en primer plano.
+    implementation(libs.litertlm.android)
+    implementation(libs.androidx.work.runtime.ktx)
 
     // F-01-mobile (specs/F-01-mobile/design.md, "Dependencias nuevas")
     implementation(libs.androidx.navigation3.runtime)

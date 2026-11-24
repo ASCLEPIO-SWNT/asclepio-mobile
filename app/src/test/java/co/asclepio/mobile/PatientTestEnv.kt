@@ -35,8 +35,8 @@ class PatientTestEnv(dir: File) {
     private val ds = TestDataStore(dir.resolve("session.preferences_pb"))
     val store = SessionStore(ds.dataStore, FakeTokenCipher())
     lateinit var sessionManager: SessionManager
-    private val client = OkHttpClient.Builder().addInterceptor(AuthInterceptor { sessionManager.currentToken() }).build()
-    private val retrofit = createRetrofit(server.url("/").toString(), client)
+    val client = OkHttpClient.Builder().addInterceptor(AuthInterceptor { sessionManager.currentToken() }).build()
+    val retrofit = createRetrofit(server.url("/").toString(), client)
     val meApi: MeApi = retrofit.create(MeApi::class.java)
     val tenantsApi: TenantsApi = retrofit.create(TenantsApi::class.java)
     val profileApi: PatientProfileApi = retrofit.create(PatientProfileApi::class.java)

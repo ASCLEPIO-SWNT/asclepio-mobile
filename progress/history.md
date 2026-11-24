@@ -94,5 +94,13 @@ API/DBreal y matrizextendida API31/tablet/320dp200/5idiomas/TalkBack/teclado/mov
 - **Revisión:** APROBADO por un reviewer independiente (`9ca6709`); 354 pruebas JVM, 0 fallos; lint 0 errores (15 avisos previos). Observaciones no bloqueantes: `DictationGuideExclusionTest` comprueba la guía anterior de forma trivial; la cancelación cuando la guía empieza a hablar no tiene prueba JVM; al salir de la pantalla se muestra `dictation_cancelled`.
 - **QA manual (T13, humano, 2026-11-17):**
   - Tablet Lenovo TB350FU (Android 14): sin modelo local en español (Subtítulos instantáneos solo en inglés), la app oculta "Dictar", muestra el aviso y permite escribir el motivo (R16).
-  - Emulador Medium_Phone_API_37 (Android 17), con micrófono del host, español instalado, `adb reverse` y la API local: el humano informó "funciona correctamente". No reportó el detalle caso por caso.
+  - Emulador Medium_Phone_API_37 (Android 17), con micrófono del host, español instalado, `adb reverse` y la API local: el humano informó "funciona correctamente" y el 2026-11-19 confirmó que vio "Dictar" y dictó sus síntomas por voz. En un emulador recreado de cero el 2026-11-19, "Dictar" no aparece hasta que el reconocimiento local en español termina de instalarse (es el entorno, no la app).
 - **Cierre:** `./init.sh` completo VERDE. Pendientes conocidos: en dispositivos sin español en el reconocimiento local, como esa tablet Lenovo, no hay dictado (es el comportamiento esperado).
+
+## 2026-11-18 — F-10-mobile: posición en la fila y espera, en vivo → done
+
+- **Spec:** aprobada por el humano el 2026-11-18. Consume el contrato 0.10.0 (F-10-api, PR asclepio-api#5). Rama `feature/F-10-mobile` desde `develop`.
+- **Resultado:** tarjeta en vivo en la zona de estado del prerregistro de `Home` (no en `Route.Status`, que es la pantalla de salud de F-00). `QueuePositionStream` usa `okhttp-sse` 5.5.1, la única dependencia nueva, sobre el `OkHttpClient` autenticado. `QueuePositionViewModel` reconecta con backoff de 1→30 s, reinicia tras cada evento y conserva el último dato en `RECONNECTING` ("hace X min" con reloj monótono). Con 401 va al login; con `DONE` no reconecta. El stream se abre solo dentro de `repeatOnLifecycle(STARTED)`, mientras el último prerregistro está en curso (incluido `PENDING`), y sigue el prerregistro por su id. Textos en el catálogo de localización con `liveRegion` educado.
+- **Pruebas:** 396 unitarias. R1–R11 cubiertos. La prueba instrumentada de la tarjeta compila.
+- **Revisión:** RECHAZADA una vez (tras `DONE` el ViewModel quedaba `ended` y un prerregistro nuevo en la misma sesión no reabría el stream). Se corrigió con la clave por id del prerregistro y se APROBÓ.
+- **QA manual (T6):** validada por el humano en el dispositivo el 2026-11-18, con el script `../f10.sh` de la raíz del workspace.

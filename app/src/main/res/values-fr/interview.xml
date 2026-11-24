@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Entrevista de síntomas con IA (F-11-mobile). Las preguntas del asistente no son textos de la app: vienen
+     del validador o de las preguntas fijas, siempre en español (el brief deja otros idiomas fuera de alcance). -->
+<resources>
+    <string name="assistant_download_channel">Téléchargement de l’assistant</string>
+    <string name="assistant_download_notification">Téléchargement de l’assistant de symptômes</string>
+    <string name="preregistration_continue">Continuer</string>
+    <string name="interview_title">Questions sur vos symptômes</string>
+    <string name="interview_preparing">Préparation de l’assistant…</string>
+    <string name="interview_disclaimer">L’assistant recueille seulement des informations pour le personnel de santé. Il ne donne ni diagnostic ni traitement. Les questions sont en espagnol.</string>
+    <string name="interview_progress">Question %1$d sur %2$d</string>
+    <string name="interview_answer">Votre réponse</string>
+    <string name="interview_dont_know">Je ne sais pas</string>
+    <string name="interview_finish">Terminer</string>
+    <string name="interview_next">Suivant</string>
+    <string name="interview_generating">Préparation de la question suivante…</string>
+    <string name="server_notice_title">Assistant sur notre serveur</string>
+    <string name="server_notice_body">Sur ce téléphone, l’assistant fonctionne sur notre serveur : vos réponses seront envoyées pour générer les questions. Elles ne sont pas conservées et n’incluent ni votre nom ni votre pièce d’identité.</string>
+    <string name="server_notice_continue">Continuer</string>
+    <string name="server_notice_skip">Ignorer l’assistant</string>
+    <string name="server_notice_download">Télécharger l’assistant sur ce téléphone (Wi-Fi uniquement)</string>
+    <string name="server_notice_download_requested">Le téléchargement commencera dès qu’il y aura du Wi-Fi. Vous pouvez le suivre dans Mes informations.</string>
+    <string name="summary_title">Vérifiez vos réponses</string>
+    <string name="summary_unverified">Elles seront envoyées au personnel de santé comme vos réponses non vérifiées. Vous pouvez les corriger avant l’envoi.</string>
+    <string name="summary_unavailable">L’assistant n’est pas disponible. Vous pouvez envoyer votre préinscription avec ce que vous avez déjà répondu.</string>
+    <string name="red_flag_title">Allez immédiatement aux urgences ou appelez le 123</string>
+    <string name="red_flag_body">Ce que vous décrivez peut être un signe d’alerte. N’attendez pas : allez aux urgences maintenant ou appelez le 123. Nous envoyons déjà votre préinscription.</string>
+    <string name="red_flag_call">Appeler le 123</string>
+    <string name="red_flag_sending">Envoi de votre préinscription…</string>
+    <string name="red_flag_retrying">L’envoi a échoué. Nouvel essai dans %1$d s…</string>
+    <string name="red_flag_sent">Votre préinscription a été envoyée. Prévenez le personnel à votre arrivée.</string>
+    <string name="red_flag_failed">Votre préinscription n’a pas pu être envoyée.</string>
+    <string name="red_flag_home">Retour à l’accueil</string>
+    <string name="assistant_title">Assistant de symptômes</string>
+    <string name="assistant_intro">Téléchargement facultatif (environ 2,6 Go, Wi-Fi uniquement) pour que les questions soient générées sur votre téléphone sans envoyer vos réponses.</string>
+    <string name="assistant_not_downloaded">Non téléchargé.</string>
+    <string name="assistant_not_capable">Ce téléphone n’a pas assez de mémoire pour l’assistant local : les questions seront générées sur notre serveur, avec un avis préalable.</string>
+    <string name="assistant_waiting">En attente du Wi-Fi pour télécharger.</string>
+    <string name="assistant_downloading">Téléchargement : %1$d %% (%2$d sur %3$d Mo).</string>
+    <string name="assistant_ready">Prêt : l’assistant fonctionne sur ce téléphone.</string>
+    <string name="assistant_no_space">Espace insuffisant : libérez %1$d Mo et réessayez.</string>
+    <string name="assistant_corrupted">Le téléchargement n’a pas passé la vérification et a été supprimé. Réessayez.</string>
+    <string name="assistant_download">Télécharger</string>
+    <string name="assistant_cancel">Annuler le téléchargement</string>
+    <string name="assistant_delete">Supprimer l’assistant</string>
+</resources>
