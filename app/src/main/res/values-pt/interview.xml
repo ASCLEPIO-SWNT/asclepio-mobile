@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Entrevista de síntomas con IA (F-11-mobile). Las preguntas del asistente no son textos de la app: vienen
+     del validador o de las preguntas fijas, siempre en español (el brief deja otros idiomas fuera de alcance). -->
+<resources>
+    <string name="assistant_download_channel">Download do assistente</string>
+    <string name="assistant_download_notification">Baixando o assistente de sintomas</string>
+    <string name="preregistration_continue">Continuar</string>
+    <string name="interview_title">Perguntas sobre seus sintomas</string>
+    <string name="interview_preparing">Preparando o assistente…</string>
+    <string name="interview_disclaimer">O assistente só coleta informações para a equipe de saúde. Não dá diagnósticos nem tratamentos. As perguntas estão em espanhol.</string>
+    <string name="interview_progress">Pergunta %1$d de %2$d</string>
+    <string name="interview_answer">Sua resposta</string>
+    <string name="interview_dont_know">Não sei</string>
+    <string name="interview_finish">Terminar</string>
+    <string name="interview_next">Próxima</string>
+    <string name="interview_generating">Preparando a próxima pergunta…</string>
+    <string name="server_notice_title">Assistente em nosso servidor</string>
+    <string name="server_notice_body">Neste telefone o assistente funciona em nosso servidor: suas respostas serão enviadas para gerar as perguntas. Elas não são guardadas nem incluem seu nome ou documento.</string>
+    <string name="server_notice_continue">Continuar</string>
+    <string name="server_notice_skip">Pular assistente</string>
+    <string name="server_notice_download">Baixar o assistente neste telefone (só por Wi-Fi)</string>
+    <string name="server_notice_download_requested">O download começará quando houver Wi-Fi. Você pode acompanhá-lo em Meus dados.</string>
+    <string name="summary_title">Revise suas respostas</string>
+    <string name="summary_unverified">Serão enviadas à equipe de saúde como suas respostas não verificadas. Você pode corrigi-las antes de enviar.</string>
+    <string name="summary_unavailable">O assistente não está disponível. Você pode enviar seu pré-registro com o que já respondeu.</string>
+    <string name="red_flag_title">Vá já ao pronto-socorro ou ligue para o 123</string>
+    <string name="red_flag_body">O que você descreve pode ser um sinal de alerta. Não espere: vá ao pronto-socorro agora ou ligue para o 123. Já estamos enviando seu pré-registro.</string>
+    <string name="red_flag_call">Ligar para o 123</string>
+    <string name="red_flag_sending">Enviando seu pré-registro…</string>
+    <string name="red_flag_retrying">Não foi possível enviar. Tentando de novo em %1$d s…</string>
+    <string name="red_flag_sent">Seu pré-registro foi enviado. Avise a equipe ao chegar.</string>
+    <string name="red_flag_failed">Não foi possível enviar seu pré-registro.</string>
+    <string name="red_flag_home">Voltar ao início</string>
+    <string name="assistant_title">Assistente de sintomas</string>
+    <string name="assistant_intro">Download opcional (cerca de 2,6 GB, só por Wi-Fi) para que as perguntas sejam geradas no seu telefone sem enviar suas respostas.</string>
+    <string name="assistant_not_downloaded">Não baixado.</string>
+    <string name="assistant_not_capable">Este telefone não tem memória suficiente para o assistente local: as perguntas serão geradas em nosso servidor, com aviso prévio.</string>
+    <string name="assistant_waiting">Aguardando Wi-Fi para baixar.</string>
+    <string name="assistant_downloading">Baixando: %1$d %% (%2$d de %3$d MB).</string>
+    <string name="assistant_ready">Pronto: o assistente funciona neste telefone.</string>
+    <string name="assistant_no_space">Falta espaço: libere %1$d MB e tente de novo.</string>
+    <string name="assistant_corrupted">O download não passou na verificação e foi apagado. Tente de novo.</string>
+    <string name="assistant_download">Baixar</string>
+    <string name="assistant_cancel">Cancelar download</string>
+    <string name="assistant_delete">Apagar o assistente</string>
+</resources>

@@ -1,5 +1,6 @@
 package co.asclepio.mobile.feature.encounters.data
 
+import co.asclepio.mobile.core.interview.SymptomInterviewDto
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import retrofit2.http.Body
@@ -7,8 +8,8 @@ import retrofit2.http.GET
 import retrofit2.http.Header
 import retrofit2.http.POST
 
-// DTOs escritos a mano según el snapshot 0.9.0 de ../asclepio-api/openapi/asclepio-api.v1.json (sin cambios en
-// CreatePreRegistrationDto ni PatientPreRegistrationDto desde 0.4.0).
+// DTOs escritos a mano según el snapshot 0.11.0 de ../asclepio-api/openapi/asclepio-api.v1.json: CreatePreRegistrationDto
+// añade `interview` (SymptomInterviewDto, opcional); PatientPreRegistrationDto no cambia desde 0.4.0.
 
 /** Origen del motivo (D8 de F-02, D5 de F-08): [VOICE_ON_DEVICE] desde que el borrador acepta un dictado local. */
 @Serializable
@@ -21,17 +22,19 @@ enum class ComplaintSource {
 }
 
 /**
- * CreatePreRegistrationDto. Sin valores por defecto: el cuerpo lleva exactamente estos tres campos (R10),
- * sin horas (R22) ni `patientId`/`tenantId` (R26). El `toString()` enmascara el motivo (R27).
+ * CreatePreRegistrationDto. El cuerpo lleva exactamente siteId, chiefComplaintText y complaintSource (R10), sin horas
+ * (R22) ni `patientId`/`tenantId` (R26); `interview` (contrato 0.11.0, F-11-mobile R12, R14) solo va si hay entrevista
+ * (`encodeDefaults = false`). El `toString()` enmascara el motivo y la entrevista (R27; R16 de F-11-mobile).
  */
 @Serializable
 data class CreatePreRegistrationRequest(
     val siteId: String,
     val chiefComplaintText: String,
     val complaintSource: ComplaintSource,
+    val interview: SymptomInterviewDto? = null,
 ) {
     override fun toString(): String =
-        "CreatePreRegistrationRequest(siteId=$siteId, chiefComplaintText=***, complaintSource=$complaintSource)"
+        "CreatePreRegistrationRequest(siteId=$siteId, chiefComplaintText=***, complaintSource=$complaintSource, interview=$interview)"
 }
 
 /** EncounterRefDto. `status` es texto para que un valor nuevo de la API no rompa la lista (D5). */

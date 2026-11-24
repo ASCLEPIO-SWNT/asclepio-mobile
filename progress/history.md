@@ -94,7 +94,7 @@ API/DBreal y matrizextendida API31/tablet/320dp200/5idiomas/TalkBack/teclado/mov
 - **Revisión:** APROBADO por un reviewer independiente (`9ca6709`); 354 pruebas JVM, 0 fallos; lint 0 errores (15 avisos previos). Observaciones no bloqueantes: `DictationGuideExclusionTest` comprueba la guía anterior de forma trivial; la cancelación cuando la guía empieza a hablar no tiene prueba JVM; al salir de la pantalla se muestra `dictation_cancelled`.
 - **QA manual (T13, humano, 2026-11-17):**
   - Tablet Lenovo TB350FU (Android 14): sin modelo local en español (Subtítulos instantáneos solo en inglés), la app oculta "Dictar", muestra el aviso y permite escribir el motivo (R16).
-  - Emulador Medium_Phone_API_37 (Android 17), con micrófono del host, español instalado, `adb reverse` y la API local: el humano informó "funciona correctamente". No reportó el detalle caso por caso.
+  - Emulador Medium_Phone_API_37 (Android 17), con micrófono del host, español instalado, `adb reverse` y la API local: el humano informó "funciona correctamente" y el 2026-11-19 confirmó que vio "Dictar" y dictó sus síntomas por voz. En un emulador recreado de cero el 2026-11-19, "Dictar" no aparece hasta que el reconocimiento local en español termina de instalarse (es el entorno, no la app).
 - **Cierre:** `./init.sh` completo VERDE. Pendientes conocidos: en dispositivos sin español en el reconocimiento local, como esa tablet Lenovo, no hay dictado (es el comportamiento esperado).
 
 ## 2026-11-18 — F-10-mobile: posición en la fila y espera, en vivo → done

@@ -13,7 +13,7 @@
 - [ ] `progress/current/` contiene solo el archivo de la feature activa (o nada).
 
 ## C3 — El código respeta la arquitectura
-- [ ] Los paquetes siguen `docs/architecture.md` (app solo del paciente): `core/{network,auth,ui,model,tenants}` y `feature/{account,patients,encounters,status,voice}`, sin paquetes ni rutas de personal (`PatientOnlyResourcesTest`, `PatientOnlyNavigationTest`).
+- [ ] Los paquetes siguen `docs/architecture.md` (app solo del paciente): `core/{network,auth,ui,model,tenants}` y `feature/{account,patients,encounters,status,voice,interview}`, sin paquetes ni rutas de personal (`PatientOnlyResourcesTest`, `PatientOnlyNavigationTest`).
 - [ ] Hay MVVM: los `@Composable` no llaman a Retrofit; los ViewModel exponen `StateFlow<UiState>`.
 - [ ] Una `feature/*` no importa de otra `feature/*`.
 - [ ] No hay dependencias nuevas sin justificación en el `design.md`.
